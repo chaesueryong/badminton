@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export const regions: Record<string, string[]> = {
   "서울특별시": ["강남구", "강동구", "강북구", "강서구", "관악구", "광진구", "구로구", "금천구", "노원구", "도봉구", "동대문구", "동작구", "마포구", "서대문구", "서초구", "성동구", "성북구", "송파구", "양천구", "영등포구", "용산구", "은평구", "종로구", "중구", "중랑구"],
@@ -47,6 +47,15 @@ export default function RegionSelect({
 }: RegionSelectProps) {
   const [selectedProvince, setSelectedProvince] = useState(defaultProvince);
   const [selectedCity, setSelectedCity] = useState(defaultCity);
+
+  // Update when defaultProvince or defaultCity changes
+  useEffect(() => {
+    setSelectedProvince(defaultProvince);
+  }, [defaultProvince]);
+
+  useEffect(() => {
+    setSelectedCity(defaultCity);
+  }, [defaultCity]);
 
   const handleProvinceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const province = e.target.value;

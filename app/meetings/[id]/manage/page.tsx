@@ -168,27 +168,27 @@ export default function MeetingManagePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 py-4 sm:py-8 pb-20 md:pb-8">
       <div className="container mx-auto px-4 max-w-4xl">
         {/* 헤더 */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <button
             onClick={() => router.push(`/meetings/${params.id}`)}
-            className="text-blue-600 hover:text-blue-700 mb-4 flex items-center gap-2"
+            className="text-blue-600 hover:text-blue-700 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base"
           >
             ← 돌아가기
           </button>
-          <h1 className="text-3xl font-bold text-gray-900">{meeting.title} 관리</h1>
-          <p className="text-gray-600 mt-2">정기 모임 일정을 생성하고 관리하세요</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">{meeting.title} 관리</h1>
+          <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">정기 모임 일정을 생성하고 관리하세요</p>
         </div>
 
         {/* 일정 생성 폼 */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-          <h2 className="text-xl font-bold mb-4">새 일정 만들기</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-6 sm:mb-8">
+          <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">새 일정 만들기</h2>
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                   날짜 *
                 </label>
                 <input
@@ -196,11 +196,11 @@ export default function MeetingManagePage() {
                   required
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                   최대 인원 *
                 </label>
                 <input
@@ -209,14 +209,14 @@ export default function MeetingManagePage() {
                   min="1"
                   value={formData.maxParticipants}
                   onChange={(e) => setFormData({ ...formData, maxParticipants: parseInt(e.target.value) })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                   시작 시간 *
                 </label>
                 <input
@@ -224,11 +224,11 @@ export default function MeetingManagePage() {
                   required
                   value={formData.startTime}
                   onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                   종료 시간 *
                 </label>
                 <input
@@ -236,13 +236,13 @@ export default function MeetingManagePage() {
                   required
                   value={formData.endTime}
                   onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 장소
               </label>
               <input
@@ -250,12 +250,12 @@ export default function MeetingManagePage() {
                 value={formData.location}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                 placeholder="예: 서울시민체육관"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 주소
               </label>
               <input
@@ -263,12 +263,12 @@ export default function MeetingManagePage() {
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 placeholder="상세 주소"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 참가비 (원)
               </label>
               <input
@@ -276,12 +276,12 @@ export default function MeetingManagePage() {
                 min="0"
                 value={formData.fee}
                 onChange={(e) => setFormData({ ...formData, fee: parseInt(e.target.value) })}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 메모
               </label>
               <textarea
@@ -289,14 +289,14 @@ export default function MeetingManagePage() {
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 rows={3}
                 placeholder="일정에 대한 추가 안내사항"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 sm:px-4 py-2 focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
               />
             </div>
 
             <button
               type="submit"
               disabled={isCreating}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+              className="w-full bg-blue-600 text-white py-2.5 sm:py-3 rounded-lg font-semibold hover-hover:hover:bg-blue-700 transition disabled:opacity-50 text-sm sm:text-base"
             >
               {isCreating ? "생성 중..." : "일정 생성"}
             </button>
@@ -304,20 +304,21 @@ export default function MeetingManagePage() {
         </div>
 
         {/* 일정 목록 */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+          <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">등록된 일정</h2>
           {schedules.length === 0 ? (
-            <p className="text-gray-600 text-center py-8">아직 생성된 일정이 없습니다</p>
+            <p className="text-gray-600 text-center py-6 sm:py-8 text-sm sm:text-base">아직 생성된 일정이 없습니다</p>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {schedules.map((schedule) => (
                 <div
                   key={schedule.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition"
+                  className="border border-gray-200 rounded-lg p-3 sm:p-4 hover:border-blue-300 transition"
                 >
-                  <div className="flex justify-between items-start">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                        <h3 className="text-sm sm:text-lg font-semibold">
                           {new Date(schedule.date).toLocaleDateString('ko-KR', {
                             year: 'numeric',
                             month: 'long',
@@ -325,7 +326,7 @@ export default function MeetingManagePage() {
                             weekday: 'short',
                           })}
                         </h3>
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
                           schedule.status === 'OPEN' ? 'bg-green-100 text-green-800' :
                           schedule.status === 'CLOSED' ? 'bg-gray-100 text-gray-800' :
                           schedule.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
@@ -336,17 +337,17 @@ export default function MeetingManagePage() {
                            schedule.status === 'COMPLETED' ? '완료' : '취소'}
                         </span>
                       </div>
-                      <div className="text-sm text-gray-600 space-y-1">
+                      <div className="text-xs sm:text-sm text-gray-600 space-y-0.5 sm:space-y-1">
                         <p>⏰ {schedule.startTime} - {schedule.endTime}</p>
-                        {schedule.location && <p>📍 {schedule.location}</p>}
+                        {schedule.location && <p className="truncate">📍 {schedule.location}</p>}
                         <p>👥 {schedule.currentCount}/{schedule.maxParticipants}명</p>
                         {schedule.fee > 0 && <p>💰 {schedule.fee.toLocaleString()}원</p>}
-                        {schedule.notes && <p className="mt-2 text-gray-700">📝 {schedule.notes}</p>}
+                        {schedule.notes && <p className="mt-1 sm:mt-2 text-gray-700 text-xs sm:text-sm">📝 {schedule.notes}</p>}
                       </div>
                     </div>
                     <button
                       onClick={() => handleDeleteSchedule(schedule.id)}
-                      className="ml-4 text-red-600 hover:text-red-700 text-sm font-medium"
+                      className="self-end sm:self-auto text-red-600 hover:text-red-700 text-xs sm:text-sm font-medium px-3 py-1.5 sm:px-0 sm:py-0 border sm:border-0 border-red-200 rounded sm:rounded-none"
                     >
                       삭제
                     </button>

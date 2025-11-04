@@ -27,7 +27,8 @@
       "Bash(npx shadcn-ui@latest add:*)",
       "Bash(npx shadcn@latest add select input textarea label dropdown-menu tabs scroll-area --yes)",
       "Bash(find:*)",
-      "Bash(powershell -Command \"Get-ChildItem -Path ''app'' -Filter ''*.tsx'' -Recurse | Where-Object { $_FullName -notlike ''*node_modules*'' -and $_Name -ne ''button.tsx'' -and $_Name -ne ''badge.tsx'' } | ForEach-Object { (Get-Content $_FullName -Raw) -replace '' hover:'', '' hover-hover:hover:'' | Set-Content $_FullName -NoNewline }\")"
+      "Bash(powershell -Command \"Get-ChildItem -Path ''app'' -Filter ''*.tsx'' -Recurse | Where-Object { $_FullName -notlike ''*node_modules*'' -and $_Name -ne ''button.tsx'' -and $_Name -ne ''badge.tsx'' } | ForEach-Object { (Get-Content $_FullName -Raw) -replace '' hover:'', '' hover-hover:hover:'' | Set-Content $_FullName -NoNewline }\")",
+      "Bash(node scripts/create-storage-buckets.js:*)"
     ],
     "deny": [],
     "ask": []

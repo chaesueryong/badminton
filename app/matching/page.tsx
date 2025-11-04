@@ -78,6 +78,33 @@ const levelColors: Record<SkillLevel, string> = {
 
 const skillLevelOrder: SkillLevel[] = ["BEGINNER", "D_GRADE", "C_GRADE", "INTERMEDIATE", "B_GRADE", "ADVANCED", "A_GRADE", "EXPERT", "S_GRADE"];
 
+// 생년월일로부터 나이 계산하는 함수
+function calculateAge(birthdate: string | null): number | null {
+  if (!birthdate) return null;
+
+  // YYYY.MM.DD 또는 YYYY-MM-DD 형식 파싱
+  const match = birthdate.match(/^(\d{4})[.\-](\d{2})[.\-](\d{2})$/);
+  if (!match) return null;
+
+  const birthYear = parseInt(match[1]);
+  const birthMonth = parseInt(match[2]);
+  const birthDay = parseInt(match[3]);
+
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
+  const currentDay = today.getDate();
+
+  let age = currentYear - birthYear;
+
+  // 생일이 아직 안 지났으면 1살 빼기
+  if (currentMonth < birthMonth || (currentMonth === birthMonth && currentDay < birthDay)) {
+    age--;
+  }
+
+  return age;
+}
+
 interface User {
   id: string;
   name: string;
@@ -93,6 +120,7 @@ interface User {
   preferredStyle?: string | null;
   experience?: number | null;
   age?: number | null;
+  birthdate?: string | null;
 }
 
 export default function MatchingPage() {
@@ -273,10 +301,10 @@ export default function MatchingPage() {
               </select>
             </div>
 
-            {/* 실력 급수 범위 */}
+            {/* 급수 범위 */}
             <div className="lg:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                실력 급수
+                급수
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <select
@@ -403,33 +431,40 @@ export default function MatchingPage() {
             <p className="text-gray-600">검색 조건에 맞는 파트너가 없습니다.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {users.map((user) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {users.map((user, index) => (
               <div
                 key={user.id}
-                className="bg-white rounded-lg shadow-md hover:shadow-lg transition p-6"
+                className="bg-white rounded-lg shadow-md hover-hover:hover:shadow-lg transition p-4 sm:p-6 relative"
               >
+                {/* HOT 태그 - 상위 3명에게만 표시 */}
+                {index < 3 && (
+                  <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10 flex items-center gap-1">
+                    <span className="text-yellow-200">🔥</span> HOT
+                  </div>
+                )}
+
                 {/* 프로필 */}
-                <div className="flex items-center mb-4">
-                  <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mr-4 overflow-hidden">
+                <div className="flex items-center mb-3 sm:mb-4">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-bold mr-3 sm:mr-4 overflow-hidden flex-shrink-0">
                     {user.profileImage && user.profileImage !== '/default-avatar.png' ? (
                       <img src={user.profileImage} alt={user.nickname} className="w-full h-full object-cover" />
                     ) : (
-                      <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                       </svg>
                     )}
                   </div>
-                  <div>
-                    <h3 className="text-xl font-semibold">{user.nickname}</h3>
-                    <p className="text-gray-600 text-sm">{user.region}</p>
+                  <div className="min-w-0">
+                    <h3 className="text-base sm:text-xl font-semibold truncate">{user.nickname}</h3>
+                    <p className="text-gray-600 text-xs sm:text-sm truncate">{user.region}</p>
                   </div>
                 </div>
 
                 {/* 레벨 */}
-                <div className="flex gap-2 mb-4">
+                <div className="flex gap-2 mb-3 sm:mb-4">
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium ${
                       levelColors[user.level]
                     }`}
                   >
@@ -438,20 +473,22 @@ export default function MatchingPage() {
                 </div>
 
                 {/* 사용자 정보 */}
-                <div className="space-y-2 mb-4 py-4 border-t border-b border-gray-200">
-                  <div className="flex justify-between text-sm">
+                <div className="space-y-1.5 sm:space-y-2 mb-3 sm:mb-4 py-3 sm:py-4 border-t border-b border-gray-200">
+                  <div className="flex justify-between text-xs sm:text-sm">
                     <span className="text-gray-600">성별</span>
                     <span className="font-medium">{user.gender === "MALE" ? "남성" : user.gender === "FEMALE" ? "여성" : "-"}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-xs sm:text-sm">
                     <span className="text-gray-600">나이</span>
-                    <span className="font-medium">{user.age ? `${user.age}세` : "-"}</span>
+                    <span className="font-medium">
+                      {user.birthdate ? `${calculateAge(user.birthdate)}세` : user.age ? `${user.age}세` : "-"}
+                    </span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-xs sm:text-sm">
                     <span className="text-gray-600">경력</span>
                     <span className="font-medium">{user.experience ? `${user.experience}년` : "-"}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-xs sm:text-sm">
                     <span className="text-gray-600">선호 스타일</span>
                     <span className="font-medium">
                       {user.preferredStyle === "ALL" ? "전체" :
@@ -464,8 +501,8 @@ export default function MatchingPage() {
 
                 {/* 자기소개 */}
                 {user.bio && (
-                  <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-700 line-clamp-2">
+                  <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-gray-50 rounded-lg">
+                    <p className="text-xs sm:text-sm text-gray-700 line-clamp-2">
                       {user.bio}
                     </p>
                   </div>
@@ -476,7 +513,7 @@ export default function MatchingPage() {
                   {currentUserId === user.id ? (
                     <Link
                       href="/profile"
-                      className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-center hover:bg-blue-700 transition"
+                      className="flex-1 bg-blue-600 text-white py-1.5 sm:py-2 rounded-lg text-center hover-hover:hover:bg-blue-700 transition text-xs sm:text-sm"
                     >
                       프로필 수정
                     </Link>
@@ -484,11 +521,11 @@ export default function MatchingPage() {
                     <>
                       <Link
                         href={`/profile/${user.id}`}
-                        className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg text-center hover:bg-gray-200 transition"
+                        className="flex-1 bg-gray-100 text-gray-700 py-1.5 sm:py-2 rounded-lg text-center hover-hover:hover:bg-gray-200 transition text-xs sm:text-sm"
                       >
                         프로필
                       </Link>
-                      <button className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
+                      <button className="flex-1 bg-blue-600 text-white py-1.5 sm:py-2 rounded-lg hover-hover:hover:bg-blue-700 transition text-xs sm:text-sm">
                         메시지
                       </button>
                     </>

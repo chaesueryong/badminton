@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
@@ -105,16 +105,7 @@ export default function CommunityPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsLoggedIn(!!session);
-    };
-    checkAuth();
-    fetchPosts();
-  }, [supabase, page, selectedCategory]);
-
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     try {
       setIsLoading(true);
       const params = new URLSearchParams();
@@ -145,7 +136,16 @@ export default function CommunityPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page, selectedCategory, searchQuery]);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsLoggedIn(!!session);
+    };
+    checkAuth();
+    fetchPosts();
+  }, [fetchPosts]);
 
   const applyFilters = () => {
     setPage(1);
@@ -156,17 +156,17 @@ export default function CommunityPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4 max-w-5xl">
         {/* 헤더 */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">커뮤니티</h1>
-            <p className="text-gray-600 mt-2">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">커뮤니티</h1>
+            <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
               배드민턴 이야기를 나누는 공간
             </p>
           </div>
           {isLoggedIn && (
             <Link
               href="/community/write"
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
+              className="bg-blue-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover-hover:hover:bg-blue-700 transition text-sm sm:text-base"
             >
               글쓰기
             </Link>
@@ -174,18 +174,19 @@ export default function CommunityPage() {
         </div>
 
         {/* 검색 바 */}
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 mb-4 sm:mb-6">
           <div className="flex gap-2">
             <input
               type="text"
               placeholder="제목 또는 내용으로 검색..."
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && applyFilters()}
             />
             <button
               onClick={applyFilters}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+              className="bg-blue-600 text-white px-4 sm:px-6 py-2 rounded-lg hover-hover:hover:bg-blue-700 transition text-sm sm:text-base"
             >
               검색
             </button>
@@ -193,13 +194,13 @@ export default function CommunityPage() {
         </div>
 
         {/* 카테고리 탭 */}
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-          <div className="flex flex-wrap gap-2">
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 mb-4 sm:mb-6 overflow-x-auto">
+          <div className="flex gap-2 min-w-max sm:flex-wrap">
             <button
-              className={`px-4 py-2 rounded-lg transition ${
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition text-sm sm:text-base whitespace-nowrap ${
                 selectedCategory === ""
                   ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-gray-100 text-gray-700 hover-hover:hover:bg-gray-200"
               }`}
               onClick={() => setSelectedCategory("")}
             >
@@ -208,10 +209,10 @@ export default function CommunityPage() {
             {Object.entries(categoryLabels).map(([key, label]) => (
               <button
                 key={key}
-                className={`px-4 py-2 rounded-lg transition ${
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition text-sm sm:text-base whitespace-nowrap ${
                   selectedCategory === key
                     ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    : "bg-gray-100 text-gray-700 hover-hover:hover:bg-gray-200"
                 }`}
                 onClick={() => setSelectedCategory(key)}
               >
@@ -237,47 +238,47 @@ export default function CommunityPage() {
             <Link
               key={post.id}
               href={`/community/${post.id}`}
-              className={`block p-6 hover:bg-gray-50 transition ${
-                index !== mockPosts.length - 1 ? "border-b border-gray-200" : ""
+              className={`block p-4 sm:p-6 hover-hover:hover:bg-gray-50 transition ${
+                index !== posts.length - 1 ? "border-b border-gray-200" : ""
               }`}
             >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
                   {/* 제목과 카테고리 */}
-                  <div className="flex items-center gap-3 mb-2">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium flex-shrink-0 ${
                         categoryColors[post.category]
                       }`}
                     >
                       {categoryLabels[post.category]}
                     </span>
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 break-words">
                       {post.title}
                     </h3>
                   </div>
 
                   {/* 내용 미리보기 */}
-                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                  <p className="text-gray-600 text-xs sm:text-sm mb-2 sm:mb-3 line-clamp-2">
                     {post.content}
                   </p>
 
                   {/* 메타 정보 */}
-                  <div className="flex items-center gap-4 text-sm text-gray-500">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500">
                     <span>{post.author.nickname || post.author.name}</span>
-                    <span>•</span>
+                    <span className="hidden sm:inline">•</span>
                     <span>{post.createdAt}</span>
-                    <span>•</span>
+                    <span className="hidden sm:inline">•</span>
                     <span>조회 {post.views}</span>
-                    <span>•</span>
+                    <span className="hidden sm:inline">•</span>
                     <span>댓글 {post.commentCount}</span>
                   </div>
                 </div>
 
                 {/* 좋아요 */}
-                <div className="ml-4 text-center">
-                  <div className="text-red-500 text-xl mb-1">❤️</div>
-                  <div className="text-sm font-semibold">{post.likes}</div>
+                <div className="text-center flex-shrink-0">
+                  <div className="text-red-500 text-lg sm:text-xl mb-0.5 sm:mb-1">❤️</div>
+                  <div className="text-xs sm:text-sm font-semibold">{post.likes}</div>
                 </div>
               </div>
             </Link>

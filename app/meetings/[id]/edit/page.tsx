@@ -1,43 +1,123 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import RegionSelect from "@/components/RegionSelect";
+import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import ImageUpload from "@/components/SimpleImageUpload";
+import RegionSelect from "@/components/RegionSelect";
 
 // Storage bucket name for meetings
 const STORAGE_BUCKETS = {
   MEETINGS: "meetings",
 };
 
-export default function CreateMeetingPage() {
+interface Meeting {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  address: string;
+  maxParticipants: number;
+  fee: number;
+  feePeriod?: string;
+  levelMin?: string;
+  levelMax?: string;
+  region?: string;
+  thumbnailImage?: string;
+  requiredGender?: string;
+  ageMin?: number;
+  ageMax?: number;
+  hostId: string;
+}
+
+export default function MeetingEditPage() {
+  const params = useParams();
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [feePeriod, setFeePeriod] = useState<"monthly" | "quarterly" | "yearly">("monthly");
+  const supabase = createClientComponentClient();
+  const [meeting, setMeeting] = useState<Meeting | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // Form data - matching create page structure
+  const [thumbnailImage, setThumbnailImage] = useState<string>("");
+  const [feePeriod, setFeePeriod] = useState<"perSession" | "monthly" | "quarterly" | "yearly">("perSession");
   const [levelRange, setLevelRange] = useState({ min: "", max: "" });
   const [selectedRegion, setSelectedRegion] = useState({ province: "", city: "" });
-  const [thumbnailImage, setThumbnailImage] = useState<string>("");
 
-  // 로그인 체크 임시 비활성화 (UI 확인용)
-  // useEffect(() => {
-  //   const checkAuth = async () => {
-  //     const { data: { session } } = await supabase.auth.getSession();
-  //     if (!session) {
-  //       alert("로그인이 필요합니다");
-  //       router.push("/login");
-  //     }
-  //   };
-  //   checkAuth();
-  // }, [router, supabase]);
+  useEffect(() => {
+    fetchCurrentUser();
+    fetchMeeting();
+  }, [params.id]);
 
-  // 이미지 업로드 핸들러 (임시 비활성화)
-  // const handleImageUpload = (url: string, path: string) => {
-  //   setImageUrl(url);
-  // };
+  const fetchCurrentUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      setCurrentUserId(user.id);
+    }
+  };
+
+  const fetchMeeting = async () => {
+    try {
+      const response = await fetch(`/api/meetings/${params.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setMeeting(data);
+
+        // 호스트가 아니면 접근 불가
+        if (currentUserId && data.hostId !== currentUserId) {
+          alert("모임 수정 권한이 없습니다");
+          router.push(`/meetings/${params.id}`);
+          return;
+        }
+
+        // Form에 데이터 설정
+        setThumbnailImage(data.thumbnailImage || "");
+        setLevelRange({
+          min: data.levelMin || "",
+          max: data.levelMax || ""
+        });
+
+        // feePeriod 매핑
+        if (data.feePeriod === "monthly") {
+          setFeePeriod("monthly");
+        } else if (data.feePeriod === "quarterly") {
+          setFeePeriod("quarterly");
+        } else if (data.feePeriod === "yearly") {
+          setFeePeriod("yearly");
+        } else {
+          setFeePeriod("perSession");
+        }
+
+        // 지역 설정
+        if (data.region) {
+          const [prov, cit] = data.region.split(' ');
+          setSelectedRegion({
+            province: prov || "",
+            city: cit || ""
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch meeting:", error);
+      alert("모임 정보를 불러오는데 실패했습니다");
+      router.push(`/meetings/${params.id}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsSubmitting(true);
+
+    if (!currentUserId || !meeting) return;
+
+    if (meeting.hostId !== currentUserId) {
+      alert("모임 수정 권한이 없습니다");
+      return;
+    }
+
+    setIsSaving(true);
 
     const formData = new FormData(e.currentTarget);
 
@@ -62,25 +142,41 @@ export default function CreateMeetingPage() {
     };
 
     try {
-      const response = await fetch("/api/meetings", {
-        method: "POST",
+      const response = await fetch(`/api/meetings/${params.id}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
       if (response.ok) {
-        const meeting = await response.json();
-        router.push(`/meetings/${meeting.id}`);
+        alert("모임이 수정되었습니다!");
+        router.push(`/meetings/${params.id}`);
       } else {
-        alert("모임 생성에 실패했습니다");
+        const error = await response.json();
+        alert(error.error || "모임 수정에 실패했습니다");
       }
     } catch (error) {
-      console.error(error);
+      console.error("Failed to update meeting:", error);
       alert("오류가 발생했습니다");
     } finally {
-      setIsSubmitting(false);
+      setIsSaving(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">로딩 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!meeting || !currentUserId || meeting.hostId !== currentUserId) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -88,7 +184,7 @@ export default function CreateMeetingPage() {
         {/* 헤더 */}
         <div className="mb-8">
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push(`/meetings/${params.id}`)}
             className="flex items-center text-gray-600 hover:text-gray-900 mb-4 text-sm"
           >
             <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -98,9 +194,9 @@ export default function CreateMeetingPage() {
           </button>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
             <span className="text-3xl">🏸</span>
-            모임 만들기
+            모임 수정
           </h1>
-          <p className="text-gray-600 mt-2 text-sm">함께 운동할 동료들을 모집해보세요</p>
+          <p className="text-gray-600 mt-2 text-sm">모임 정보를 수정할 수 있습니다</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -135,6 +231,7 @@ export default function CreateMeetingPage() {
                 id="title"
                 name="title"
                 required
+                defaultValue={meeting.title}
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="예: 강남 배드민턴 클럽"
               />
@@ -149,6 +246,7 @@ export default function CreateMeetingPage() {
                 id="description"
                 name="description"
                 rows={5}
+                defaultValue={meeting.description}
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="모임에 대해 자유롭게 소개해주세요&#10;- 모임 분위기&#10;- 참가 대상&#10;- 준비물&#10;- 기타 안내사항"
               />
@@ -157,7 +255,9 @@ export default function CreateMeetingPage() {
             {/* 지역 */}
             <RegionSelect
               showLabel={true}
-              required={true}
+              required={false}
+              defaultProvince={selectedRegion.province}
+              defaultCity={selectedRegion.city}
               onChange={(province, city) => setSelectedRegion({ province, city })}
             />
           </div>
@@ -178,7 +278,7 @@ export default function CreateMeetingPage() {
                 required
                 min="2"
                 max="50"
-                defaultValue="8"
+                defaultValue={meeting.maxParticipants}
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               <p className="text-sm text-gray-500 mt-1">2~50명</p>
@@ -242,7 +342,7 @@ export default function CreateMeetingPage() {
               <select
                 id="requiredGender"
                 name="requiredGender"
-                defaultValue="ANY"
+                defaultValue={meeting.requiredGender || "ANY"}
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500"
               >
                 <option value="ANY">제한 없음</option>
@@ -267,6 +367,7 @@ export default function CreateMeetingPage() {
                     name="ageMin"
                     min="1"
                     max="100"
+                    defaultValue={meeting.ageMin || ""}
                     placeholder="예: 20"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                   />
@@ -281,6 +382,7 @@ export default function CreateMeetingPage() {
                     name="ageMax"
                     min="1"
                     max="100"
+                    defaultValue={meeting.ageMax || ""}
                     placeholder="예: 40"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                   />
@@ -302,7 +404,7 @@ export default function CreateMeetingPage() {
                     name="fee"
                     min="0"
                     step="1000"
-                    defaultValue="0"
+                    defaultValue={meeting.fee}
                     className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="0"
                   />
@@ -312,9 +414,10 @@ export default function CreateMeetingPage() {
                     id="feePeriod"
                     name="feePeriod"
                     value={feePeriod}
-                    onChange={(e) => setFeePeriod(e.target.value as "monthly" | "quarterly" | "yearly")}
+                    onChange={(e) => setFeePeriod(e.target.value as "perSession" | "monthly" | "quarterly" | "yearly")}
                     className="w-full border border-gray-300 rounded-lg px-4 py-3"
                   >
+                    <option value="perSession">원/회</option>
                     <option value="monthly">원/월</option>
                     <option value="quarterly">원/분기</option>
                     <option value="yearly">원/연</option>
@@ -331,22 +434,19 @@ export default function CreateMeetingPage() {
           <div className="flex gap-3 pt-4">
             <button
               type="button"
-              onClick={() => router.back()}
+              onClick={() => router.push(`/meetings/${params.id}`)}
               className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
             >
               취소
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSaving}
               className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? "생성 중..." : "모임 만들기"}
+              {isSaving ? "저장 중..." : "변경사항 저장"}
             </button>
           </div>
-          <p className="text-center text-xs text-gray-500 mt-3">
-            모임을 만들면 자동으로 호스트가 됩니다
-          </p>
         </form>
       </div>
     </div>

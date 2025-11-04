@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import type { User } from "@supabase/supabase-js";
 
@@ -40,6 +40,30 @@ export default function MessagesPage() {
   const [messageText, setMessageText] = useState("");
   const [sending, setSending] = useState(false);
 
+  const loadConversations = useCallback(async (userId: string) => {
+    try {
+      const response = await fetch(`/api/messages?userId=${userId}`);
+      if (!response.ok) throw new Error('Failed to load conversations');
+
+      const data = await response.json();
+      setConversations(data);
+    } catch (error) {
+      console.error("대화 목록 로딩 실패:", error);
+    }
+  }, []);
+
+  const loadMessages = useCallback(async (userId: string, otherUserId: string) => {
+    try {
+      const response = await fetch(`/api/messages?userId=${userId}&otherUserId=${otherUserId}`);
+      if (!response.ok) throw new Error('Failed to load messages');
+
+      const data = await response.json();
+      setMessages(data);
+    } catch (error) {
+      console.error("메시지 로딩 실패:", error);
+    }
+  }, []);
+
   useEffect(() => {
     const initUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -72,7 +96,7 @@ export default function MessagesPage() {
     });
 
     return () => subscription.unsubscribe();
-  }, [router]);
+  }, [router, loadConversations]);
 
   useEffect(() => {
     if (user && selectedUserId) {
@@ -84,31 +108,7 @@ export default function MessagesPage() {
 
       return () => clearInterval(interval);
     }
-  }, [user, selectedUserId]);
-
-  const loadConversations = async (userId: string) => {
-    try {
-      const response = await fetch(`/api/messages?userId=${userId}`);
-      if (!response.ok) throw new Error('Failed to load conversations');
-
-      const data = await response.json();
-      setConversations(data);
-    } catch (error) {
-      console.error("대화 목록 로딩 실패:", error);
-    }
-  };
-
-  const loadMessages = async (userId: string, otherUserId: string) => {
-    try {
-      const response = await fetch(`/api/messages?userId=${userId}&otherUserId=${otherUserId}`);
-      if (!response.ok) throw new Error('Failed to load messages');
-
-      const data = await response.json();
-      setMessages(data);
-    } catch (error) {
-      console.error("메시지 로딩 실패:", error);
-    }
-  };
+  }, [user, selectedUserId, loadMessages]);
 
   const handleSendMessage = async () => {
     if (!user || !selectedUserId || !messageText.trim()) return;
