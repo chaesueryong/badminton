@@ -70,10 +70,11 @@ export async function GET(request: NextRequest) {
     });
 
     // 참여 모임 추가 (호스팅 모임과 중복되지 않은 것만)
-    participatingMeetings?.forEach((participation) => {
-      if (participation?.meetings && participation.meetings.id && !allMeetings.has(participation.meetings.id)) {
-        allMeetings.set(participation.meetings.id, {
-          ...participation.meetings,
+    participatingMeetings?.forEach((participation: any) => {
+      const meeting = participation?.meetings;
+      if (meeting && typeof meeting === 'object' && !Array.isArray(meeting) && meeting.id && !allMeetings.has(meeting.id)) {
+        allMeetings.set(meeting.id, {
+          ...meeting,
           isHost: false,
           isParticipant: true
         });

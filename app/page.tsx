@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -69,16 +69,7 @@ export default function Home() {
   const [popularMeetings, setPopularMeetings] = useState<Meeting[]>([]);
   const supabase = createClientComponentClient();
 
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setIsLoggedIn(!!user);
-    };
-    checkUser();
-    fetchPopularMeetings();
-  }, []);
-
-  const fetchPopularMeetings = async () => {
+  const fetchPopularMeetings = useCallback(async () => {
     try {
       const response = await fetch("/api/meetings?limit=6");
       if (response.ok) {
@@ -88,7 +79,16 @@ export default function Home() {
     } catch (error) {
       console.error("인기 모임 조회 실패:", error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsLoggedIn(!!user);
+    };
+    checkUser();
+    fetchPopularMeetings();
+  }, [fetchPopularMeetings]);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 pb-20 md:pb-8">

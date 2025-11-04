@@ -471,8 +471,10 @@ export default function ProfilePage() {
                     지역
                   </label>
                   <RegionSelect
-                    value={editFormData.region}
-                    onChange={(value) => setEditFormData({ ...editFormData, region: value })}
+                    defaultProvince={editFormData.region?.split(' ')[0] || ''}
+                    defaultCity={editFormData.region?.split(' ')[1] || ''}
+                    onChange={(province, city) => setEditFormData({ ...editFormData, region: `${province} ${city}` })}
+                    showLabel={false}
                   />
                 </div>
                 <div>

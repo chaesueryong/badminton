@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
@@ -105,16 +105,7 @@ export default function CommunityPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsLoggedIn(!!session);
-    };
-    checkAuth();
-    fetchPosts();
-  }, [supabase, page, selectedCategory]);
-
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     try {
       setIsLoading(true);
       const params = new URLSearchParams();
@@ -145,7 +136,16 @@ export default function CommunityPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page, selectedCategory, searchQuery]);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsLoggedIn(!!session);
+    };
+    checkAuth();
+    fetchPosts();
+  }, [fetchPosts]);
 
   const applyFilters = () => {
     setPage(1);

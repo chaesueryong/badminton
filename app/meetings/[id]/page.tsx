@@ -225,7 +225,7 @@ export default function MeetingDetailPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-32 md:pb-0">
       {/* 상단 이미지 */}
-      {(meeting.thumbnailImage || (meeting.images?.length > 0)) && (
+      {(meeting.thumbnailImage || (meeting.images && meeting.images.length > 0)) && (
         <div className="w-full h-48 sm:h-64 md:h-96 bg-gray-200">
           <img
             src={meeting.thumbnailImage || meeting.images?.[0]}
