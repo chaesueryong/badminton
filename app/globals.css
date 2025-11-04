@@ -76,11 +76,18 @@ select option {
   padding: 8px 12px !important;
 }
 
-select option:hover,
 select option:focus,
 select option:checked {
   background-color: #3b82f6 !important; /* blue-600 */
   color: white !important;
+}
+
+/* hover 효과는 hover가 가능한 디바이스에서만 적용 */
+@media (hover: hover) {
+  select option:hover {
+    background-color: #3b82f6 !important; /* blue-600 */
+    color: white !important;
+  }
 }
 
 /* 다크모드에서도 동일하게 적용 */
@@ -95,10 +102,17 @@ select option:checked {
     color: #111827 !important;
   }
 
-  select option:hover,
   select option:focus,
   select option:checked {
     background-color: #3b82f6 !important;
     color: white !important;
+  }
+
+  /* hover 효과는 hover가 가능한 디바이스에서만 적용 */
+  @media (hover: hover) {
+    select option:hover {
+      background-color: #3b82f6 !important;
+      color: white !important;
+    }
   }
 }

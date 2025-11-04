@@ -172,7 +172,7 @@ export default function MeetingsPage() {
                       variant="ghost"
                       size="sm"
                       onClick={clearFilters}
-                      className="h-9 md:hover:bg-red-50 md:hover:text-red-600 active:scale-95 transition-colors"
+                      className="h-9 hover-hover:hover:bg-red-50 hover-hover:hover:text-red-600 active:scale-95 transition-colors"
                     >
                       <X className="h-4 w-4 mr-1" />
                       초기화
@@ -219,7 +219,7 @@ export default function MeetingsPage() {
                     <select
                       value={filters.levelMin}
                       onChange={(e) => handleFilterChange("levelMin", e.target.value)}
-                      className="w-full h-11 rounded-xl border-2 border-gray-200 bg-white px-4 py-2 text-sm font-medium transition-all md:hover:border-blue-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      className="w-full h-11 rounded-xl border-2 border-gray-200 bg-white px-4 py-2 text-sm font-medium transition-all hover-hover:hover:border-blue-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                     >
                       <option value="">🎯 전체</option>
                       {Object.entries(levelLabels).map(([value, label]) => (
@@ -239,7 +239,7 @@ export default function MeetingsPage() {
                     <select
                       value={filters.levelMax}
                       onChange={(e) => handleFilterChange("levelMax", e.target.value)}
-                      className="w-full h-11 rounded-xl border-2 border-gray-200 bg-white px-4 py-2 text-sm font-medium transition-all md:hover:border-blue-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      className="w-full h-11 rounded-xl border-2 border-gray-200 bg-white px-4 py-2 text-sm font-medium transition-all hover-hover:hover:border-blue-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                     >
                       <option value="">🎯 전체</option>
                       {Object.entries(levelLabels).map(([value, label]) => (
@@ -255,7 +255,7 @@ export default function MeetingsPage() {
                 <div className="flex justify-center md:justify-start pt-2">
                   <Button
                     onClick={applyFilters}
-                    className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-purple-600 md:hover:from-blue-700 md:hover:to-purple-700 active:scale-95 text-white px-8 py-2.5 rounded-xl font-semibold shadow-lg md:hover:shadow-xl transform md:hover:scale-105 transition-all"
+                    className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover-hover:hover:from-blue-700 hover-hover:hover:to-purple-700 active:scale-95 text-white px-8 py-2.5 rounded-xl font-semibold shadow-lg hover-hover:hover:shadow-xl transform hover-hover:hover:scale-105 transition-all"
                   >
                     <Search className="w-5 h-5 mr-2" />
                     모임 검색하기
@@ -287,10 +287,10 @@ export default function MeetingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {meetings.map((meeting) => (
                 <Link key={meeting.id} href={`/meetings/${meeting.id}`}>
-                  <Card className="h-full md:hover:shadow-lg active:scale-[0.98] transition-all duration-300 cursor-pointer group">
+                  <Card className="h-full hover-hover:hover:shadow-lg active:scale-[0.98] transition-all duration-300 cursor-pointer group">
                     <CardHeader>
                       <div className="flex items-start justify-between gap-2">
-                        <CardTitle className="text-lg md:group-hover:text-primary transition-colors line-clamp-2">
+                        <CardTitle className="text-lg group-hover-hover:hover:text-primary transition-colors line-clamp-2">
                           {meeting.title}
                         </CardTitle>
                         <Badge variant={statusConfig[meeting.status].variant} className="flex-shrink-0">

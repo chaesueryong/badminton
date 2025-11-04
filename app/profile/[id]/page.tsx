@@ -249,7 +249,7 @@ export default function ProfilePage() {
                       setIsEditing(true);
                     }
                   }}
-                  className="bg-white/20 hover:bg-white/30 px-6 py-2 rounded-lg transition"
+                  className="bg-white/20 hover-hover:hover:bg-white/30 px-6 py-2 rounded-lg transition"
                 >
                   {isEditing ? "취소" : "프로필 수정"}
                 </button>
@@ -489,7 +489,7 @@ export default function ProfilePage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400"
+                  className="w-full bg-blue-600 text-white py-3 rounded-lg hover-hover:hover:bg-blue-700 transition disabled:bg-gray-400"
                 >
                   {submitting ? "저장 중..." : "저장하기"}
                 </button>

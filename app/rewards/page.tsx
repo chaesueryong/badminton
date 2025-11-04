@@ -164,7 +164,7 @@ export default function RewardsPage() {
               return (
                 <div
                   key={reward.id}
-                  className={`bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-105 ${
+                  className={`bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover-hover:hover:shadow-2xl hover-hover:hover:scale-105 ${
                     !canAfford || !isAvailable ? "opacity-60" : ""
                   }`}
                 >
@@ -213,7 +213,7 @@ export default function RewardsPage() {
                         disabled={!canAfford || !isAvailable}
                         className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
                           canAfford && isAvailable
-                            ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 shadow-md hover:shadow-lg"
+                            ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover-hover:hover:from-indigo-700 hover-hover:hover:to-purple-700 shadow-md hover-hover:hover:shadow-lg"
                             : "bg-gray-300 text-gray-500 cursor-not-allowed"
                         }`}
                       >
@@ -237,42 +237,42 @@ export default function RewardsPage() {
             💡 포인트 획득 방법
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="flex items-center gap-4 bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-4 bg-white p-4 rounded-lg shadow-sm hover-hover:hover:shadow-md transition-shadow">
               <span className="text-3xl">🏸</span>
               <div>
                 <div className="font-semibold text-blue-900">모임 참여</div>
                 <div className="text-lg font-bold text-indigo-600">50 P</div>
               </div>
             </div>
-            <div className="flex items-center gap-4 bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-4 bg-white p-4 rounded-lg shadow-sm hover-hover:hover:shadow-md transition-shadow">
               <span className="text-3xl">✅</span>
               <div>
                 <div className="font-semibold text-blue-900">모임 완료</div>
                 <div className="text-lg font-bold text-indigo-600">100 P</div>
               </div>
             </div>
-            <div className="flex items-center gap-4 bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-4 bg-white p-4 rounded-lg shadow-sm hover-hover:hover:shadow-md transition-shadow">
               <span className="text-3xl">📝</span>
               <div>
                 <div className="font-semibold text-blue-900">게시글 작성</div>
                 <div className="text-lg font-bold text-indigo-600">10 P</div>
               </div>
             </div>
-            <div className="flex items-center gap-4 bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-4 bg-white p-4 rounded-lg shadow-sm hover-hover:hover:shadow-md transition-shadow">
               <span className="text-3xl">⭐</span>
               <div>
                 <div className="font-semibold text-blue-900">리뷰 작성</div>
                 <div className="text-lg font-bold text-indigo-600">30 P</div>
               </div>
             </div>
-            <div className="flex items-center gap-4 bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-4 bg-white p-4 rounded-lg shadow-sm hover-hover:hover:shadow-md transition-shadow">
               <span className="text-3xl">🎯</span>
               <div>
                 <div className="font-semibold text-blue-900">경기 승리</div>
                 <div className="text-lg font-bold text-indigo-600">150 P</div>
               </div>
             </div>
-            <div className="flex items-center gap-4 bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-4 bg-white p-4 rounded-lg shadow-sm hover-hover:hover:shadow-md transition-shadow">
               <span className="text-3xl">👥</span>
               <div>
                 <div className="font-semibold text-blue-900">친구 초대</div>
@@ -321,13 +321,13 @@ export default function RewardsPage() {
                     setShowRedeemModal(false);
                     setSelectedReward(null);
                   }}
-                  className="flex-1 px-6 py-3 border-2 border-gray-300 rounded-xl hover:bg-gray-50 transition-all duration-300 font-medium"
+                  className="flex-1 px-6 py-3 border-2 border-gray-300 rounded-xl hover-hover:hover:bg-gray-50 transition-all duration-300 font-medium"
                 >
                   취소
                 </button>
                 <button
                   onClick={handleRedeem}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl font-medium"
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover-hover:hover:from-indigo-700 hover-hover:hover:to-purple-700 transition-all duration-300 shadow-lg hover-hover:hover:shadow-xl font-medium"
                 >
                   교환하기
                 </button>
