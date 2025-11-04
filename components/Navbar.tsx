@@ -104,7 +104,7 @@ export default function Navbar() {
                 className={`px-4 py-2 rounded-lg transition-all ${
                   isActive('/meetings')
                     ? 'bg-blue-50 text-blue-600 font-medium'
-                    : 'text-gray-700 md:hover:bg-gray-50'
+                    : 'text-gray-700 hover-hover:hover:bg-gray-50'
                 }`}
               >
                 모임
@@ -114,7 +114,7 @@ export default function Navbar() {
                 className={`px-4 py-2 rounded-lg transition-all ${
                   isActive('/gyms')
                     ? 'bg-blue-50 text-blue-600 font-medium'
-                    : 'text-gray-700 md:hover:bg-gray-50'
+                    : 'text-gray-700 hover-hover:hover:bg-gray-50'
                 }`}
               >
                 체육관
@@ -124,7 +124,7 @@ export default function Navbar() {
                 className={`px-4 py-2 rounded-lg transition-all ${
                   isActive('/community')
                     ? 'bg-blue-50 text-blue-600 font-medium'
-                    : 'text-gray-700 md:hover:bg-gray-50'
+                    : 'text-gray-700 hover-hover:hover:bg-gray-50'
                 }`}
               >
                 커뮤니티
@@ -134,7 +134,7 @@ export default function Navbar() {
                 className={`px-4 py-2 rounded-lg transition-all ${
                   isActive('/matching')
                     ? 'bg-blue-50 text-blue-600 font-medium'
-                    : 'text-gray-700 md:hover:bg-gray-50'
+                    : 'text-gray-700 hover-hover:hover:bg-gray-50'
                 }`}
               >
                 매칭
@@ -144,7 +144,7 @@ export default function Navbar() {
                 className={`px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 ${
                   isActive('/leaderboard')
                     ? 'bg-blue-50 text-blue-600 font-medium'
-                    : 'text-gray-700 md:hover:bg-gray-50'
+                    : 'text-gray-700 hover-hover:hover:bg-gray-50'
                 }`}
               >
                 <Trophy className="w-4 h-4" />
@@ -155,7 +155,7 @@ export default function Navbar() {
                 className={`px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 ${
                   isActive('/rewards')
                     ? 'bg-blue-50 text-blue-600 font-medium'
-                    : 'text-gray-700 md:hover:bg-gray-50'
+                    : 'text-gray-700 hover-hover:hover:bg-gray-50'
                 }`}
               >
                 <Gift className="w-4 h-4" />
@@ -171,7 +171,7 @@ export default function Navbar() {
                 <>
                   <Link
                     href="/profile"
-                    className="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-gray-50 transition"
+                    className="flex items-center space-x-2 px-4 py-2 rounded-lg hover-hover:hover:bg-gray-50 transition"
                   >
                     <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium text-sm overflow-hidden">
                       {profileImage ? (
@@ -189,7 +189,7 @@ export default function Navbar() {
                       await supabase.auth.signOut();
                       window.location.href = "/";
                     }}
-                    className="text-sm text-gray-600 hover:text-gray-900 transition"
+                    className="text-sm text-gray-600 hover-hover:hover:text-gray-900 transition"
                   >
                     로그아웃
                   </button>
@@ -197,7 +197,7 @@ export default function Navbar() {
               ) : (
                 <Link
                   href="/login"
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-lg md:hover:from-blue-700 md:hover:to-indigo-700 active:scale-95 transition-all shadow-md md:hover:shadow-lg"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-lg hover-hover:hover:from-blue-700 hover-hover:hover:to-indigo-700 active:scale-95 transition-all shadow-md hover-hover:hover:shadow-lg"
                 >
                   로그인
                 </Link>

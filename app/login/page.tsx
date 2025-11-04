@@ -67,7 +67,7 @@ export default function LoginPage() {
           <div className="space-y-3">
               <button
                 onClick={() => handleSocialLogin('google')}
-                className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-50 transition"
+                className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 py-2 rounded-lg hover-hover:hover:bg-gray-50 transition"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path
@@ -92,7 +92,7 @@ export default function LoginPage() {
 
               <button
                 onClick={() => handleSocialLogin('kakao')}
-                className="w-full flex items-center justify-center gap-3 bg-[#FEE500] text-[#000000] py-2 rounded-lg hover:bg-[#FDD835] transition font-medium"
+                className="w-full flex items-center justify-center gap-3 bg-[#FEE500] text-[#000000] py-2 rounded-lg hover-hover:hover:bg-[#FDD835] transition font-medium"
               >
                 <svg
                   className="w-5 h-5"

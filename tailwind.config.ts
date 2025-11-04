@@ -77,6 +77,15 @@ const config: Config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    // 모바일에서 hover 효과를 비활성화하기 위한 플러그인
+    function({ addVariant }: any) {
+      // hover가 가능한 디바이스에서만 hover 스타일 적용
+      addVariant('hover-hover', '@media (hover: hover)');
+      // 터치 디바이스가 아닌 경우에만 적용
+      addVariant('not-touch', '@media (pointer: fine)');
+    }
+  ],
 };
 export default config;

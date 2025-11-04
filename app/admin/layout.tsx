@@ -96,7 +96,7 @@ export default function AdminLayout({
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${
                       isActive
                         ? "bg-indigo-600 text-white"
-                        : "text-gray-300 hover:bg-gray-800"
+                        : "text-gray-300 hover-hover:hover:bg-gray-800"
                     }`}
                   >
                     <span className="text-xl">{item.icon}</span>
@@ -113,7 +113,7 @@ export default function AdminLayout({
               <p className="mb-1">관리자: {userEmail}</p>
               <Link
                 href="/"
-                className="text-indigo-400 hover:text-indigo-300 transition"
+                className="text-indigo-400 hover-hover:hover:text-indigo-300 transition"
               >
                 사이트로 돌아가기 →
               </Link>

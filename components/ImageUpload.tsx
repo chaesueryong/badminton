@@ -126,7 +126,7 @@ export default function ImageUpload({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover-hover:hover:bg-blue-700 transition disabled:opacity-50"
           >
             {uploading ? "업로드 중..." : preview ? "이미지 변경" : "이미지 선택"}
           </button>
