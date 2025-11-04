@@ -53,9 +53,20 @@ jobs:
           username: ec2-user
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
           script: |
-            docker pull ghcr.io/${{ github.repository }}/badminton-prod:latest
+            # 기존 컨테이너 정지 및 제거 (이미지 삭제 전에 필요)
             docker stop badminton-prod || true
             docker rm badminton-prod || true
+
+            # 기존 이미지 삭제 (디스크 공간 확보)
+            docker rmi ghcr.io/${{ github.repository }}/badminton-prod:latest || true
+
+            # 사용하지 않는 이미지 정리 (dangling images)
+            docker image prune -f
+
+            # 새 이미지 pull
+            docker pull ghcr.io/${{ github.repository }}/badminton-prod:latest
+
+            # 새 컨테이너 실행
             docker run -d --name badminton-prod \
               -p 3030:3000 \
               -e NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }} \
@@ -65,3 +76,6 @@ jobs:
               -e SITE_URL=https://badmate.club \
               --restart unless-stopped \
               ghcr.io/${{ github.repository }}/badminton-prod:latest
+
+            # 컨테이너 상태 확인
+            docker ps | grep badminton-prod
