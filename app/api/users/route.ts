@@ -51,7 +51,8 @@ export async function GET(request: NextRequest) {
         gender,
         "preferredStyle",
         experience,
-        age
+        age,
+        birthdate
       `, { count: 'exact' })
       .order(orderColumn, { ascending: orderAscending });
 

@@ -16,7 +16,9 @@ import {
   Menu,
   X,
   Home,
-  User as UserIcon
+  User as UserIcon,
+  Bell,
+  MapPin
 } from "lucide-react";
 
 export default function Navbar() {
@@ -27,6 +29,7 @@ export default function Navbar() {
   const [user, setUser] = useState<User | null>(null);
   const [nickname, setNickname] = useState<string>("");
   const [profileImage, setProfileImage] = useState<string>("");
+  const [userRegion, setUserRegion] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,11 +38,11 @@ export default function Navbar() {
       setUser(session?.user ?? null);
       setLoading(false);
 
-      // 닉네임과 프로필 이미지 가져오기
+      // 닉네임, 프로필 이미지, 지역 가져오기
       if (session?.user) {
         supabase
           .from('users')
-          .select('nickname, profileImage')
+          .select('nickname, profileImage, region')
           .eq('id', session.user.id)
           .maybeSingle()
           .then(({ data: userData }) => {
@@ -48,6 +51,9 @@ export default function Navbar() {
             }
             if (userData?.profileImage) {
               setProfileImage(userData.profileImage);
+            }
+            if (userData?.region) {
+              setUserRegion(userData.region);
             }
           });
       }
@@ -62,7 +68,7 @@ export default function Navbar() {
       if (session?.user) {
         supabase
           .from('users')
-          .select('nickname, profileImage')
+          .select('nickname, profileImage, region')
           .eq('id', session.user.id)
           .maybeSingle()
           .then(({ data: userData }) => {
@@ -72,10 +78,14 @@ export default function Navbar() {
             if (userData?.profileImage) {
               setProfileImage(userData.profileImage);
             }
+            if (userData?.region) {
+              setUserRegion(userData.region);
+            }
           });
       } else {
         setNickname("");
         setProfileImage("");
+        setUserRegion("");
       }
     });
 
@@ -210,97 +220,106 @@ export default function Navbar() {
       {/* 모바일 상단 헤더 */}
       <div className="md:hidden bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
         <div className="px-4 py-3 flex justify-between items-center">
-          <Link href="/" className="flex items-center">
-            <span className="text-base font-bold text-gray-900">
-              배드메이트
+          {/* 왼쪽: 지역 표시 */}
+          <div className="flex items-center gap-1">
+            <MapPin className="w-4 h-4 text-gray-600" />
+            <span className="text-sm font-medium text-gray-900">
+              {userRegion || "지역 미설정"}
             </span>
-          </Link>
-          {loading ? (
-            <div className="w-9 h-9 rounded-full bg-gray-200 animate-pulse" />
-          ) : user ? (
-            <Link
-              href="/profile"
-              className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium text-sm shadow-md overflow-hidden"
-            >
-              {profileImage ? (
-                <img src={profileImage} alt={nickname || "프로필"} className="w-full h-full object-cover" />
-              ) : (
-                (nickname || user.email || "U").charAt(0).toUpperCase()
-              )}
-            </Link>
-          ) : (
-            <Link
-              href="/login"
-              className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-full shadow-md"
-            >
-              로그인
-            </Link>
-          )}
+          </div>
+
+          {/* 오른쪽: 알림, 메시지 */}
+          <div className="flex items-center gap-3">
+            {user && (
+              <>
+                <Link href="/notifications" className="relative">
+                  <Bell className="w-5 h-5 text-gray-600" />
+                </Link>
+                <Link href="/messages">
+                  <MessageCircle className="w-5 h-5 text-gray-600" />
+                </Link>
+              </>
+            )}
+            {!loading && !user && (
+              <Link
+                href="/login"
+                className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-full shadow-md"
+              >
+                로그인
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 
       {/* 모바일 하단 네비게이션 */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-lg">
-        <div className="grid grid-cols-5 h-14">
+        <div className="grid grid-cols-5 h-16">
           <Link
             href="/"
-            className={`flex flex-col items-center justify-center space-y-0.5 transition-all ${
+            className={`flex flex-col items-center justify-center gap-1 transition-all ${
               isActive('/')
                 ? 'text-blue-600'
                 : 'text-gray-500'
             }`}
           >
-            <Home className="w-5 h-5" />
-            <span className="text-[10px] font-medium">홈</span>
+            <Home className="w-5 h-5" strokeWidth={isActive('/') ? 2.5 : 2} />
+            <span className="text-[10px] leading-none">홈</span>
           </Link>
 
           <Link
-            href="/meetings"
-            className={`flex flex-col items-center justify-center space-y-0.5 transition-all ${
-              isActive('/meetings')
+            href={user ? "/meetings/my" : "/meetings"}
+            className={`flex flex-col items-center justify-center gap-1 transition-all ${
+              isActive('/meetings') || isActive('/meetings/my')
                 ? 'text-blue-600'
                 : 'text-gray-500'
             }`}
           >
-            <Users className="w-5 h-5" />
-            <span className="text-[10px] font-medium">모임</span>
+            <Users className="w-5 h-5" strokeWidth={isActive('/meetings') || isActive('/meetings/my') ? 2.5 : 2} />
+            <span className="text-[10px] leading-none">{user ? "내모임" : "모임"}</span>
           </Link>
 
           <Link
             href="/matching"
-            className={`flex flex-col items-center justify-center space-y-0.5 transition-all ${
+            className={`flex flex-col items-center justify-center gap-1 transition-all ${
               isActive('/matching')
                 ? 'text-blue-600'
                 : 'text-gray-500'
             }`}
           >
-            <Activity className="w-5 h-5" />
-            <span className="text-[10px] font-medium">매칭</span>
+            <Activity className="w-5 h-5" strokeWidth={isActive('/matching') ? 2.5 : 2} />
+            <span className="text-[10px] leading-none">매칭</span>
           </Link>
 
           <Link
             href="/community"
-            className={`flex flex-col items-center justify-center space-y-0.5 transition-all ${
+            className={`flex flex-col items-center justify-center gap-1 transition-all ${
               isActive('/community')
                 ? 'text-blue-600'
                 : 'text-gray-500'
             }`}
           >
-            <MessageCircle className="w-5 h-5" />
-            <span className="text-[10px] font-medium">커뮤니티</span>
+            <MessageCircle className="w-5 h-5" strokeWidth={isActive('/community') ? 2.5 : 2} />
+            <span className="text-[10px] leading-none">커뮤니티</span>
           </Link>
 
-          <button
-            onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
-            className={`flex flex-col items-center justify-center space-y-0.5 transition-all ${
-              isMoreMenuOpen
+          <Link
+            href="/profile"
+            className={`flex flex-col items-center justify-center gap-1 transition-all ${
+              isActive('/profile')
                 ? 'text-blue-600'
                 : 'text-gray-500'
             }`}
           >
-            <Menu className="w-5 h-5" />
-            <span className="text-[10px] font-medium">더보기</span>
-          </button>
+            {user && profileImage ? (
+              <div className={`w-5 h-5 rounded-full overflow-hidden ${isActive('/profile') ? 'ring-2 ring-blue-600' : ''}`}>
+                <img src={profileImage} alt="프로필" className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <UserIcon className="w-5 h-5" strokeWidth={isActive('/profile') ? 2.5 : 2} />
+            )}
+            <span className="text-[10px] leading-none">프로필</span>
+          </Link>
         </div>
       </nav>
 

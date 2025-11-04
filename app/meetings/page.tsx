@@ -22,6 +22,14 @@ interface Meeting {
   fee: number;
   status: string;
   date: string;
+  thumbnailImage?: string | null;
+  host?: {
+    id: string;
+    name?: string;
+    nickname?: string;
+    level?: string;
+    profileImage?: string;
+  };
 }
 
 const levelLabels: Record<string, string> = {
@@ -61,8 +69,11 @@ export default function MeetingsPage() {
       setIsLoggedIn(!!session);
     };
     checkAuth();
+  }, []);
+
+  useEffect(() => {
     fetchMeetings();
-  }, [page]);
+  }, [page, filters]);
 
   const fetchMeetings = async () => {
     try {
@@ -84,11 +95,15 @@ export default function MeetingsPage() {
       const response = await fetch(`/api/meetings?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
-        setMeetings(data.meetings || data);
+        setMeetings(Array.isArray(data) ? data : (data.meetings || []));
         setTotalPages(data.pagination?.totalPages || 1);
+      } else {
+        console.error("Failed to fetch meetings:", response.status);
+        setMeetings([]);
       }
     } catch (error) {
       console.error("모임 조회 실패:", error);
+      setMeetings([]);
     } finally {
       setIsLoading(false);
     }
@@ -104,14 +119,12 @@ export default function MeetingsPage() {
 
   const applyFilters = () => {
     setPage(1);
-    fetchMeetings();
     setShowFilters(false);
   };
 
   const clearFilters = () => {
     setFilters({ province: "", city: "", levelMin: "", levelMax: "" });
     setPage(1);
-    fetchMeetings();
   };
 
   const hasActiveFilters = filters.province || filters.levelMin || filters.levelMax;
@@ -284,45 +297,55 @@ export default function MeetingsPage() {
           </Card>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {meetings.map((meeting) => (
                 <Link key={meeting.id} href={`/meetings/${meeting.id}`}>
-                  <Card className="h-full hover-hover:hover:shadow-lg active:scale-[0.98] transition-all duration-300 cursor-pointer group">
-                    <CardHeader>
+                  <Card className="h-full hover-hover:hover:shadow-lg active:scale-[0.98] transition-all duration-300 cursor-pointer group overflow-hidden">
+                    {/* 모임 썸네일 이미지 */}
+                    {meeting.thumbnailImage && (
+                      <div className="w-full h-32 sm:h-48 bg-gray-100 overflow-hidden">
+                        <img
+                          src={meeting.thumbnailImage}
+                          alt={meeting.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                    )}
+                    <CardHeader className="p-4 sm:p-6">
                       <div className="flex items-start justify-between gap-2">
-                        <CardTitle className="text-lg group-hover-hover:hover:text-primary transition-colors line-clamp-2">
+                        <CardTitle className="text-base sm:text-lg group-hover-hover:hover:text-primary transition-colors line-clamp-2">
                           {meeting.title}
                         </CardTitle>
-                        <Badge variant={statusConfig[meeting.status].variant} className="flex-shrink-0">
-                          {statusConfig[meeting.status].label}
+                        <Badge variant={statusConfig[meeting.status]?.variant || "outline"} className="flex-shrink-0 text-xs">
+                          {statusConfig[meeting.status]?.label || meeting.status}
                         </Badge>
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0 space-y-2 sm:space-y-3">
+                      <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+                        <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
                         <span className="line-clamp-1">
                           {meeting.location || meeting.region}
                         </span>
                       </div>
-                      <div className="flex items-center text-sm">
-                        <Users className="h-4 w-4 mr-2 flex-shrink-0 text-muted-foreground" />
+                      <div className="flex items-center text-xs sm:text-sm">
+                        <Users className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0 text-muted-foreground" />
                         <span className="font-semibold">{meeting.currentCount}</span>
                         <span className="text-muted-foreground mx-1">/</span>
                         <span className="text-muted-foreground">{meeting.maxParticipants}명</span>
                       </div>
                       {(meeting.levelMin || meeting.levelMax) && (
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <TrendingUp className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+                          <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
                           <span>
-                            {meeting.levelMin && levelLabels[meeting.levelMin]} ~{" "}
-                            {meeting.levelMax && levelLabels[meeting.levelMax]}
+                            {meeting.levelMin && (levelLabels[meeting.levelMin] || meeting.levelMin)} ~{" "}
+                            {meeting.levelMax && (levelLabels[meeting.levelMax] || meeting.levelMax)}
                           </span>
                         </div>
                       )}
                       {meeting.fee > 0 && (
-                        <div className="flex items-center text-sm text-muted-foreground">
-                          <DollarSign className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+                          <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
                           <span>{meeting.fee.toLocaleString()}원</span>
                         </div>
                       )}

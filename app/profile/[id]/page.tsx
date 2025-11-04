@@ -7,6 +7,7 @@ import type { User } from "@supabase/supabase-js";
 import ImageUpload from "@/components/ImageUpload";
 import { STORAGE_BUCKETS } from "@/lib/storage";
 import Image from "next/image";
+import RegionSelect from "@/components/RegionSelect";
 
 const levelLabels: Record<string, string> = {
   E_GRADE: "E조",
@@ -22,6 +23,33 @@ const levelLabels: Record<string, string> = {
   EXPERT: "A조",
 };
 
+// 생년월일로부터 나이 계산하는 함수
+function calculateAge(birthdate: string | null): number | null {
+  if (!birthdate) return null;
+
+  // YYYY.MM.DD 형식 파싱
+  const match = birthdate.match(/^(\d{4})\.(\d{2})\.(\d{2})$/);
+  if (!match) return null;
+
+  const birthYear = parseInt(match[1]);
+  const birthMonth = parseInt(match[2]);
+  const birthDay = parseInt(match[3]);
+
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
+  const currentDay = today.getDate();
+
+  let age = currentYear - birthYear;
+
+  // 생일이 아직 안 지났으면 1살 빼기
+  if (currentMonth < birthMonth || (currentMonth === birthMonth && currentDay < birthDay)) {
+    age--;
+  }
+
+  return age;
+}
+
 interface UserProfile {
   id: string;
   name: string;
@@ -36,6 +64,7 @@ interface UserProfile {
   preferredStyle: string | null;
   experience: number | null;
   age: number | null;
+  birthdate: string | null;
   total_games: number;
   wins: number;
   points: number;
@@ -61,7 +90,7 @@ export default function ProfilePage() {
     gender: "",
     preferredStyle: "",
     experience: 0,
-    age: 0,
+    birthdate: "",
   });
 
   const supabase = createClientComponentClient();
@@ -98,9 +127,10 @@ export default function ProfilePage() {
         .single();
 
       if (profileData) {
+        console.log("Profile data loaded:", profileData);
         setProfile(profileData);
         if (isOwnProfile) {
-          setEditFormData({
+          const initialEditFormData = {
             nickname: profileData.nickname || "",
             phone: profileData.phone || "",
             region: profileData.region || "",
@@ -109,8 +139,10 @@ export default function ProfilePage() {
             gender: profileData.gender || "",
             preferredStyle: profileData.preferredStyle || "",
             experience: profileData.experience || 0,
-            age: profileData.age || 0,
-          });
+            birthdate: profileData.birthdate || "",
+          };
+          console.log("Initial edit form data:", initialEditFormData);
+          setEditFormData(initialEditFormData);
         }
         setLoading(false);
       } else if (isOwnProfile && session?.user) {
@@ -147,6 +179,8 @@ export default function ProfilePage() {
     e.preventDefault();
     if (!currentUser || !profile) return;
 
+    console.log("Submitting profile data:", editFormData);
+
     setSubmitting(true);
     try {
       const response = await fetch(`/api/users/${currentUser.id}`, {
@@ -157,15 +191,45 @@ export default function ProfilePage() {
         body: JSON.stringify(editFormData),
       });
 
-      if (!response.ok) throw new Error('Failed to update profile');
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error("Update failed:", errorData);
+        throw new Error('Failed to update profile');
+      }
 
       const updatedProfile = await response.json();
+      console.log("Received updated profile:", updatedProfile);
 
-      // 프로필 업데이트 성공 후 상태 갱신
-      setProfile({
-        ...profile,
-        ...editFormData,
-      });
+      // Supabase에서 최신 데이터 다시 가져오기
+      const { data: refreshedProfile, error: fetchError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', currentUser.id)
+        .single();
+
+      if (!fetchError && refreshedProfile) {
+        console.log("Refreshed profile from database:", refreshedProfile);
+        setProfile(refreshedProfile);
+
+        // editFormData도 새로운 데이터로 업데이트
+        setEditFormData({
+          nickname: refreshedProfile.nickname || "",
+          phone: refreshedProfile.phone || "",
+          region: refreshedProfile.region || "",
+          level: refreshedProfile.level || "",
+          bio: refreshedProfile.bio || "",
+          gender: refreshedProfile.gender || "",
+          preferredStyle: refreshedProfile.preferredStyle || "",
+          experience: refreshedProfile.experience || 0,
+          birthdate: refreshedProfile.birthdate || "",
+        });
+      } else {
+        // 실패 시 API 응답 데이터 사용
+        setProfile({
+          ...profile,
+          ...updatedProfile,
+        });
+      }
 
       setIsEditing(false);
       alert("프로필이 수정되었습니다!");
@@ -189,7 +253,7 @@ export default function ProfilePage() {
         gender: profile.gender || "",
         preferredStyle: profile.preferredStyle || "",
         experience: profile.experience || 0,
-        age: profile.age || 0,
+        birthdate: profile.birthdate || "",
       });
     }
     setIsEditing(false);
@@ -215,26 +279,26 @@ export default function ProfilePage() {
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {/* 헤더 */}
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-8 text-white">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center text-4xl font-bold mr-6 overflow-hidden relative">
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 sm:p-8 text-white">
+            <div className="flex flex-col sm:flex-row items-center sm:justify-between space-y-4 sm:space-y-0">
+              <div className="flex flex-col sm:flex-row items-center text-center sm:text-left">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white/20 rounded-full flex items-center justify-center text-4xl font-bold mb-4 sm:mb-0 sm:mr-6 overflow-hidden relative">
                   {profile.profileImage && profile.profileImage !== '/default-avatar.png' ? (
                     <Image
                       src={profile.profileImage}
                       alt={profile.nickname}
                       fill
                       className="object-cover"
-                      sizes="96px"
+                      sizes="(max-width: 640px) 80px, 96px"
                     />
                   ) : (
-                    <svg className="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-12 h-12 sm:w-16 sm:h-16 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                     </svg>
                   )}
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold mb-2">{profile.nickname}</h1>
+                  <h1 className="text-xl sm:text-2xl font-bold mb-2">{profile.nickname}</h1>
                   <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
                     {levelLabels[profile.level] || profile.level}
                   </span>
@@ -246,10 +310,29 @@ export default function ProfilePage() {
                     if (isEditing) {
                       handleCancelEdit();
                     } else {
+                      // 수정 모드로 전환할 때 현재 프로필 데이터로 폼 초기화
+                      if (profile) {
+                        console.log("Setting edit form data from profile:", profile);
+                        const newEditFormData = {
+                          nickname: profile.nickname || "",
+                          phone: profile.phone || "",
+                          region: profile.region || "",
+                          level: profile.level || "",
+                          bio: profile.bio || "",
+                          gender: profile.gender || "",
+                          preferredStyle: profile.preferredStyle || "",
+                          experience: profile.experience || 0,
+                          birthdate: profile.birthdate || "",
+                        };
+                        console.log("New edit form data:", newEditFormData);
+                        setEditFormData(newEditFormData);
+                      } else {
+                        console.log("Profile is null or undefined");
+                      }
                       setIsEditing(true);
                     }
                   }}
-                  className="bg-white/20 hover-hover:hover:bg-white/30 px-6 py-2 rounded-lg transition"
+                  className="bg-white/20 hover-hover:hover:bg-white/30 px-4 sm:px-6 py-2 rounded-lg transition text-sm sm:text-base"
                 >
                   {isEditing ? "취소" : "프로필 수정"}
                 </button>
@@ -258,46 +341,48 @@ export default function ProfilePage() {
           </div>
 
           {/* 통계 */}
-          <div className="grid grid-cols-3 gap-4 p-8 border-b border-gray-200">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 p-4 sm:p-8 border-b border-gray-200">
             <div className="text-center">
-              <p className="text-sm text-gray-600 mb-1">총 경기</p>
-              <p className="text-2xl font-bold text-gray-900">{profile.total_games || 0}</p>
+              <p className="text-xs sm:text-sm text-gray-600 mb-1">총 경기</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900">{profile.total_games || 0}</p>
             </div>
             <div className="text-center">
-              <p className="text-sm text-gray-600 mb-1">승리</p>
-              <p className="text-2xl font-bold text-green-600">{profile.wins || 0}</p>
+              <p className="text-xs sm:text-sm text-gray-600 mb-1">승리</p>
+              <p className="text-lg sm:text-2xl font-bold text-green-600">{profile.wins || 0}</p>
             </div>
             <div className="text-center">
-              <p className="text-sm text-gray-600 mb-1">포인트</p>
-              <p className="text-2xl font-bold text-blue-600">{profile.points || 0}</p>
+              <p className="text-xs sm:text-sm text-gray-600 mb-1">포인트</p>
+              <p className="text-lg sm:text-2xl font-bold text-blue-600">{profile.points || 0}</p>
             </div>
           </div>
 
           {/* 승률 */}
-          <div className="p-8 border-b border-gray-200">
-            <h3 className="text-lg font-semibold mb-4">승률</h3>
-            <div className="flex items-center">
+          <div className="p-4 sm:p-8 border-b border-gray-200">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">승률</h3>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
               <div className="flex-1">
-                <div className="flex justify-between text-sm text-gray-600 mb-2">
+                <div className="flex justify-between text-xs sm:text-sm text-gray-600 mb-2">
                   <span>승</span>
                   <span>패</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-4">
                   <div
-                    className="bg-green-500 h-4 rounded-full flex items-center justify-center text-xs text-white font-semibold"
+                    className="bg-green-500 h-4 rounded-full flex items-center justify-center text-xs text-white font-semibold transition-all duration-300"
                     style={{
-                      width: profile.total_games > 0 ? `${(profile.wins / profile.total_games) * 100}%` : '0%',
+                      width: profile.total_games > 0 ? `${Math.max((profile.wins / profile.total_games) * 100, 5)}%` : '0%',
                     }}
                   >
-                    {profile.total_games > 0 ? ((profile.wins / profile.total_games) * 100).toFixed(1) : 0}%
+                    <span className={`${profile.total_games > 0 && (profile.wins / profile.total_games) < 0.15 ? 'ml-1' : ''}`}>
+                      {profile.total_games > 0 ? ((profile.wins / profile.total_games) * 100).toFixed(0) : 0}%
+                    </span>
                   </div>
                 </div>
               </div>
-              <div className="ml-6 text-right">
-                <p className="text-xl font-bold">
+              <div className="text-center sm:text-right sm:ml-6">
+                <p className="text-lg sm:text-xl font-bold">
                   {profile.total_games > 0 ? ((profile.wins / profile.total_games) * 100).toFixed(1) : 0}%
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600">
                   {profile.wins || 0}승 {(profile.total_games || 0) - (profile.wins || 0)}패
                 </p>
               </div>
@@ -305,8 +390,8 @@ export default function ProfilePage() {
           </div>
 
           {/* 상세 정보 */}
-          <div className="p-8">
-            <h3 className="text-lg font-semibold mb-4">상세 정보</h3>
+          <div className="p-4 sm:p-8">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">상세 정보</h3>
             {isEditing && isOwnProfile ? (
               <form onSubmit={handleEditSubmit} className="space-y-4">
                 <div>
@@ -385,11 +470,9 @@ export default function ProfilePage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     지역
                   </label>
-                  <input
-                    type="text"
+                  <RegionSelect
                     value={editFormData.region}
-                    onChange={(e) => setEditFormData({ ...editFormData, region: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    onChange={(value) => setEditFormData({ ...editFormData, region: value })}
                   />
                 </div>
                 <div>
@@ -409,20 +492,21 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    나이
+                    생년월일
                   </label>
                   <input
-                    type="number"
-                    value={editFormData.age}
-                    onChange={(e) => setEditFormData({ ...editFormData, age: parseInt(e.target.value) })}
+                    type="text"
+                    value={editFormData.birthdate}
+                    onChange={(e) => setEditFormData({ ...editFormData, birthdate: e.target.value })}
                     className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                    min="10"
-                    max="100"
+                    placeholder="1994.06.04"
+                    pattern="\d{4}\.\d{2}\.\d{2}"
+                    title="생년월일 형식: YYYY.MM.DD (예: 1994.06.04)"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    실력 급수
+                    급수
                   </label>
                   <select
                     value={editFormData.level}
@@ -436,12 +520,12 @@ export default function ProfilePage() {
                       paddingRight: '2.5rem'
                     }}
                   >
-                    <option value="E_GRADE">E급</option>
-                    <option value="D_GRADE">D급</option>
-                    <option value="C_GRADE">C급</option>
-                    <option value="B_GRADE">B급</option>
-                    <option value="A_GRADE">A급</option>
-                    <option value="S_GRADE">S급</option>
+                    <option value="E_GRADE">E조</option>
+                    <option value="D_GRADE">D조</option>
+                    <option value="C_GRADE">C조</option>
+                    <option value="B_GRADE">B조</option>
+                    <option value="A_GRADE">A조</option>
+                    <option value="S_GRADE">자강</option>
                   </select>
                 </div>
                 <div>
@@ -509,8 +593,16 @@ export default function ProfilePage() {
                   <p className="text-gray-900">{profile.gender === "MALE" ? "남성" : profile.gender === "FEMALE" ? "여성" : "-"}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">나이</p>
-                  <p className="text-gray-900">{profile.age || "-"}세</p>
+                  <p className="text-sm text-gray-600 mb-1">생년월일 (나이)</p>
+                  <p className="text-gray-900">
+                    {profile.birthdate ? (
+                      <>
+                        {profile.birthdate} ({calculateAge(profile.birthdate) || "-"}세)
+                      </>
+                    ) : (
+                      "-"
+                    )}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 mb-1">경력</p>

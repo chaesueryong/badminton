@@ -126,7 +126,7 @@ export default function RootLayout({
       <body className="antialiased flex flex-col min-h-screen">
         <SessionProvider>
           <Navbar />
-          <main className="flex-1">
+          <main className="flex-1 pb-16 md:pb-0">
             {children}
           </main>
           <Footer />

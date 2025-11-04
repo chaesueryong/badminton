@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import RegionSelect from "@/components/RegionSelect";
+import { formatPhoneNumber, unformatPhoneNumber } from "@/lib/utils/phone";
 
 const levels = [
   { value: "S_GRADE", label: "자강" },
@@ -20,6 +21,7 @@ export default function OnboardingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [userEmail, setUserEmail] = useState("");
+  const [phoneValue, setPhoneValue] = useState("");
 
   useEffect(() => {
     const getUserData = async () => {
@@ -40,7 +42,8 @@ export default function OnboardingPage() {
 
     const formData = new FormData(e.currentTarget);
     const nickname = formData.get("nickname") as string;
-    const phone = formData.get("phone") as string;
+    const phoneInput = formData.get("phone") as string;
+    const phone = unformatPhoneNumber(phoneInput);  // Remove formatting for storage
     const level = formData.get("level") as string;
     const province = formData.get("province") as string;
     const city = formData.get("city") as string;
@@ -48,7 +51,7 @@ export default function OnboardingPage() {
     const gender = formData.get("gender") as string;
     const preferredStyle = formData.get("preferredStyle") as string;
     const experience = formData.get("experience") as string;
-    const age = formData.get("age") as string;
+    const birthdate = formData.get("birthdate") as string;
 
     try {
       const response = await fetch("/api/user/complete-profile", {
@@ -64,7 +67,7 @@ export default function OnboardingPage() {
           gender,
           preferredStyle,
           experience: experience ? parseInt(experience) : null,
-          age: age ? parseInt(age) : null,
+          birthdate: birthdate || null,
         }),
       });
 
@@ -83,33 +86,33 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-8 sm:py-12 px-4">
       <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
             환영합니다! 🏸
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600 px-4">
             배드민턴 커뮤니티를 시작하기 위해 추가 정보를 입력해주세요
           </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-8">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-8">
           {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm">
+            <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 sm:mb-6 text-sm">
               {error}
             </div>
           )}
 
-          <div className="flex items-center gap-4 mb-6 pb-6 border-b">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+          <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 pb-4 sm:pb-6 border-b">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
               </svg>
             </div>
-            <div>
-              <p className="font-semibold text-gray-900">새로운 회원</p>
-              <p className="text-sm text-gray-600">{userEmail}</p>
+            <div className="overflow-hidden">
+              <p className="font-semibold text-gray-900 text-sm sm:text-base">새로운 회원</p>
+              <p className="text-xs sm:text-sm text-gray-600 truncate">{userEmail}</p>
             </div>
           </div>
 
@@ -144,10 +147,16 @@ export default function OnboardingPage() {
                 type="tel"
                 id="phone"
                 name="phone"
+                value={phoneValue}
+                onChange={(e) => setPhoneValue(e.target.value)}
+                onBlur={(e) => {
+                  const formatted = formatPhoneNumber(e.target.value);
+                  setPhoneValue(formatted);
+                }}
                 pattern="^01[0-9]-?[0-9]{3,4}-?[0-9]{4}$"
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="010-1234-5678"
-                title="전화번호 형식: 010-1234-5678 또는 01012345678"
+                title="전화번호 형식: 010-1234-5678"
               />
             </div>
 
@@ -174,30 +183,30 @@ export default function OnboardingPage() {
             {/* 나이 */}
             <div>
               <label
-                htmlFor="age"
+                htmlFor="birthdate"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                나이 <span className="text-red-500">*</span>
+                생년월일 <span className="text-red-500">*</span>
               </label>
               <input
-                type="number"
-                id="age"
-                name="age"
+                type="text"
+                id="birthdate"
+                name="birthdate"
                 required
-                min="10"
-                max="100"
+                placeholder="1994.06.04"
+                pattern="\d{4}\.\d{2}\.\d{2}"
+                title="생년월일 형식: YYYY.MM.DD (예: 1994.06.04)"
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="예: 25"
               />
             </div>
 
-            {/* 실력 급수 */}
+            {/* 급수 */}
             <div>
               <label
                 htmlFor="level"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                실력 급수 <span className="text-red-500">*</span>
+                급수 <span className="text-red-500">*</span>
               </label>
               <select
                 id="level"

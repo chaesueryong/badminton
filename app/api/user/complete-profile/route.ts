@@ -16,9 +16,9 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { nickname, phone, level, region, gender, preferredStyle, experience, age } = body;
+    const { nickname, phone, level, region, gender, preferredStyle, experience, birthdate } = body;
 
-    if (!nickname || !level || !gender || !preferredStyle || experience === undefined || !age) {
+    if (!nickname || !level || !gender || !preferredStyle || experience === undefined || !birthdate) {
       return NextResponse.json(
         { error: "필수 항목을 모두 입력해주세요" },
         { status: 400 }
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
           gender,
           preferredStyle,
           experience,
-          age,
+          birthdate,
           profileImage: '/default-avatar.png',  // 소셜 이미지 사용 안함, 기본 아이콘
           createdAt: now,
           updatedAt: now,
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
           gender,
           preferredStyle,
           experience,
-          age,
+          birthdate,
         })
         .eq('id', user.id)
         .select()

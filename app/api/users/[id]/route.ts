@@ -26,6 +26,7 @@ export async function GET(
         "preferredStyle",
         experience,
         age,
+        birthdate,
         "createdAt"
       `)
       .eq('id', params.id)
@@ -73,6 +74,7 @@ export async function PATCH(
 ) {
   try {
     const body = await request.json();
+    console.log("API PATCH - Received data:", body);
 
     // 비밀번호 필드는 제외 (별도 API로 처리)
     const { password, email, totalGames, createdAt, ...updateData } = body;
@@ -104,6 +106,16 @@ export async function PATCH(
     if (updateData.age !== undefined) {
       snakeCaseData.age = updateData.age === "" ? null : updateData.age;
     }
+    if (updateData.birthdate !== undefined) {
+      if (updateData.birthdate === "") {
+        snakeCaseData.birthdate = null;
+      } else {
+        // YYYY.MM.DD 형식을 YYYY-MM-DD로 변환
+        snakeCaseData.birthdate = updateData.birthdate.replace(/\./g, '-');
+      }
+    }
+
+    console.log("API PATCH - Data to update:", snakeCaseData);
 
     const { data: user, error } = await supabaseAdmin
       .from('users')
@@ -125,7 +137,8 @@ export async function PATCH(
         gender,
         "preferredStyle",
         experience,
-        age
+        age,
+        birthdate
       `)
       .single();
 
