@@ -1,0 +1,74 @@
+# 빌드 스테이지
+FROM node:20.11.1-alpine AS builder
+
+WORKDIR /usr/src/app
+
+# Build arguments 정의
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ARG SUPABASE_SERVICE_ROLE_KEY
+ARG NEXT_PUBLIC_SITE_URL
+
+# 패키지 파일 복사 및 의존성 설치
+COPY package*.json ./
+RUN npm ci
+
+# 소스 코드 복사
+COPY . .
+
+# 환경변수 설정 (빌드 전에 설정해야 Next.js가 인식함)
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+ENV SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+
+# Next.js 빌드
+RUN npm run build
+
+# 개발 환경
+FROM node:20.11.1-alpine AS development
+
+WORKDIR /usr/src/app
+
+# 환경변수 설정
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+ENV SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+
+# 패키지 파일 복사 및 프로덕션 의존성만 설치
+COPY package*.json ./
+RUN npm ci
+
+# 빌드 결과물 복사
+COPY --from=builder /usr/src/app/.next ./.next
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+COPY --from=builder /usr/src/app/next.config.js ./
+COPY --from=builder /usr/src/app/public ./public
+
+EXPOSE 3000
+CMD ["npm", "run", "start"]
+
+# 프로덕션 환경
+FROM node:20.11.1-alpine AS production
+
+WORKDIR /usr/src/app
+
+# 환경변수 설정
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+ENV SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+
+# 패키지 파일 복사 및 프로덕션 의존성만 설치
+COPY package*.json ./
+RUN npm ci
+
+# 빌드 결과물 복사
+COPY --from=builder /usr/src/app/.next ./.next
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+COPY --from=builder /usr/src/app/next.config.js ./
+COPY --from=builder /usr/src/app/public ./public
+
+EXPOSE 3000
+CMD ["npm", "run", "start"]

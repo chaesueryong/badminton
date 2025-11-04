@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="shuttleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e0e7ff;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background rounded square -->
+  <rect x="2" y="2" width="28" height="28" rx="8" fill="url(#bgGrad)"/>
+
+  <!-- Shuttlecock simplified design -->
+  <g transform="translate(16, 16)">
+    <!-- Cork base -->
+    <circle cx="0" cy="5" r="3.5" fill="url(#shuttleGrad)"/>
+
+    <!-- Feather cone -->
+    <path d="M -6 -2 L -3 4 L 3 4 L 6 -2 Q 0 -6 -6 -2 Z" fill="url(#shuttleGrad)" opacity="0.95"/>
+    <path d="M -4 -1 L -2 3 L 2 3 L 4 -1 Q 0 -3.5 -4 -1 Z" fill="white" opacity="0.5"/>
+
+    <!-- Highlight -->
+    <circle cx="-1" cy="-1" r="1" fill="white" opacity="0.9"/>
+  </g>
+</svg>

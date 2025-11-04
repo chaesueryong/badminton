@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev:*)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(curl:*)",
+      "Bash(taskkill:*)",
+      "Bash(tasklist:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(npx prisma migrate:*)",
+      "Bash(npm run dev:get_project_url:*)",
+      "Bash(cmd /c taskkill /IM node.exe /F)",
+      "Bash(git checkout:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(ls:*)",
+      "Bash(del \"c:\\Users\\chaesueryong\\Documents\\GitHub\\badminton\\DEPLOYMENT_GUIDE.md\")",
+      "Bash(docker build:*)",
+      "Bash(npm install:*)",
+      "Bash(npx supabase:*)",
+      "Bash(grep:*)",
+      "Bash(git fetch:*)",
+      "Bash(git merge:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npx shadcn-ui@latest add:*)",
+      "Bash(npx shadcn@latest add select input textarea label dropdown-menu tabs scroll-area --yes)"
+    ],
+    "deny": [],
+    "ask": []
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
+}

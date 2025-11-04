@@ -1,0 +1,73 @@
+# name: Development Deploy
+
+# on:
+#   pull_request:
+#     types: [closed]
+#     branches: [ "develop" ]
+#   push:
+#     branches: [ "develop" ]
+
+# jobs:
+#   build-and-push:
+#     runs-on: ubuntu-latest
+#     if: github.event.pull_request.merged == true || github.event_name == 'push'
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v3
+
+#       - name: Setup Node.js
+#         uses: actions/setup-node@v3
+#         with:
+#           node-version: '20'
+
+#       - name: Install dependencies
+#         run: npm ci
+
+#       - name: Generate Prisma Client
+#         run: npx prisma generate
+
+#       - name: Login to GitHub Container Registry
+#         uses: docker/login-action@v2
+#         with:
+#           registry: ghcr.io
+#           username: ${{ github.actor }}
+#           password: ${{ secrets.GH_TOKEN }}
+
+#       - name: Build and push Docker image
+#         uses: docker/build-push-action@v5
+#         with:
+#           context: .
+#           target: development
+#           push: true
+#           tags: ghcr.io/${{ github.repository }}/badminton-dev:latest
+#           build-args: |
+#             NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+#             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+#             DATABASE_URL=${{ secrets.DATABASE_URL }}
+#             DIRECT_URL=${{ secrets.DIRECT_URL }}
+
+#   deploy:
+#     needs: build-and-push
+#     runs-on: ubuntu-latest
+#     environment: development
+#     steps:
+#       - name: Deploy to Development
+#         uses: appleboy/ssh-action@master
+#         with:
+#           host: ${{ secrets.LIGHTSAIL_HOST }}
+#           username: ec2-user
+#           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+#           script: |
+#             docker pull ghcr.io/${{ github.repository }}/badminton-dev:latest
+#             docker stop badminton-dev || true
+#             docker rm badminton-dev || true
+#             docker run -d --name badminton-dev \
+#               -p 3001:3000 \
+#               -e NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }} \
+#               -e NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }} \
+#               -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
+#               -e DIRECT_URL=${{ secrets.DIRECT_URL }} \
+#               -e SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }} \
+#               -e TOSS_SECRET_KEY=${{ secrets.TOSS_SECRET_KEY }} \
+#               --restart unless-stopped \
+#               ghcr.io/${{ github.repository }}/badminton-dev:latest
