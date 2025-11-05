@@ -49,6 +49,7 @@ export default function CreateMeetingPage() {
     const data = {
       title: formData.get("title"),
       description: formData.get("description"),
+      detailedInfo: formData.get("detailedInfo"),
       region: region,
       maxParticipants: parseInt(formData.get("maxParticipants") as string),
       levelMin: formData.get("levelMin"),
@@ -140,18 +141,40 @@ export default function CreateMeetingPage() {
               />
             </div>
 
-            {/* 설명 */}
+            {/* 짧은 소개 */}
             <div>
               <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                모임 소개
+                짧은 소개 (카드에 표시)
               </label>
-              <textarea
+              <input
+                type="text"
                 id="description"
                 name="description"
-                rows={5}
+                maxLength={100}
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="모임에 대해 자유롭게 소개해주세요&#10;- 모임 분위기&#10;- 참가 대상&#10;- 준비물&#10;- 기타 안내사항"
+                placeholder="모임을 한 줄로 소개해주세요 (최대 100자)"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                모임 목록 카드에 표시되는 짧은 소개글입니다 (최대 100자)
+              </p>
+            </div>
+
+            {/* 상세 정보 */}
+            <div>
+              <label htmlFor="detailedInfo" className="block text-sm font-medium text-gray-700 mb-2">
+                상세 정보 (모임 페이지에만 표시)
+              </label>
+              <textarea
+                id="detailedInfo"
+                name="detailedInfo"
+                rows={8}
+                maxLength={2000}
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="모임에 대해 자세히 소개해주세요 (최대 2000자)&#10;&#10;- 모임 분위기&#10;- 참가 대상&#10;- 준비물&#10;- 활동 내용&#10;- 기타 안내사항"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                모임 상세 페이지에만 표시되는 자세한 정보입니다 (최대 2000자)
+              </p>
             </div>
 
             {/* 지역 */}

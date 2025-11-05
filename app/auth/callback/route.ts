@@ -53,11 +53,17 @@ export async function GET(request: NextRequest) {
           // 첫 로그인 - 사용자 정보 입력 페이지로
           console.log('[Auth Callback] New user, redirecting to onboarding')
           const now = new Date().toISOString()
+
+          // 고유한 초대 코드 생성
+          const { data: codeResult } = await supabase.rpc('generate_referral_code')
+          const referralCode = codeResult || ''
+
           const { error: insertError } = await supabase.from('users').insert({
             id: data.user.id,
             email: data.user.email!,
             name: '',  // 닉네임만 사용
             profileImage: '/default-avatar.png',  // 소셜 이미지 사용 안함, 기본 아이콘
+            referralCode: referralCode,
             createdAt: now,
             updatedAt: now,
           })

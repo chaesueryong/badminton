@@ -19,13 +19,21 @@ interface PointsInfo {
   lifetimePoints: number;
 }
 
+interface AttendanceInfo {
+  hasCheckedToday: boolean;
+  streak: number;
+  lastCheckDate: string | null;
+}
+
 export default function RewardsPage() {
   const supabase = createClientComponentClient();
   const [rewards, setRewards] = useState<RewardItem[]>([]);
   const [pointsInfo, setPointsInfo] = useState<PointsInfo>({ points: 0, lifetimePoints: 0 });
+  const [attendanceInfo, setAttendanceInfo] = useState<AttendanceInfo>({ hasCheckedToday: false, streak: 0, lastCheckDate: null });
   const [loading, setLoading] = useState(true);
   const [selectedReward, setSelectedReward] = useState<RewardItem | null>(null);
   const [showRedeemModal, setShowRedeemModal] = useState(false);
+  const [checkingAttendance, setCheckingAttendance] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -48,10 +56,52 @@ export default function RewardsPage() {
         const data = await pointsRes.json();
         setPointsInfo(data);
       }
+
+      // Fetch attendance info
+      const attendanceRes = await fetch("/api/points/attendance");
+      if (attendanceRes.ok) {
+        const data = await attendanceRes.json();
+        setAttendanceInfo(data);
+      }
     } catch (error) {
       console.error("Failed to fetch data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAttendanceCheck = async () => {
+    if (attendanceInfo.hasCheckedToday) {
+      alert("오늘은 이미 출석 체크를 완료했습니다!");
+      return;
+    }
+
+    try {
+      setCheckingAttendance(true);
+      const response = await fetch("/api/points/attendance", {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        let message = `출석 체크 완료!\n+${data.pointsEarned} 포인트`;
+        if (data.bonusMessage) {
+          message += `\n\n${data.bonusMessage}`;
+        }
+        if (data.streak) {
+          message += `\n\n연속 출석: ${data.streak}일`;
+        }
+        alert(message);
+        fetchData();
+      } else {
+        const data = await response.json();
+        alert(data.error || "출석 체크에 실패했습니다");
+      }
+    } catch (error) {
+      console.error("Failed to check attendance:", error);
+      alert("오류가 발생했습니다");
+    } finally {
+      setCheckingAttendance(false);
     }
   };
 
@@ -119,7 +169,7 @@ export default function RewardsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 py-8 pb-20 md:pb-8">
       <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="mb-8 text-center">
@@ -137,11 +187,48 @@ export default function RewardsPage() {
             <div>
               <h2 className="text-lg font-medium opacity-90">보유 포인트</h2>
               <p className="text-4xl font-bold mt-2">{pointsInfo.points.toLocaleString()} P</p>
-              <p className="text-sm opacity-75 mt-1">
-                누적: {pointsInfo.lifetimePoints.toLocaleString()} P
-              </p>
             </div>
             <div className="text-6xl opacity-20">💎</div>
+          </div>
+        </div>
+
+        {/* Attendance Check */}
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg shadow-lg p-6 mb-8 border-2 border-green-200">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <span className="text-3xl">📅</span>
+                <h2 className="text-2xl font-bold text-green-900">출석 체크</h2>
+              </div>
+              <p className="text-green-700 mb-2">매일 출석하고 포인트를 받으세요!</p>
+              <div className="flex flex-col gap-2 text-sm">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1">
+                    <span className="text-green-600 font-semibold">연속 출석:</span>
+                    <span className="text-green-900 font-bold">{attendanceInfo.streak}일</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-green-600 font-semibold">기본 보상:</span>
+                    <span className="text-green-900 font-bold">+10 P</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 text-xs">
+                  <span className="text-amber-600">🎁</span>
+                  <span className="text-amber-700 font-semibold">100일 단위 달성 시 +100 P 보너스!</span>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={handleAttendanceCheck}
+              disabled={attendanceInfo.hasCheckedToday || checkingAttendance}
+              className={`px-6 py-3 rounded-xl font-bold text-lg transition-all duration-300 shadow-md ${
+                attendanceInfo.hasCheckedToday
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-gradient-to-r from-green-600 to-emerald-600 text-white hover-hover:hover:from-green-700 hover-hover:hover:to-emerald-700 hover-hover:hover:shadow-lg active:scale-95"
+              }`}
+            >
+              {checkingAttendance ? "처리 중..." : attendanceInfo.hasCheckedToday ? "✓ 완료" : "출석하기"}
+            </button>
           </div>
         </div>
 
@@ -236,33 +323,12 @@ export default function RewardsPage() {
           <h3 className="text-2xl font-bold text-blue-900 mb-6 text-center">
             💡 포인트 획득 방법
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center gap-4 bg-white p-4 rounded-lg shadow-sm hover-hover:hover:shadow-md transition-shadow">
-              <span className="text-3xl">🏸</span>
+              <span className="text-3xl">📅</span>
               <div>
-                <div className="font-semibold text-blue-900">모임 참여</div>
-                <div className="text-lg font-bold text-indigo-600">50 P</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 bg-white p-4 rounded-lg shadow-sm hover-hover:hover:shadow-md transition-shadow">
-              <span className="text-3xl">✅</span>
-              <div>
-                <div className="font-semibold text-blue-900">모임 완료</div>
-                <div className="text-lg font-bold text-indigo-600">100 P</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 bg-white p-4 rounded-lg shadow-sm hover-hover:hover:shadow-md transition-shadow">
-              <span className="text-3xl">📝</span>
-              <div>
-                <div className="font-semibold text-blue-900">게시글 작성</div>
-                <div className="text-lg font-bold text-indigo-600">10 P</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 bg-white p-4 rounded-lg shadow-sm hover-hover:hover:shadow-md transition-shadow">
-              <span className="text-3xl">⭐</span>
-              <div>
-                <div className="font-semibold text-blue-900">리뷰 작성</div>
-                <div className="text-lg font-bold text-indigo-600">30 P</div>
+                <div className="font-semibold text-blue-900">출석 체크</div>
+                <div className="text-lg font-bold text-indigo-600">10 P / 일</div>
               </div>
             </div>
             <div className="flex items-center gap-4 bg-white p-4 rounded-lg shadow-sm hover-hover:hover:shadow-md transition-shadow">

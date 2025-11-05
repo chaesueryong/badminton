@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Users, TrendingUp, DollarSign, ChevronLeft, ChevronRight, Filter, X, Search, Shield, ChevronDown } from "lucide-react";
+import { MapPin, Users, TrendingUp, DollarSign, ChevronLeft, ChevronRight, Filter, X, Search, Shield, ChevronDown, CalendarDays } from "lucide-react";
 import RegionSelect from "@/components/RegionSelect";
 import { getDefaultImage } from "@/lib/constants";
 
@@ -24,6 +24,9 @@ interface Meeting {
   status: string;
   date: string;
   thumbnailImage?: string | null;
+  ageMin?: number | null;
+  ageMax?: number | null;
+  description?: string | null;
   host?: {
     id: string;
     name?: string;
@@ -47,6 +50,16 @@ const statusConfig: Record<string, { label: string; variant: "success" | "second
   CLOSED: { label: "마감", variant: "secondary" },
   COMPLETED: { label: "완료", variant: "outline" },
   CANCELLED: { label: "취소", variant: "destructive" },
+};
+
+const formatLevelRange = (levelMin: string | null, levelMax: string | null) => {
+  if (!levelMin && !levelMax) return "모든 급수";
+  const minLabel = levelMin ? levelLabels[levelMin] || levelMin : "";
+  const maxLabel = levelMax ? levelLabels[levelMax] || levelMax : "";
+  if (minLabel === maxLabel) return minLabel;
+  if (!minLabel) return `~${maxLabel}`;
+  if (!maxLabel) return `${minLabel}~`;
+  return `${minLabel} ~ ${maxLabel}`;
 };
 
 export default function MeetingsPage() {
@@ -134,7 +147,7 @@ export default function MeetingsPage() {
     <div className="min-h-screen bg-background pb-20 md:pb-8">
       {/* Header */}
       <div className="border-b bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50">
-        <div className="container mx-auto px-2 sm:px-4 py-4 md:py-8">
+        <div className="container mx-auto px-4 py-6 md:py-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-2xl md:text-4xl font-bold tracking-tight flex items-center gap-3">
@@ -158,7 +171,7 @@ export default function MeetingsPage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-2 sm:px-4 py-4 md:py-8">
+      <div className="container mx-auto px-4 py-6 md:py-8">
         {/* Filter Section - Enhanced Design */}
         <div className="mb-8 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 rounded-2xl p-1">
           <Card className="bg-white/95 backdrop-blur border-0 shadow-xl">
@@ -321,6 +334,11 @@ export default function MeetingsPage() {
                       </div>
                     </CardHeader>
                     <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0 space-y-2 sm:space-y-3">
+                      {/* 소개 */}
+                      {meeting.description && (
+                        <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 mb-3">{meeting.description}</p>
+                      )}
+
                       <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
                         <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
                         <span className="line-clamp-1">
@@ -333,19 +351,26 @@ export default function MeetingsPage() {
                         <span className="text-muted-foreground mx-1">/</span>
                         <span className="text-muted-foreground">{meeting.maxParticipants}명</span>
                       </div>
-                      {(meeting.levelMin || meeting.levelMax) && (
+                      <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+                        <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                        <span>
+                          {formatLevelRange(meeting.levelMin, meeting.levelMax)}
+                        </span>
+                      </div>
+                      <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+                        <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                        <span>{meeting.fee > 0 ? `${meeting.fee.toLocaleString()}원` : '무료'}</span>
+                      </div>
+                      {(meeting.ageMin || meeting.ageMax) && (
                         <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
-                          <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                          <CalendarDays className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
                           <span>
-                            {meeting.levelMin && (levelLabels[meeting.levelMin] || meeting.levelMin)} ~{" "}
-                            {meeting.levelMax && (levelLabels[meeting.levelMax] || meeting.levelMax)}
+                            {meeting.ageMin && meeting.ageMax
+                              ? `${meeting.ageMin}~${meeting.ageMax}세`
+                              : meeting.ageMin
+                              ? `${meeting.ageMin}세 이상`
+                              : `${meeting.ageMax}세 이하`}
                           </span>
-                        </div>
-                      )}
-                      {meeting.fee > 0 && (
-                        <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
-                          <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
-                          <span>{meeting.fee.toLocaleString()}원</span>
                         </div>
                       )}
                     </CardContent>
