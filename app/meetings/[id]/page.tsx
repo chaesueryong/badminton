@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { getDefaultImage } from "@/lib/constants";
 import {
   MapPin,
   Calendar,
@@ -225,17 +226,15 @@ export default function MeetingDetailPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-32 md:pb-0">
       {/* 상단 이미지 */}
-      {(meeting.thumbnailImage || (meeting.images && meeting.images.length > 0)) && (
-        <div className="w-full h-48 sm:h-64 md:h-96 bg-gray-200">
-          <img
-            src={meeting.thumbnailImage || meeting.images?.[0]}
-            alt={meeting.title}
-            className="w-full h-full object-cover"
-          />
-        </div>
-      )}
+      <div className="w-full h-48 sm:h-64 md:h-96 bg-gray-200">
+        <img
+          src={meeting.thumbnailImage || (meeting.images && meeting.images.length > 0 ? meeting.images[0] : getDefaultImage('meeting'))}
+          alt={meeting.title}
+          className="w-full h-full object-cover"
+        />
+      </div>
 
-      <div className="container mx-auto px-4 max-w-4xl py-4 sm:py-8">
+      <div className="container mx-auto px-2 sm:px-4 max-w-4xl py-2 sm:py-8">
         <div className="bg-white rounded-lg border border-gray-100 shadow-sm">
           {/* 헤더 */}
           <div className="p-4 sm:p-6 md:p-8 border-b border-gray-100">
@@ -383,11 +382,11 @@ export default function MeetingDetailPage() {
               {/* 호스트 */}
               <Link href={`/profile/${meeting.host.id}`} className="text-center hover:opacity-80 transition-opacity">
                 <div className="w-14 sm:w-16 h-14 sm:h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg sm:text-xl mb-1 sm:mb-2 mx-auto overflow-hidden">
-                  {meeting.host.profileImage ? (
-                    <img src={meeting.host.profileImage} alt={meeting.host.nickname} className="w-full h-full object-cover" />
-                  ) : (
-                    meeting.host.nickname[0]
-                  )}
+                  <img
+                    src={meeting.host.profileImage || getDefaultImage('profile')}
+                    alt={meeting.host.nickname}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <div className="flex items-center justify-center gap-1">
                   <span className="text-xs sm:text-sm font-medium">{meeting.host.nickname}</span>
@@ -400,11 +399,11 @@ export default function MeetingDetailPage() {
               {meeting.participants?.filter(p => p.status === 'MANAGER' || p.role === 'MANAGER').map((manager) => (
                 <Link key={manager.id} href={`/profile/${manager.user.id}`} className="text-center hover:opacity-80 transition-opacity">
                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold text-xl mb-2 mx-auto overflow-hidden">
-                    {manager.user.profileImage ? (
-                      <img src={manager.user.profileImage} alt={manager.user.nickname} className="w-full h-full object-cover" />
-                    ) : (
-                      manager.user.nickname[0]
-                    )}
+                    <img
+                      src={manager.user.profileImage || getDefaultImage('profile')}
+                      alt={manager.user.nickname}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <div className="flex items-center justify-center gap-1">
                     <span className="text-sm font-medium">{manager.user.nickname}</span>
@@ -743,11 +742,11 @@ export default function MeetingDetailPage() {
                 {meeting.participants.map((participant, idx) => (
                   <Link key={participant.id} href={`/profile/${participant.user.id}`} className="flex items-center gap-2 sm:gap-3 py-1.5 sm:py-2 hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors">
                     <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-full bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center text-white font-medium flex-shrink-0 overflow-hidden text-sm sm:text-base">
-                      {participant.user.profileImage ? (
-                        <img src={participant.user.profileImage} alt={participant.user.name} className="w-full h-full object-cover" />
-                      ) : (
-                        participant.user.name[0]
-                      )}
+                      <img
+                        src={participant.user.profileImage || getDefaultImage('profile')}
+                        alt={participant.user.name}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">

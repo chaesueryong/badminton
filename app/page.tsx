@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getDefaultImage } from "@/lib/constants";
 import {
   MapPin,
   Users,
@@ -95,7 +96,7 @@ export default function Home() {
       {/* Hero Section with gradient background */}
       <section className="relative bg-gradient-to-br from-blue-600 via-blue-500 to-indigo-600">
 
-        <div className="relative container mx-auto px-4 py-20 md:py-32">
+        <div className="relative container mx-auto px-2 sm:px-4 py-12 md:py-32">
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-3 bg-white/20 backdrop-blur-md text-white px-6 py-3 rounded-full text-sm font-medium mb-8 animate-pulse">
               <Star className="w-5 h-5 animate-spin-slow fill-current" />
@@ -167,7 +168,7 @@ export default function Home() {
       </section>
 
       {/* Popular Meetings Section */}
-      <section className="container mx-auto px-4 py-16 md:py-20">
+      <section className="container mx-auto px-2 sm:px-4 py-8 md:py-20">
         <div className="flex items-center justify-between mb-10">
           <div>
             <div className="flex items-center gap-3">
@@ -197,23 +198,21 @@ export default function Home() {
             <Link key={meeting.id} href={`/meetings/${meeting.id}`}>
               <Card className="group h-full border-2 hover-hover:hover:border-blue-200 hover-hover:hover:shadow-2xl transform hover-hover:hover:-translate-y-1 transition-all duration-300 overflow-hidden bg-gradient-to-br from-white to-slate-50 relative">
                 {/* 모임 썸네일 이미지 */}
-                {meeting.thumbnailImage && (
-                  <div className="w-full h-48 bg-gray-100 overflow-hidden relative">
-                    <img
-                      src={meeting.thumbnailImage}
-                      alt={meeting.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                    {index < 3 && (
-                      <div className="absolute top-4 right-4">
-                        <Badge className="bg-gradient-to-r from-orange-400 to-pink-400 text-white border-0 shadow-lg flex items-center gap-1.5 px-3 py-1">
-                          <span className="font-bold">HOT</span>
-                          <Flame className="w-4 h-4" />
-                        </Badge>
-                      </div>
-                    )}
-                  </div>
-                )}
+                <div className="w-full h-48 bg-gray-100 overflow-hidden relative">
+                  <img
+                    src={meeting.thumbnailImage || getDefaultImage('meeting')}
+                    alt={meeting.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  {index < 3 && (
+                    <div className="absolute top-4 right-4">
+                      <Badge className="bg-gradient-to-r from-orange-400 to-pink-400 text-white border-0 shadow-lg flex items-center gap-1.5 px-3 py-1">
+                        <span className="font-bold">HOT</span>
+                        <Flame className="w-4 h-4" />
+                      </Badge>
+                    </div>
+                  )}
+                </div>
 
                 {!meeting.thumbnailImage && index < 3 && (
                   <div className="absolute top-4 right-4 z-10">
@@ -277,7 +276,7 @@ export default function Home() {
 
       {/* Features Section */}
       <section className="py-16 md:py-20 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-2 sm:px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-black mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               왜 배드메이트인가요?
