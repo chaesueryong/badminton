@@ -16,8 +16,11 @@ export async function GET(
       .select(`
         *,
         participants:schedule_participants(
-          *,
-          user:users(id, name, nickname, level)
+          id,
+          userId,
+          status,
+          joinedAt,
+          user:users(id, name, nickname, level, profileImage)
         )
       `)
       .eq("id", params.scheduleId)

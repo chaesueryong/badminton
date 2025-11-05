@@ -22,6 +22,8 @@ export default function OnboardingPage() {
   const [error, setError] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [phoneValue, setPhoneValue] = useState("");
+  const [referralCode, setReferralCode] = useState("");
+  const [referralError, setReferralError] = useState("");
 
   useEffect(() => {
     const getUserData = async () => {
@@ -68,6 +70,7 @@ export default function OnboardingPage() {
           preferredStyle,
           experience: experience ? parseInt(experience) : null,
           birthdate: birthdate || null,
+          referralCode: referralCode || null,
         }),
       });
 
@@ -268,6 +271,36 @@ export default function OnboardingPage() {
 
             {/* 활동 지역 */}
             <RegionSelect required={false} />
+
+            {/* 초대 코드 (선택사항) */}
+            <div>
+              <label
+                htmlFor="referralCode"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                초대 코드 <span className="text-gray-400">(선택사항)</span>
+              </label>
+              <input
+                type="text"
+                id="referralCode"
+                name="referralCode"
+                value={referralCode}
+                onChange={(e) => {
+                  const value = e.target.value.toUpperCase();
+                  setReferralCode(value);
+                  setReferralError("");
+                }}
+                maxLength={8}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+                placeholder="친구의 초대 코드를 입력하세요"
+              />
+              {referralError && (
+                <p className="text-red-500 text-xs mt-1">{referralError}</p>
+              )}
+              <p className="text-gray-500 text-xs mt-1">
+                친구의 초대 코드를 입력하면 친구에게 포인트가 지급됩니다!
+              </p>
+            </div>
 
             {/* 제출 버튼 */}
             <button

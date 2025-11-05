@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
+import Link from "next/link";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import type { User } from "@supabase/supabase-js";
 import ImageUpload from "@/components/ImageUpload";
@@ -9,6 +10,7 @@ import { STORAGE_BUCKETS } from "@/lib/storage";
 import Image from "next/image";
 import RegionSelect from "@/components/RegionSelect";
 import { formatPhoneNumber, unformatPhoneNumber } from "@/lib/utils/phone";
+import { Feather, Trophy, Gift, Copy, Share2 } from "lucide-react";
 
 const levelLabels: Record<string, string> = {
   E_GRADE: "E조",
@@ -69,7 +71,11 @@ interface UserProfile {
   totalGames: number;
   wins: number;
   points: number;
+  rating: number;
+  feathers: number;
   createdAt: string;
+  referralCode: string | null;
+  referredBy: string | null;
 }
 
 function ProfilePageContent() {
@@ -95,8 +101,40 @@ function ProfilePageContent() {
   });
   const [editProvince, setEditProvince] = useState("");
   const [editCity, setEditCity] = useState("");
+  const [copySuccess, setCopySuccess] = useState(false);
 
   const supabase = createClientComponentClient();
+
+  const copyReferralCode = () => {
+    if (profile?.referralCode) {
+      navigator.clipboard.writeText(profile.referralCode);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    }
+  };
+
+  const shareReferralCode = async () => {
+    if (!profile?.referralCode) return;
+
+    const shareText = `배드메이트에 초대합니다! 초대 코드: ${profile.referralCode}`;
+    const shareUrl = `${window.location.origin}/onboarding`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: '배드메이트 초대',
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch (err) {
+        console.log('공유 취소됨');
+      }
+    } else {
+      // 모바일이 아닌 경우 클립보드에 복사
+      navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+      alert('초대 링크가 복사되었습니다!');
+    }
+  };
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -353,9 +391,9 @@ function ProfilePageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <div className="min-h-screen bg-gray-50 md:py-8">
+      <div className="md:container md:mx-auto md:px-4 md:max-w-4xl">
+        <div className="bg-white md:rounded-lg md:shadow-md overflow-hidden">
           {/* 헤더 */}
           <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 sm:p-8 text-white">
             <div className="flex flex-col sm:flex-row items-center sm:justify-between space-y-4 sm:space-y-0">
@@ -440,7 +478,7 @@ function ProfilePageContent() {
           </div>
 
           {/* 통계 */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 p-4 sm:p-8 border-b border-gray-200">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-4 p-4 sm:p-8 border-b border-gray-200">
             <div className="text-center">
               <p className="text-xs sm:text-sm text-gray-600 mb-1">총 경기</p>
               <p className="text-lg sm:text-2xl font-bold text-gray-900">{profile.totalGames || 0}</p>
@@ -450,8 +488,19 @@ function ProfilePageContent() {
               <p className="text-lg sm:text-2xl font-bold text-green-600">{profile.wins || 0}</p>
             </div>
             <div className="text-center">
+              <p className="text-xs sm:text-sm text-gray-600 mb-1">레이팅</p>
+              <p className="text-lg sm:text-2xl font-bold text-purple-600">{profile.rating || 1500}</p>
+            </div>
+            <div className="text-center">
               <p className="text-xs sm:text-sm text-gray-600 mb-1">포인트</p>
               <p className="text-lg sm:text-2xl font-bold text-blue-600">{profile.points || 0}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs sm:text-sm text-gray-600 mb-1">깃털</p>
+              <div className="flex items-center justify-center gap-1">
+                <Feather className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />
+                <p className="text-lg sm:text-2xl font-bold text-amber-600">{(profile.feathers || 0).toLocaleString()}</p>
+              </div>
             </div>
           </div>
 
@@ -487,6 +536,49 @@ function ProfilePageContent() {
               </div>
             </div>
           </div>
+
+          {/* 초대 코드 - 자신의 프로필일 때만 표시 */}
+          {isOwnProfile && profile.referralCode && (
+            <div className="p-4 sm:p-8 border-b border-gray-200">
+              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">친구 초대</h3>
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">내 초대 코드</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-blue-600 tracking-wider">
+                      {profile.referralCode}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={copyReferralCode}
+                      className="p-3 bg-white rounded-lg shadow hover-hover:hover:shadow-md transition active:scale-95"
+                      title="복사하기"
+                    >
+                      {copySuccess ? (
+                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : (
+                        <Copy className="w-5 h-5 text-gray-600" />
+                      )}
+                    </button>
+                    <button
+                      onClick={shareReferralCode}
+                      className="p-3 bg-white rounded-lg shadow hover-hover:hover:shadow-md transition active:scale-95"
+                      title="공유하기"
+                    >
+                      <Share2 className="w-5 h-5 text-gray-600" />
+                    </button>
+                  </div>
+                </div>
+                <div className="text-sm text-gray-600 space-y-1">
+                  <p>친구가 이 코드로 가입하면 100 포인트를 받아요!</p>
+                  <p className="text-xs text-gray-500">가입 시 초대 코드를 입력하도록 안내해주세요.</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* 상세 정보 */}
           <div className="p-4 sm:p-8 border-b border-gray-200">
@@ -747,6 +839,39 @@ function ProfilePageContent() {
               </div>
             )}
           </div>
+
+          {/* 빠른 메뉴 - 자신의 프로필일 때만 표시 */}
+          {isOwnProfile && (
+            <div className="p-4 sm:p-8 border-b border-gray-200">
+              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">빠른 메뉴</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <Link
+                  href="/leaderboard"
+                  className="flex items-center gap-3 p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg hover-hover:hover:shadow-md transition-all active:scale-95"
+                >
+                  <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
+                    <Trophy className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">랭킹</p>
+                    <p className="text-xs text-gray-600">순위 확인</p>
+                  </div>
+                </Link>
+                <Link
+                  href="/rewards"
+                  className="flex items-center gap-3 p-4 bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg hover-hover:hover:shadow-md transition-all active:scale-95"
+                >
+                  <div className="w-10 h-10 bg-amber-600 rounded-full flex items-center justify-center">
+                    <Gift className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">리워드</p>
+                    <p className="text-xs text-gray-600">보상 받기</p>
+                  </div>
+                </Link>
+              </div>
+            </div>
+          )}
 
           {/* 로그아웃 버튼 - 자신의 프로필일 때만 표시 */}
           {isOwnProfile && (

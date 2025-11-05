@@ -14,7 +14,10 @@ export async function GET(
     // 모임 일정 조회 (meeting_schedules 테이블에서)
     const { data: schedules, error } = await supabase
       .from("meeting_schedules")
-      .select("*")
+      .select(`
+        *,
+        participants:schedule_participants(userId)
+      `)
       .eq("meetingId", params.id)
       .order("date", { ascending: true });
 

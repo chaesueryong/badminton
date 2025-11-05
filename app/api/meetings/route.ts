@@ -97,6 +97,7 @@ export async function POST(request: NextRequest) {
     const {
       title,
       description,
+      detailedInfo,
       region,
       date,
       startTime,
@@ -123,11 +124,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate description length
+    if (description && description.length > 100) {
+      return NextResponse.json(
+        { error: "짧은 소개는 100자를 초과할 수 없습니다" },
+        { status: 400 }
+      );
+    }
+
+    // Validate detailed info length
+    if (detailedInfo && detailedInfo.length > 2000) {
+      return NextResponse.json(
+        { error: "상세 정보는 2000자를 초과할 수 없습니다" },
+        { status: 400 }
+      );
+    }
+
     const { data: meeting, error } = await supabase
       .from("meetings")
       .insert({
         title,
-        description,
+        description: description || null,
+        detailed_info: detailedInfo || null,
         region,
         date: date ? new Date(date).toISOString() : null,
         startTime: startTime || null,

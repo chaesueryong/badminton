@@ -109,7 +109,7 @@ export default function MyMeetingsPage() {
   };
 
   const formatLevelRange = (levelMin: string | null, levelMax: string | null) => {
-    if (!levelMin && !levelMax) return "모든 레벨";
+    if (!levelMin && !levelMax) return "모든 급수";
     const minLabel = levelMin ? levelLabels[levelMin] || levelMin : "";
     const maxLabel = levelMax ? levelLabels[levelMax] || levelMax : "";
     if (minLabel === maxLabel) return minLabel;

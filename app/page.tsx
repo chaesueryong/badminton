@@ -27,7 +27,9 @@ import {
   Zap,
   Award,
   Crown,
-  MessageCircle
+  MessageCircle,
+  DollarSign,
+  CalendarDays
 } from "lucide-react";
 
 interface Meeting {
@@ -40,6 +42,10 @@ interface Meeting {
   levelMax: string | null;
   status: string;
   thumbnailImage?: string | null;
+  fee?: number;
+  ageMin?: number | null;
+  ageMax?: number | null;
+  description?: string | null;
   host: {
     id: string;
     nickname: string;
@@ -63,6 +69,16 @@ const levelColors: Record<string, string> = {
   B_GRADE: "bg-pink-100 text-pink-700 border-pink-200",
   A_GRADE: "bg-orange-100 text-orange-700 border-orange-200",
   S_GRADE: "bg-gradient-to-r from-yellow-100 to-amber-100 text-amber-700 border-amber-200",
+};
+
+const formatLevelRange = (levelMin: string | null, levelMax: string | null) => {
+  if (!levelMin && !levelMax) return "모든 급수";
+  const minLabel = levelMin ? levelLabels[levelMin] || levelMin : "";
+  const maxLabel = levelMax ? levelLabels[levelMax] || levelMax : "";
+  if (minLabel === maxLabel) return minLabel;
+  if (!minLabel) return `~${maxLabel}`;
+  if (!maxLabel) return `${minLabel}~`;
+  return `${minLabel} ~ ${maxLabel}`;
 };
 
 export default function Home() {
@@ -92,11 +108,11 @@ export default function Home() {
   }, [fetchPopularMeetings]);
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 pb-20 md:pb-8">
+    <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
       {/* Hero Section with gradient background */}
       <section className="relative bg-gradient-to-br from-blue-600 via-blue-500 to-indigo-600">
 
-        <div className="relative container mx-auto px-2 sm:px-4 py-12 md:py-32">
+        <div className="relative container mx-auto px-4 py-12 md:py-32">
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-3 bg-white/20 backdrop-blur-md text-white px-6 py-3 rounded-full text-sm font-medium mb-8 animate-pulse">
               <Star className="w-5 h-5 animate-spin-slow fill-current" />
@@ -168,7 +184,7 @@ export default function Home() {
       </section>
 
       {/* Popular Meetings Section */}
-      <section className="container mx-auto px-2 sm:px-4 py-8 md:py-20">
+      <section className="container mx-auto px-4 py-8 md:py-20">
         <div className="flex items-center justify-between mb-10">
           <div>
             <div className="flex items-center gap-3">
@@ -245,7 +261,13 @@ export default function Home() {
                   </div>
                 </CardHeader>
 
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-3">
+                  {/* 소개 */}
+                  {meeting.description && (
+                    <p className="text-sm text-gray-600 line-clamp-2">{meeting.description}</p>
+                  )}
+
+                  {/* 인원 및 급수 */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-blue-500" />
@@ -256,13 +278,29 @@ export default function Home() {
                       </div>
                     </div>
 
-                    {(meeting.levelMin || meeting.levelMax) && (
-                      <div className="flex items-center gap-1.5 px-3 py-1 bg-gray-100 rounded-full">
-                        <TrendingUp className="h-3.5 w-3.5 text-purple-500" />
-                        <span className="text-xs font-medium text-gray-700">
-                          {meeting.levelMin && levelLabels[meeting.levelMin]}
-                          {meeting.levelMin && meeting.levelMax && " ~ "}
-                          {meeting.levelMax && levelLabels[meeting.levelMax]}
+                    <div className="flex items-center gap-1.5 px-3 py-1 bg-gray-100 rounded-full">
+                      <TrendingUp className="h-3.5 w-3.5 text-purple-500" />
+                      <span className="text-xs font-medium text-gray-700">
+                        {formatLevelRange(meeting.levelMin, meeting.levelMax)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 참가비 및 나이제한 */}
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-1">
+                      <DollarSign className="h-3.5 w-3.5 text-green-600" />
+                      <span>{meeting.fee && meeting.fee > 0 ? `${meeting.fee.toLocaleString()}원` : '무료'}</span>
+                    </div>
+                    {(meeting.ageMin || meeting.ageMax) && (
+                      <div className="flex items-center gap-1">
+                        <CalendarDays className="h-3.5 w-3.5 text-orange-500" />
+                        <span>
+                          {meeting.ageMin && meeting.ageMax
+                            ? `${meeting.ageMin}~${meeting.ageMax}세`
+                            : meeting.ageMin
+                            ? `${meeting.ageMin}세 이상`
+                            : `${meeting.ageMax}세 이하`}
                         </span>
                       </div>
                     )}
@@ -276,7 +314,7 @@ export default function Home() {
 
       {/* Features Section */}
       <section className="py-16 md:py-20 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50">
-        <div className="container mx-auto px-2 sm:px-4">
+        <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-black mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               왜 배드메이트인가요?

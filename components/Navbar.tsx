@@ -19,7 +19,8 @@ import {
   Home,
   User as UserIcon,
   Bell,
-  MapPin
+  MapPin,
+  Feather
 } from "lucide-react";
 
 export default function Navbar() {
@@ -31,6 +32,7 @@ export default function Navbar() {
   const [nickname, setNickname] = useState<string>("");
   const [profileImage, setProfileImage] = useState<string>("");
   const [userRegion, setUserRegion] = useState<string>("");
+  const [feathers, setFeathers] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,11 +41,11 @@ export default function Navbar() {
       setUser(session?.user ?? null);
       setLoading(false);
 
-      // 닉네임, 프로필 이미지, 지역 가져오기
+      // 닉네임, 프로필 이미지, 지역, 깃털 가져오기
       if (session?.user) {
         supabase
           .from('users')
-          .select('nickname, profileImage, region')
+          .select('nickname, profileImage, region, feathers')
           .eq('id', session.user.id)
           .maybeSingle()
           .then(({ data: userData }) => {
@@ -55,6 +57,9 @@ export default function Navbar() {
             }
             if (userData?.region) {
               setUserRegion(userData.region);
+            }
+            if (userData?.feathers !== undefined) {
+              setFeathers(userData.feathers);
             }
           });
       }
@@ -69,7 +74,7 @@ export default function Navbar() {
       if (session?.user) {
         supabase
           .from('users')
-          .select('nickname, profileImage, region')
+          .select('nickname, profileImage, region, feathers')
           .eq('id', session.user.id)
           .maybeSingle()
           .then(({ data: userData }) => {
@@ -82,11 +87,15 @@ export default function Navbar() {
             if (userData?.region) {
               setUserRegion(userData.region);
             }
+            if (userData?.feathers !== undefined) {
+              setFeathers(userData.feathers);
+            }
           });
       } else {
         setNickname("");
         setProfileImage("");
         setUserRegion("");
+        setFeathers(0);
       }
     });
 
@@ -229,10 +238,14 @@ export default function Navbar() {
             </span>
           </div>
 
-          {/* 오른쪽: 알림, 메시지 */}
+          {/* 오른쪽: 깃털, 알림, 메시지 */}
           <div className="flex items-center gap-3">
             {user && (
               <>
+                <div className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-full border border-amber-200">
+                  <Feather className="w-4 h-4 text-amber-600" />
+                  <span className="text-xs font-semibold text-amber-700">{feathers.toLocaleString()}</span>
+                </div>
                 <Link href="/notifications" className="relative">
                   <Bell className="w-5 h-5 text-gray-600" />
                 </Link>

@@ -42,6 +42,7 @@ interface Meeting {
   id: string;
   title: string;
   description: string;
+  detailed_info?: string;
   date: string;
   startTime: string;
   endTime: string;
@@ -102,6 +103,7 @@ interface Schedule {
   status: string;
   fee: number;
   notes?: string;
+  participants?: { userId: string }[];
 }
 
 export default function MeetingDetailPage() {
@@ -203,6 +205,133 @@ export default function MeetingDetailPage() {
     }
   };
 
+  const handleLeaveMeeting = async () => {
+    if (!confirm('정말 이 모임을 탈퇴하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/meetings/${params.id}/leave`, {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        alert("모임에서 탈퇴했습니다");
+        router.push("/meetings");
+      } else {
+        const error = await response.json();
+        alert(error.error || "탈퇴에 실패했습니다");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("오류가 발생했습니다");
+    }
+  };
+
+  const handleKickMember = async (userId: string, userName: string) => {
+    if (!confirm(`정말 ${userName}님을 강퇴하시겠습니까?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/meetings/${params.id}/kick`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (response.ok) {
+        alert("멤버를 강퇴했습니다");
+        fetchMeeting();
+      } else {
+        const error = await response.json();
+        alert(error.error || "강퇴에 실패했습니다");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("오류가 발생했습니다");
+    }
+  };
+
+  const handleBlacklistMember = async (userId: string, userName: string) => {
+    const reason = prompt(`${userName}님을 블랙리스트에 추가하시겠습니까?\n사유를 입력해주세요 (선택사항):`);
+
+    if (reason === null) {
+      return; // 취소
+    }
+
+    try {
+      const response = await fetch(`/api/meetings/${params.id}/blacklist`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId, reason }),
+      });
+
+      if (response.ok) {
+        alert("블랙리스트에 추가했습니다");
+        fetchMeeting();
+      } else {
+        const error = await response.json();
+        alert(error.error || "블랙리스트 추가에 실패했습니다");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("오류가 발생했습니다");
+    }
+  };
+
+  const handleJoinSchedule = async (scheduleId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (!confirm('이 일정에 참석하시겠습니까?')) return;
+
+    try {
+      const response = await fetch(`/api/meetings/${params.id}/schedules/${scheduleId}/join`, {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        alert("일정에 참석 신청했습니다");
+        fetchMeeting();
+        fetchSchedules();
+      } else {
+        const error = await response.json();
+        alert(error.error || "참석 신청에 실패했습니다");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("오류가 발생했습니다");
+    }
+  };
+
+  const handleLeaveSchedule = async (scheduleId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (!confirm('이 일정 참석을 취소하시겠습니까?')) return;
+
+    try {
+      const response = await fetch(`/api/meetings/${params.id}/schedules/${scheduleId}/leave`, {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        alert("일정 참석을 취소했습니다");
+        fetchMeeting();
+        fetchSchedules();
+      } else {
+        const error = await response.json();
+        alert(error.error || "취소에 실패했습니다");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("오류가 발생했습니다");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -222,6 +351,7 @@ export default function MeetingDetailPage() {
   const isOpen = meeting.status === "OPEN";
   const isHost = currentUserId === meeting.hostId;
   const isParticipant = meeting.participants?.some(p => p.userId === currentUserId);
+  const userRole = meeting.participants?.find(p => p.userId === currentUserId)?.role;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-32 md:pb-0">
@@ -234,7 +364,7 @@ export default function MeetingDetailPage() {
         />
       </div>
 
-      <div className="container mx-auto px-2 sm:px-4 max-w-4xl py-2 sm:py-8">
+      <div className="md:container md:mx-auto md:px-4 md:max-w-4xl md:py-8">
         <div className="bg-white rounded-lg border border-gray-100 shadow-sm">
           {/* 헤더 */}
           <div className="p-4 sm:p-6 md:p-8 border-b border-gray-100">
@@ -256,9 +386,20 @@ export default function MeetingDetailPage() {
           {/* 모임 소개 */}
           <div className="p-4 sm:p-6 md:p-8 border-b border-gray-100">
             <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">📝 모임 소개</h2>
+
+            {/* 짧은 소개 */}
+            {meeting.description && (
+              <div className="mb-4 p-3 bg-blue-50 border-l-4 border-blue-500 rounded">
+                <p className="text-gray-800 text-sm sm:text-base font-medium">
+                  {meeting.description}
+                </p>
+              </div>
+            )}
+
+            {/* 상세 정보 */}
             <div className="prose prose-sm max-w-none">
               <p className="text-gray-600 whitespace-pre-wrap leading-relaxed text-xs sm:text-sm">
-                {meeting.description || '소개글이 없습니다.'}
+                {meeting.detailed_info || '상세 정보가 없습니다.'}
               </p>
             </div>
           </div>
@@ -289,71 +430,99 @@ export default function MeetingDetailPage() {
             ) : (
               <>
                 <div className="space-y-3">
-                  {schedules.slice(0, 3).map((schedule) => (
-                    <div
-                      key={schedule.id}
-                      className="border border-gray-200 rounded-lg p-3 sm:p-4 hover:border-blue-200 hover:bg-blue-50/30 transition-all cursor-pointer"
-                      onClick={() => router.push(`/meetings/${params.id}/schedules/${schedule.id}`)}
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                            <div className="text-center min-w-[50px] sm:min-w-[60px]">
-                              <div className="text-xl sm:text-2xl font-bold text-gray-900">
-                                {new Date(schedule.date).getDate()}
+                  {schedules.slice(0, 3).map((schedule) => {
+                    const isScheduleParticipant = schedule.participants?.some(p => p.userId === currentUserId);
+                    const isScheduleFull = schedule.currentCount >= schedule.maxParticipants;
+
+                    return (
+                      <div
+                        key={schedule.id}
+                        className="border border-gray-200 rounded-lg p-3 sm:p-4 hover:border-blue-200 hover:bg-blue-50/30 transition-all"
+                      >
+                        <div
+                          className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 cursor-pointer"
+                          onClick={() => router.push(`/meetings/${params.id}/schedules/${schedule.id}`)}
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                              <div className="text-center min-w-[50px] sm:min-w-[60px]">
+                                <div className="text-xl sm:text-2xl font-bold text-gray-900">
+                                  {new Date(schedule.date).getDate()}
+                                </div>
+                                <div className="text-xs text-gray-600">
+                                  {new Date(schedule.date).toLocaleDateString('ko-KR', { month: 'short' })}
+                                </div>
                               </div>
-                              <div className="text-xs text-gray-600">
-                                {new Date(schedule.date).toLocaleDateString('ko-KR', { month: 'short' })}
-                              </div>
-                            </div>
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-gray-900 text-sm sm:text-base">
-                                {new Date(schedule.date).toLocaleDateString('ko-KR', {
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric',
-                                  weekday: 'short'
-                                })}
-                              </h3>
-                              <div className="text-xs sm:text-sm text-gray-600 mt-1 space-y-0.5">
-                                <p>🕐 {schedule.startTime} - {schedule.endTime}</p>
-                                {schedule.location && (
-                                  <p className="flex items-center gap-1">
-                                    <MapPin className="w-3 h-3 text-gray-500" />
-                                    <span className="truncate">{schedule.location}</span>
-                                  </p>
-                                )}
-                                {schedule.fee > 0 && (
-                                  <p className="flex items-center gap-1">
-                                    <DollarSign className="w-3 h-3 text-gray-500" />
-                                    {schedule.fee.toLocaleString()}원
-                                  </p>
-                                )}
+                              <div className="flex-1">
+                                <h3 className="font-semibold text-gray-900 text-sm sm:text-base">
+                                  {new Date(schedule.date).toLocaleDateString('ko-KR', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    weekday: 'short'
+                                  })}
+                                </h3>
+                                <div className="text-xs sm:text-sm text-gray-600 mt-1 space-y-0.5">
+                                  <p>🕐 {schedule.startTime} - {schedule.endTime}</p>
+                                  {schedule.location && (
+                                    <p className="flex items-center gap-1">
+                                      <MapPin className="w-3 h-3 text-gray-500" />
+                                      <span className="truncate">{schedule.location}</span>
+                                    </p>
+                                  )}
+                                  {schedule.fee > 0 && (
+                                    <p className="flex items-center gap-1">
+                                      <DollarSign className="w-3 h-3 text-gray-500" />
+                                      {schedule.fee.toLocaleString()}원
+                                    </p>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                        <div className="flex items-center justify-between sm:flex-col sm:items-end gap-2 sm:gap-3">
-                          <div className="flex items-center gap-1">
-                            <Users className="w-4 sm:w-5 h-4 sm:h-5 text-gray-500" />
-                            <span className="text-sm sm:text-lg font-bold text-blue-600">
-                              {schedule.currentCount}/{schedule.maxParticipants}
+                          <div className="flex items-center justify-between sm:flex-col sm:items-end gap-2 sm:gap-3">
+                            <div className="flex items-center gap-1">
+                              <Users className="w-4 sm:w-5 h-4 sm:h-5 text-gray-500" />
+                              <span className="text-sm sm:text-lg font-bold text-blue-600">
+                                {schedule.currentCount}/{schedule.maxParticipants}
+                              </span>
+                            </div>
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${
+                              schedule.status === 'OPEN' ? 'bg-green-100 text-green-800' :
+                              schedule.status === 'CLOSED' ? 'bg-gray-100 text-gray-800' :
+                              schedule.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {schedule.status === 'OPEN' ? '모집중' :
+                               schedule.status === 'CLOSED' ? '마감' :
+                               schedule.status === 'COMPLETED' ? '완료' : '취소'}
                             </span>
                           </div>
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            schedule.status === 'OPEN' ? 'bg-green-100 text-green-800' :
-                            schedule.status === 'CLOSED' ? 'bg-gray-100 text-gray-800' :
-                            schedule.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            {schedule.status === 'OPEN' ? '모집중' :
-                             schedule.status === 'CLOSED' ? '마감' :
-                             schedule.status === 'COMPLETED' ? '완료' : '취소'}
-                          </span>
                         </div>
+
+                        {(isParticipant || isHost) && schedule.status === 'OPEN' && (
+                          <div className="mt-3 pt-3 border-t border-gray-200" onClick={(e) => e.stopPropagation()}>
+                            {isScheduleParticipant ? (
+                              <button
+                                onClick={(e) => handleLeaveSchedule(schedule.id, e)}
+                                className="w-full bg-red-50 text-red-600 py-2 rounded-lg font-medium text-sm hover:bg-red-100 transition"
+                              >
+                                참석 취소
+                              </button>
+                            ) : (
+                              <button
+                                onClick={(e) => handleJoinSchedule(schedule.id, e)}
+                                disabled={isScheduleFull}
+                                className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium text-sm hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {isScheduleFull ? '마감' : '참석하기'}
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 {schedules.length > 3 && (
                   <div className="text-center mt-4">
@@ -568,13 +737,19 @@ export default function MeetingDetailPage() {
                 )}
               </div>
               <div className="space-y-3">
-                {schedules.map((schedule) => (
+                {schedules.map((schedule) => {
+                  const isScheduleParticipant = schedule.participants?.some(p => p.userId === currentUserId);
+                  const isScheduleFull = schedule.currentCount >= schedule.maxParticipants;
+
+                  return (
                     <div
                       key={schedule.id}
-                      className="border border-gray-200 rounded-lg p-3 sm:p-4 hover:border-blue-300 transition cursor-pointer"
-                      onClick={() => router.push(`/meetings/${params.id}/schedules/${schedule.id}`)}
+                      className="border border-gray-200 rounded-lg p-3 sm:p-4 hover:border-blue-300 transition"
                     >
-                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                      <div
+                        className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 cursor-pointer"
+                        onClick={() => router.push(`/meetings/${params.id}/schedules/${schedule.id}`)}
+                      >
                         <div className="flex-1">
                           <div className="flex items-center gap-2 sm:gap-3 mb-2">
                             <div className="text-center min-w-[50px] sm:min-w-[60px]">
@@ -631,8 +806,30 @@ export default function MeetingDetailPage() {
                           </span>
                         </div>
                       </div>
+
+                      {(isParticipant || isHost) && schedule.status === 'OPEN' && (
+                        <div className="mt-3 pt-3 border-t border-gray-200" onClick={(e) => e.stopPropagation()}>
+                          {isScheduleParticipant ? (
+                            <button
+                              onClick={(e) => handleLeaveSchedule(schedule.id, e)}
+                              className="w-full bg-red-50 text-red-600 py-2 rounded-lg font-medium text-sm hover:bg-red-100 transition"
+                            >
+                              참석 취소
+                            </button>
+                          ) : (
+                            <button
+                              onClick={(e) => handleJoinSchedule(schedule.id, e)}
+                              disabled={isScheduleFull}
+                              className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium text-sm hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {isScheduleFull ? '마감' : '참석하기'}
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  ))}
+                  );
+                })}
                 </div>
             </div>
           )}
@@ -739,33 +936,64 @@ export default function MeetingDetailPage() {
                 </button>
               </div>
               <div className="space-y-2 sm:space-y-3">
-                {meeting.participants.map((participant, idx) => (
-                  <Link key={participant.id} href={`/profile/${participant.user.id}`} className="flex items-center gap-2 sm:gap-3 py-1.5 sm:py-2 hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors">
-                    <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-full bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center text-white font-medium flex-shrink-0 overflow-hidden text-sm sm:text-base">
-                      <img
-                        src={participant.user.profileImage || getDefaultImage('profile')}
-                        alt={participant.user.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                        <span className="font-medium text-gray-900 text-sm sm:text-base truncate">{participant.user.name}</span>
-                        {participant.userId === meeting.hostId && (
-                          <span className="text-xs bg-yellow-100 text-yellow-700 px-1.5 sm:px-2 py-0.5 rounded font-medium">
-                            Premium Sponsor
+                {meeting.participants.map((participant, idx) => {
+                  const canManage = isHost || userRole === 'MANAGER';
+                  const isTargetHost = participant.userId === meeting.hostId;
+
+                  return (
+                    <div key={participant.id} className="flex items-center gap-2 sm:gap-3 py-1.5 sm:py-2 hover:bg-gray-50 rounded-lg px-2 -mx-2 transition-colors">
+                      <Link href={`/profile/${participant.user.id}`} className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                        <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-full bg-gradient-to-br from-gray-300 to-gray-500 flex items-center justify-center text-white font-medium flex-shrink-0 overflow-hidden text-sm sm:text-base">
+                          <img
+                            src={participant.user.profileImage || getDefaultImage('profile')}
+                            alt={participant.user.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                            <span className="font-medium text-gray-900 text-sm sm:text-base truncate">{participant.user.name}</span>
+                            {participant.userId === meeting.hostId && (
+                              <span className="text-xs bg-yellow-100 text-yellow-700 px-1.5 sm:px-2 py-0.5 rounded font-medium">
+                                Premium Sponsor
+                              </span>
+                            )}
+                            {idx < 2 && idx > 0 && (
+                              <span className="text-xs bg-red-100 text-red-700 px-1.5 sm:px-2 py-0.5 rounded font-medium">
+                                NEW
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs sm:text-sm text-gray-500 truncate">{participant.user.nickname}</p>
+                        </div>
+                        <div className="flex-shrink-0">
+                          <span className="text-xs sm:text-sm font-medium text-blue-600 bg-blue-50 px-2 sm:px-3 py-1 rounded-full">
+                            {levelLabels[participant.user.level] || participant.user.level}
                           </span>
-                        )}
-                        {idx < 2 && idx > 0 && (
-                          <span className="text-xs bg-red-100 text-red-700 px-1.5 sm:px-2 py-0.5 rounded font-medium">
-                            NEW
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs sm:text-sm text-gray-500 truncate">{participant.user.nickname || levelLabels[participant.user.level]}</p>
+                        </div>
+                      </Link>
+
+                      {canManage && !isTargetHost && (
+                        <div className="flex gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => handleKickMember(participant.user.id, participant.user.name)}
+                            className="p-1.5 sm:p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition text-xs sm:text-sm"
+                            title="내보내기"
+                          >
+                            🚪
+                          </button>
+                          <button
+                            onClick={() => handleBlacklistMember(participant.user.id, participant.user.name)}
+                            className="p-1.5 sm:p-2 text-red-600 hover:bg-red-50 rounded-lg transition text-xs sm:text-sm"
+                            title="블랙리스트"
+                          >
+                            🚫
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  </Link>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -774,7 +1002,7 @@ export default function MeetingDetailPage() {
 
       {/* 플로팅 버튼 */}
       <div className="fixed bottom-16 left-0 right-0 bg-white border-t shadow-lg md:hidden z-40">
-        <div className="container mx-auto px-4 max-w-5xl py-3 sm:py-4">
+        <div className="md:container md:mx-auto md:px-4 md:max-w-5xl py-3">
           <div className="flex items-center justify-between gap-3 sm:gap-4">
             <div className="flex items-center gap-6 sm:gap-8">
               <button onClick={handleShare} className="flex flex-col items-center hover:opacity-70 transition">
@@ -800,9 +1028,17 @@ export default function MeetingDetailPage() {
               </button>
             )}
             {isParticipant && !isHost && (
-              <button className="flex-1 bg-green-600 text-white py-3 sm:py-4 rounded-lg font-bold text-sm sm:text-lg">
-                ✓ 참가 중
-              </button>
+              <div className="flex-1 flex gap-2">
+                <button className="flex-1 bg-green-600 text-white py-3 sm:py-4 rounded-lg font-bold text-sm sm:text-lg">
+                  ✓ 참가 중
+                </button>
+                <button
+                  onClick={handleLeaveMeeting}
+                  className="px-4 bg-red-600 text-white py-3 sm:py-4 rounded-lg font-bold text-sm sm:text-lg hover-hover:hover:bg-red-700 transition"
+                >
+                  탈퇴
+                </button>
+              </div>
             )}
           </div>
         </div>

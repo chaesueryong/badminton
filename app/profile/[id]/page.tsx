@@ -8,6 +8,7 @@ import ImageUpload from "@/components/ImageUpload";
 import { STORAGE_BUCKETS } from "@/lib/storage";
 import Image from "next/image";
 import RegionSelect from "@/components/RegionSelect";
+import { Feather } from "lucide-react";
 
 const levelLabels: Record<string, string> = {
   E_GRADE: "E조",
@@ -68,6 +69,8 @@ interface UserProfile {
   total_games: number;
   wins: number;
   points: number;
+  rating: number;
+  feathers: number;
   created_at: string;
 }
 
@@ -341,7 +344,7 @@ export default function ProfilePage() {
           </div>
 
           {/* 통계 */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 p-4 sm:p-8 border-b border-gray-200">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-4 p-4 sm:p-8 border-b border-gray-200">
             <div className="text-center">
               <p className="text-xs sm:text-sm text-gray-600 mb-1">총 경기</p>
               <p className="text-lg sm:text-2xl font-bold text-gray-900">{profile.total_games || 0}</p>
@@ -351,8 +354,19 @@ export default function ProfilePage() {
               <p className="text-lg sm:text-2xl font-bold text-green-600">{profile.wins || 0}</p>
             </div>
             <div className="text-center">
+              <p className="text-xs sm:text-sm text-gray-600 mb-1">레이팅</p>
+              <p className="text-lg sm:text-2xl font-bold text-purple-600">{profile.rating || 1500}</p>
+            </div>
+            <div className="text-center">
               <p className="text-xs sm:text-sm text-gray-600 mb-1">포인트</p>
               <p className="text-lg sm:text-2xl font-bold text-blue-600">{profile.points || 0}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs sm:text-sm text-gray-600 mb-1">깃털</p>
+              <div className="flex items-center justify-center gap-1">
+                <Feather className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />
+                <p className="text-lg sm:text-2xl font-bold text-amber-600">{(profile.feathers || 0).toLocaleString()}</p>
+              </div>
             </div>
           </div>
 
