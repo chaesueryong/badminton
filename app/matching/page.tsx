@@ -222,7 +222,7 @@ export default function MatchingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-2 sm:px-4">
         {/* 헤더 */}
         <div className="mb-8">
           <div className="flex justify-between items-start">

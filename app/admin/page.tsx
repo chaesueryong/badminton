@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Stats {
   users: {
@@ -74,8 +77,24 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="space-y-8">
+        <div className="mb-8">
+          <Skeleton className="h-10 w-48 mb-2" />
+          <Skeleton className="h-5 w-64" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-8 w-24 mt-2" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-4 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
@@ -83,18 +102,20 @@ export default function AdminDashboard() {
   if (error) {
     return (
       <div className="text-center py-12">
-        <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg p-4 max-w-md mx-auto">
-          <p className="font-semibold mb-2">오류 발생</p>
-          <p className="text-sm">{error}</p>
-        </div>
+        <Alert variant="destructive" className="max-w-md mx-auto">
+          <AlertTitle>오류 발생</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       </div>
     );
   }
 
   if (!stats) {
     return (
-      <div className="text-center text-gray-600 py-12">
-        통계를 불러올 수 없습니다.
+      <div className="text-center py-12">
+        <Alert className="max-w-md mx-auto">
+          <AlertDescription>통계를 불러올 수 없습니다.</AlertDescription>
+        </Alert>
       </div>
     );
   }
@@ -110,81 +131,89 @@ export default function AdminDashboard() {
       {/* 통계 카드 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {/* 회원 통계 */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between mb-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
-              <p className="text-sm text-gray-600">전체 회원</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.users.total.toLocaleString()}</p>
+              <CardTitle className="text-sm font-medium text-muted-foreground">전체 회원</CardTitle>
+              <p className="text-3xl font-bold mt-2">{stats.users.total.toLocaleString()}</p>
             </div>
             <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
               <span className="text-2xl">👥</span>
             </div>
-          </div>
-          <div className="flex items-center text-sm">
-            <span className="text-green-600 font-semibold">{stats.users.active.toLocaleString()}</span>
-            <span className="text-gray-600 ml-2">활성 회원</span>
-          </div>
-        </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center text-sm">
+              <span className="text-green-600 font-semibold">{stats.users.active.toLocaleString()}</span>
+              <span className="text-muted-foreground ml-2">활성 회원</span>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* 모임 통계 */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between mb-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
-              <p className="text-sm text-gray-600">전체 모임</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.meetings.total.toLocaleString()}</p>
+              <CardTitle className="text-sm font-medium text-muted-foreground">전체 모임</CardTitle>
+              <p className="text-3xl font-bold mt-2">{stats.meetings.total.toLocaleString()}</p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
               <span className="text-2xl">🏸</span>
             </div>
-          </div>
-          <div className="flex items-center text-sm">
-            <span className="text-green-600 font-semibold">{stats.meetings.recruiting}</span>
-            <span className="text-gray-600 ml-2">모집 중</span>
-          </div>
-        </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center text-sm">
+              <span className="text-green-600 font-semibold">{stats.meetings.recruiting}</span>
+              <span className="text-muted-foreground ml-2">모집 중</span>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* 게시글 통계 */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between mb-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
-              <p className="text-sm text-gray-600">전체 게시글</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.posts.total.toLocaleString()}</p>
+              <CardTitle className="text-sm font-medium text-muted-foreground">전체 게시글</CardTitle>
+              <p className="text-3xl font-bold mt-2">{stats.posts.total.toLocaleString()}</p>
             </div>
             <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
               <span className="text-2xl">📝</span>
             </div>
-          </div>
-          <div className="flex items-center text-sm">
-            <span className="text-green-600 font-semibold">{stats.posts.published}</span>
-            <span className="text-gray-600 ml-2">공개</span>
-          </div>
-        </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center text-sm">
+              <span className="text-green-600 font-semibold">{stats.posts.published}</span>
+              <span className="text-muted-foreground ml-2">공개</span>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* 신고 통계 */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between mb-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
-              <p className="text-sm text-gray-600">신고 접수</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.reports.total}</p>
+              <CardTitle className="text-sm font-medium text-muted-foreground">신고 접수</CardTitle>
+              <p className="text-3xl font-bold mt-2">{stats.reports.total}</p>
             </div>
             <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
               <span className="text-2xl">🚨</span>
             </div>
-          </div>
-          <div className="flex items-center text-sm">
-            <span className="text-red-600 font-semibold">{stats.reports.pending}</span>
-            <span className="text-gray-600 ml-2">처리 대기</span>
-          </div>
-        </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center text-sm">
+              <span className="text-red-600 font-semibold">{stats.reports.pending}</span>
+              <span className="text-muted-foreground ml-2">처리 대기</span>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* 상세 통계 */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900">상세 통계</h2>
-          </div>
-          <div className="p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>상세 통계</CardTitle>
+          </CardHeader>
+          <CardContent>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">정지된 회원</span>
@@ -211,15 +240,15 @@ export default function AdminDashboard() {
                 <span className="font-semibold text-gray-600">{stats.reports.dismissed}</span>
               </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* 빠른 액션 */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900">빠른 액션</h2>
-          </div>
-          <div className="p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>빠른 액션</CardTitle>
+          </CardHeader>
+          <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <Link
                 href="/admin/users"
@@ -266,8 +295,8 @@ export default function AdminDashboard() {
                 <div className="text-sm font-semibold">통계 보기</div>
               </Link>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

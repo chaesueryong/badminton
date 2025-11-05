@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { MapPin, Users, TrendingUp, DollarSign, ChevronLeft, ChevronRight, Filter, X, Search, Shield, ChevronDown } from "lucide-react";
 import RegionSelect from "@/components/RegionSelect";
+import { getDefaultImage } from "@/lib/constants";
 
 interface Meeting {
   id: string;
@@ -133,7 +134,7 @@ export default function MeetingsPage() {
     <div className="min-h-screen bg-background pb-20 md:pb-8">
       {/* Header */}
       <div className="border-b bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50">
-        <div className="container mx-auto px-4 py-6 md:py-8">
+        <div className="container mx-auto px-2 sm:px-4 py-4 md:py-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-2xl md:text-4xl font-bold tracking-tight flex items-center gap-3">
@@ -157,7 +158,7 @@ export default function MeetingsPage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6 md:py-8">
+      <div className="container mx-auto px-2 sm:px-4 py-4 md:py-8">
         {/* Filter Section - Enhanced Design */}
         <div className="mb-8 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 rounded-2xl p-1">
           <Card className="bg-white/95 backdrop-blur border-0 shadow-xl">
@@ -302,15 +303,13 @@ export default function MeetingsPage() {
                 <Link key={meeting.id} href={`/meetings/${meeting.id}`}>
                   <Card className="h-full hover-hover:hover:shadow-lg active:scale-[0.98] transition-all duration-300 cursor-pointer group overflow-hidden">
                     {/* 모임 썸네일 이미지 */}
-                    {meeting.thumbnailImage && (
-                      <div className="w-full h-32 sm:h-48 bg-gray-100 overflow-hidden">
-                        <img
-                          src={meeting.thumbnailImage}
-                          alt={meeting.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                    )}
+                    <div className="w-full h-32 sm:h-48 bg-gray-100 overflow-hidden">
+                      <img
+                        src={meeting.thumbnailImage || getDefaultImage('meeting')}
+                        alt={meeting.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
                     <CardHeader className="p-4 sm:p-6">
                       <div className="flex items-start justify-between gap-2">
                         <CardTitle className="text-base sm:text-lg group-hover-hover:hover:text-primary transition-colors line-clamp-2">

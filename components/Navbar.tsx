@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import type { User } from "@supabase/supabase-js";
 import { usePathname } from "next/navigation";
+import { getDefaultImage } from "@/lib/constants";
 import {
   Activity,
   Star,
@@ -184,11 +185,11 @@ export default function Navbar() {
                     className="flex items-center space-x-2 px-4 py-2 rounded-lg hover-hover:hover:bg-gray-50 transition"
                   >
                     <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium text-sm overflow-hidden">
-                      {profileImage ? (
-                        <img src={profileImage} alt={nickname || "프로필"} className="w-full h-full object-cover" />
-                      ) : (
-                        (nickname || user.email || "U").charAt(0).toUpperCase()
-                      )}
+                      <img
+                        src={profileImage || getDefaultImage('profile')}
+                        alt={nickname || "프로필"}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     <span className="text-sm font-medium text-gray-700">
                       {nickname || "프로필"}
@@ -311,9 +312,13 @@ export default function Navbar() {
                 : 'text-gray-500'
             }`}
           >
-            {user && profileImage ? (
+            {user ? (
               <div className={`w-5 h-5 rounded-full overflow-hidden ${isActive('/profile') ? 'ring-2 ring-blue-600' : ''}`}>
-                <img src={profileImage} alt="프로필" className="w-full h-full object-cover" />
+                <img
+                  src={profileImage || getDefaultImage('profile')}
+                  alt="프로필"
+                  className="w-full h-full object-cover"
+                />
               </div>
             ) : (
               <UserIcon className="w-5 h-5" strokeWidth={isActive('/profile') ? 2.5 : 2} />

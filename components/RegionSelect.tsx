@@ -1,6 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 export const regions: Record<string, string[]> = {
   "서울특별시": ["강남구", "강동구", "강북구", "강서구", "관악구", "광진구", "구로구", "금천구", "노원구", "도봉구", "동대문구", "동작구", "마포구", "서대문구", "서초구", "성동구", "성북구", "송파구", "양천구", "영등포구", "용산구", "은평구", "종로구", "중구", "중랑구"],
@@ -57,8 +65,7 @@ export default function RegionSelect({
     setSelectedCity(defaultCity);
   }, [defaultCity]);
 
-  const handleProvinceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const province = e.target.value;
+  const handleProvinceChange = (province: string) => {
     setSelectedProvince(province);
     setSelectedCity("");
     if (onChange) {
@@ -66,8 +73,7 @@ export default function RegionSelect({
     }
   };
 
-  const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const city = e.target.value;
+  const handleCityChange = (city: string) => {
     setSelectedCity(city);
     if (onChange) {
       onChange(selectedProvince, city);
@@ -77,42 +83,47 @@ export default function RegionSelect({
   return (
     <div>
       {showLabel && (
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <Label className="block text-sm font-medium mb-1">
           활동 지역 {required && <span className="text-red-500">*</span>}
-        </label>
+        </Label>
       )}
       <div className="grid grid-cols-2 gap-3">
-        <select
-          id={provinceId}
-          name={provinceName}
+        <Select
           value={selectedProvince}
-          onChange={handleProvinceChange}
+          onValueChange={handleProvinceChange}
           required={required}
-          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          name={provinceName}
         >
-          <option value="">시/도</option>
-          {Object.keys(regions).map((province) => (
-            <option key={province} value={province}>
-              {province}
-            </option>
-          ))}
-        </select>
-        <select
-          id={cityId}
-          name={cityName}
+          <SelectTrigger id={provinceId}>
+            <SelectValue placeholder="시/도" />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.keys(regions).map((province) => (
+              <SelectItem key={province} value={province}>
+                {province}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
           value={selectedCity}
-          onChange={handleCityChange}
+          onValueChange={handleCityChange}
           disabled={!selectedProvince}
           required={required && !!selectedProvince}
-          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+          name={cityName}
         >
-          <option value="">시/군/구</option>
-          {selectedProvince && regions[selectedProvince]?.map((city) => (
-            <option key={city} value={city}>
-              {city}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger id={cityId}>
+            <SelectValue placeholder="시/군/구" />
+          </SelectTrigger>
+          <SelectContent>
+            {selectedProvince && regions[selectedProvince]?.map((city) => (
+              <SelectItem key={city} value={city}>
+                {city}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );

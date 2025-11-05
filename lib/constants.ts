@@ -1,0 +1,23 @@
+// Default images
+export const DEFAULT_IMAGES = {
+  PROFILE: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2U1ZTdlYiIvPjxjaXJjbGUgY3g9IjEwMCIgY3k9IjgwIiByPSI0MCIgZmlsbD0iIzljYTNhZiIvPjxwYXRoIGQ9Ik00MCAxNjBjMC0zMyAyNy01NCA2MC01NHM2MCAyMSA2MCA1NCIgZmlsbD0iIzljYTNhZiIvPjwvc3ZnPg==',
+  MEETING: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2YzZjRmNiIvPjxwYXRoIGQ9Ik0xNTAgMTAwbDUwIDMwLTUwIDMweiIgZmlsbD0iIzljYTNhZiIvPjxjaXJjbGUgY3g9IjIwMCIgY3k9IjE1MCIgcj0iNjAiIHN0cm9rZT0iIzljYTNhZiIgc3Ryb2tlLXdpZHRoPSI0IiBmaWxsPSJub25lIi8+PHRleHQgeD0iMjAwIiB5PSIyNjAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzZiNzI4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+67Cw65Oc66+86rS0PC90ZXh0Pjwvc3ZnPg==',
+  GYM: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2YzZjRmNiIvPjxyZWN0IHg9IjEwMCIgeT0iMTAwIiB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEwMCIgcng9IjEwIiBmaWxsPSIjOWNhM2FmIi8+PHRleHQgeD0iMjAwIiB5PSIyNjAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzZiNzI4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+7LK066+466OfPC90ZXh0Pjwvc3ZnPg==',
+  CLUB: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2YzZjRmNiIvPjxjaXJjbGUgY3g9IjE1MCIgY3k9IjEyMCIgcj0iMzAiIGZpbGw9IiM5Y2EzYWYiLz48Y2lyY2xlIGN4PSIyNTAiIGN5PSIxMjAiIHI9IjMwIiBmaWxsPSIjOWNhM2FmIi8+PGNpcmNsZSBjeD0iMjAwIiBjeT0iMTYwIiByPSIzMCIgZmlsbD0iIzljYTNhZiIvPjx0ZXh0IHg9IjIwMCIgeT0iMjYwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGZpbGw9IiM2YjcyODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiPuuPmeztmLjtmog8L3RleHQ+PC9zdmc+',
+} as const;
+
+// Get default image by type
+export function getDefaultImage(type: 'profile' | 'meeting' | 'gym' | 'club'): string {
+  switch (type) {
+    case 'profile':
+      return DEFAULT_IMAGES.PROFILE;
+    case 'meeting':
+      return DEFAULT_IMAGES.MEETING;
+    case 'gym':
+      return DEFAULT_IMAGES.GYM;
+    case 'club':
+      return DEFAULT_IMAGES.CLUB;
+    default:
+      return DEFAULT_IMAGES.PROFILE;
+  }
+}

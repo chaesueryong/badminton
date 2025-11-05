@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { MapPin, Users, TrendingUp, DollarSign, Calendar, Clock, ChevronRight, Plus, List, CalendarDays } from "lucide-react";
+import { getDefaultImage } from "@/lib/constants";
 
 interface Meeting {
   id: string;
@@ -197,15 +198,13 @@ export default function MyMeetingsPage() {
               <Link key={meeting.id} href={`/meetings/${meeting.id}`}>
                 <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full overflow-hidden">
                   {/* 모임 썸네일 이미지 */}
-                  {meeting.thumbnailImage && (
-                    <div className="w-full h-48 bg-gray-100 overflow-hidden">
-                      <img
-                        src={meeting.thumbnailImage}
-                        alt={meeting.title}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                  )}
+                  <div className="w-full h-48 bg-gray-100 overflow-hidden">
+                    <img
+                      src={meeting.thumbnailImage || getDefaultImage('meeting')}
+                      alt={meeting.title}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
                   <CardHeader>
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex-1">

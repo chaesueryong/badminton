@@ -10,6 +10,13 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // URL 파라미터에서 에러 메시지 읽기
+    const params = new URLSearchParams(window.location.search);
+    const errorParam = params.get('error');
+    if (errorParam) {
+      setError(decodeURIComponent(errorParam));
+    }
+
     // URL hash 제거 (OAuth 취소 시 #error=access_denied 제거)
     if (window.location.hash) {
       router.replace('/login');
@@ -19,7 +26,6 @@ export default function LoginPage() {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const params = new URLSearchParams(window.location.search);
         const redirect = params.get('redirect');
         router.replace(redirect || '/');
       }
@@ -59,8 +65,19 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
-              {error}
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+              <div className="flex items-start gap-2">
+                <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/>
+                </svg>
+                <div className="flex-1">
+                  <p className="font-medium text-sm">로그인 오류</p>
+                  <p className="text-sm mt-1">{error}</p>
+                  <p className="text-xs mt-2 text-red-600">
+                    문제가 계속되면 페이지를 새로고침하거나 다른 브라우저를 사용해보세요.
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 

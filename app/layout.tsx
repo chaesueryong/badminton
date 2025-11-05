@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SessionProvider from "@/components/SessionProvider";
 import JsonLd from "@/components/JsonLd";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: {
@@ -130,6 +131,7 @@ export default function RootLayout({
             {children}
           </main>
           <Footer />
+          <Toaster />
         </SessionProvider>
       </body>
     </html>
