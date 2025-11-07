@@ -11,11 +11,11 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    // Fetch from leaderboard view
+    // Fetch from users table
     let query = supabase
-      .from('leaderboard')
-      .select('*')
-      .order('elo_rating', { ascending: false })
+      .from('users')
+      .select('id, nickname, profileImage, region, level, rating, totalGames, wins')
+      .order('rating', { ascending: false })
       .range(offset, offset + limit - 1);
 
     // Filter by region if specified
@@ -30,7 +30,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch leaderboard' }, { status: 500 });
     }
 
-    return NextResponse.json({ leaderboard });
+    // 승률 계산 및 필드 매핑
+    const formattedLeaderboard = (leaderboard || []).map((entry, index) => ({
+      ...entry,
+      win_rate: entry.totalGames > 0 ? (entry.wins / entry.totalGames) * 100 : 0,
+      rank: offset + index + 1,
+      elo_rating: entry.rating || 1500,
+      games_played: entry.totalGames || 0,
+      losses: (entry.totalGames || 0) - (entry.wins || 0),
+      draws: 0,
+    }));
+
+    return NextResponse.json({ leaderboard: formattedLeaderboard });
   } catch (error) {
     console.error('Error fetching leaderboard:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

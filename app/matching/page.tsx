@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import RegionSelect from "@/components/RegionSelect";
-import { Filter, X } from "lucide-react";
+import { Filter, X, Crown } from "lucide-react";
 
 type SkillLevel = "BEGINNER" | "D_GRADE" | "C_GRADE" | "B_GRADE" | "A_GRADE" | "S_GRADE" | "INTERMEDIATE" | "ADVANCED" | "EXPERT";
 
@@ -121,6 +121,7 @@ interface User {
   experience?: number | null;
   age?: number | null;
   birthdate?: string | null;
+  isPremium?: boolean;
 }
 
 export default function MatchingPage() {
@@ -446,7 +447,7 @@ export default function MatchingPage() {
 
                 {/* 프로필 */}
                 <div className="flex items-center mb-3 sm:mb-4">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-bold mr-3 sm:mr-4 overflow-hidden flex-shrink-0">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-bold mr-3 sm:mr-4 overflow-hidden flex-shrink-0 relative">
                     {user.profileImage && user.profileImage !== '/default-avatar.png' ? (
                       <img src={user.profileImage} alt={user.nickname} className="w-full h-full object-cover" />
                     ) : (
@@ -454,9 +455,22 @@ export default function MatchingPage() {
                         <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                       </svg>
                     )}
+                    {user.isPremium && (
+                      <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full p-1 shadow-lg">
+                        <Crown className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                      </div>
+                    )}
                   </div>
                   <div className="min-w-0">
-                    <h3 className="text-base sm:text-xl font-semibold truncate">{user.nickname}</h3>
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="text-base sm:text-xl font-semibold truncate">{user.nickname}</h3>
+                      {user.isPremium && (
+                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full text-[10px] font-bold text-white shadow-sm">
+                          <Crown className="w-2.5 h-2.5" />
+                          PREMIUM
+                        </span>
+                      )}
+                    </div>
                     <p className="text-gray-600 text-xs sm:text-sm truncate">{user.region}</p>
                   </div>
                 </div>
@@ -499,17 +513,8 @@ export default function MatchingPage() {
                   </div>
                 </div>
 
-                {/* 자기소개 */}
-                {user.bio && (
-                  <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-gray-50 rounded-lg">
-                    <p className="text-xs sm:text-sm text-gray-700 line-clamp-2">
-                      {user.bio}
-                    </p>
-                  </div>
-                )}
-
                 {/* 버튼 */}
-                <div className="flex gap-2">
+                <div className="flex gap-2 mt-3 sm:mt-4">
                   {currentUserId === user.id ? (
                     <Link
                       href="/profile"

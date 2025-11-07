@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import RegionSelect from "@/components/RegionSelect";
 import ImageUpload from "@/components/SimpleImageUpload";
+import { usePremium } from "@/lib/hooks/usePremium";
 
 // Storage bucket name for meetings
 const STORAGE_BUCKETS = {
@@ -12,11 +13,14 @@ const STORAGE_BUCKETS = {
 
 export default function CreateMeetingPage() {
   const router = useRouter();
+  const { isPremium, loading: premiumLoading } = usePremium();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feePeriod, setFeePeriod] = useState<"monthly" | "quarterly" | "yearly">("monthly");
   const [levelRange, setLevelRange] = useState({ min: "", max: "" });
   const [selectedRegion, setSelectedRegion] = useState({ province: "", city: "" });
   const [thumbnailImage, setThumbnailImage] = useState<string>("");
+
+  const maxParticipantsLimit = isPremium ? 300 : 50;
 
   // 로그인 체크 임시 비활성화 (UI 확인용)
   // useEffect(() => {
@@ -200,11 +204,14 @@ export default function CreateMeetingPage() {
                 name="maxParticipants"
                 required
                 min="2"
-                max="50"
+                max={maxParticipantsLimit}
                 defaultValue="8"
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
-              <p className="text-sm text-gray-500 mt-1">2~50명</p>
+              <p className="text-sm text-gray-500 mt-1">
+                2~{maxParticipantsLimit}명
+                {!isPremium && " (프리미엄 회원은 최대 300명)"}
+              </p>
             </div>
 
             {/* 실력 급수 레인지 */}
@@ -222,7 +229,7 @@ export default function CreateMeetingPage() {
                     name="levelMin"
                     value={levelRange.min}
                     onChange={(e) => setLevelRange({ ...levelRange, min: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                   >
                     <option value="">선택안함</option>
                     <option value="E_GRADE">E급</option>
@@ -242,7 +249,7 @@ export default function CreateMeetingPage() {
                     name="levelMax"
                     value={levelRange.max}
                     onChange={(e) => setLevelRange({ ...levelRange, max: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                   >
                     <option value="">선택안함</option>
                     <option value="E_GRADE">E급</option>
@@ -266,7 +273,7 @@ export default function CreateMeetingPage() {
                 id="requiredGender"
                 name="requiredGender"
                 defaultValue="ANY"
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
               >
                 <option value="ANY">제한 없음</option>
                 <option value="MALE">남성만</option>
@@ -336,7 +343,7 @@ export default function CreateMeetingPage() {
                     name="feePeriod"
                     value={feePeriod}
                     onChange={(e) => setFeePeriod(e.target.value as "monthly" | "quarterly" | "yearly")}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-3"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                   >
                     <option value="monthly">원/월</option>
                     <option value="quarterly">원/분기</option>

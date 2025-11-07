@@ -86,17 +86,18 @@ export async function POST(
     }
 
     // Remove from all schedule participants
-    await supabase
-      .from("schedule_participants")
-      .delete()
-      .eq("userId", targetUserId)
-      .in(
-        "scheduleId",
-        supabase
-          .from("meeting_schedules")
-          .select("id")
-          .eq("meetingId", meetingId)
-      );
+    const { data: schedules } = await supabase
+      .from("meeting_schedules")
+      .select("id")
+      .eq("meetingId", meetingId);
+
+    if (schedules && schedules.length > 0) {
+      await supabase
+        .from("schedule_participants")
+        .delete()
+        .eq("userId", targetUserId)
+        .in("scheduleId", schedules.map(s => s.id));
+    }
 
     // Remove from meeting participants if exists
     const { data: participant } = await supabase

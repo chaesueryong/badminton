@@ -17,6 +17,12 @@ export async function GET() {
 
     const userId = session.user.id;
 
+    // 한국 시간 기준 오늘 날짜 (UTC+9)
+    const now = new Date();
+    const kstOffset = 9 * 60; // 9시간을 분으로
+    const kstTime = new Date(now.getTime() + kstOffset * 60 * 1000);
+    const today = kstTime.toISOString().split("T")[0];
+
     // 출석 기록 조회
     const { data: attendanceRecords, error } = await supabase
       .from("attendance_records")
@@ -34,7 +40,6 @@ export async function GET() {
     }
 
     // 오늘 출석 체크 여부
-    const today = new Date().toISOString().split("T")[0];
     const hasCheckedToday = attendanceRecords?.some(
       (record) => record.checkDate === today
     );
@@ -44,30 +49,33 @@ export async function GET() {
     if (attendanceRecords && attendanceRecords.length > 0) {
       const sortedRecords = [...attendanceRecords].sort(
         (a, b) =>
-          new Date(b.checkDate).getTime() - new Date(a.checkDate).getTime()
+          new Date(b.checkDate + "T00:00:00").getTime() - new Date(a.checkDate + "T00:00:00").getTime()
       );
 
-      let currentDate = new Date();
-      currentDate.setHours(0, 0, 0, 0);
+      // 한국 시간 기준 오늘 또는 어제부터 시작
+      const now = new Date();
+      const kstOffset = 9 * 60 * 60 * 1000; // 9시간을 밀리초로
+      const kstToday = new Date(now.getTime() + kstOffset);
+      const todayStr = kstToday.toISOString().split("T")[0];
+
+      // 오늘 출석했으면 오늘부터, 안했으면 어제부터 시작
+      let expectedDateStr = hasCheckedToday ? todayStr : (() => {
+        const yesterday = new Date(kstToday);
+        yesterday.setDate(yesterday.getDate() - 1);
+        return yesterday.toISOString().split("T")[0];
+      })();
 
       for (const record of sortedRecords) {
-        const recordDate = new Date(record.checkDate);
-        recordDate.setHours(0, 0, 0, 0);
-
-        const daysDiff = Math.floor(
-          (currentDate.getTime() - recordDate.getTime()) / (1000 * 60 * 60 * 24)
-        );
-
-        // 오늘이거나 (daysDiff === 0) 어제거나 (daysDiff === 1 && streak === 0) 연속된 날짜면 (daysDiff === 0)
-        if (daysDiff === 0 || (daysDiff === 1 && streak === 0)) {
+        // 날짜 문자열로 직접 비교
+        if (record.checkDate === expectedDateStr) {
           streak++;
-          currentDate = new Date(recordDate);
+          // 다음 반복에서는 하루 전 날짜를 기대
+          const currentDate = new Date(expectedDateStr + "T12:00:00"); // 정오 기준으로 설정하여 날짜 경계 문제 방지
           currentDate.setDate(currentDate.getDate() - 1);
-        } else if (daysDiff === 1) {
-          // 연속된 날짜
-          streak++;
-          currentDate = new Date(recordDate);
-          currentDate.setDate(currentDate.getDate() - 1);
+          const year = currentDate.getFullYear();
+          const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+          const day = String(currentDate.getDate()).padStart(2, '0');
+          expectedDateStr = `${year}-${month}-${day}`;
         } else {
           // 연속이 끊김
           break;
@@ -103,7 +111,12 @@ export async function POST() {
     }
 
     const userId = session.user.id;
-    const today = new Date().toISOString().split("T")[0];
+
+    // 한국 시간 기준 오늘 날짜 (UTC+9)
+    const now = new Date();
+    const kstOffset = 9 * 60 * 60 * 1000; // 9시간을 밀리초로
+    const kstTime = new Date(now.getTime() + kstOffset);
+    const today = kstTime.toISOString().split("T")[0];
 
     // 오늘 이미 출석 체크했는지 확인
     const { data: existingCheck } = await supabase
@@ -132,31 +145,27 @@ export async function POST() {
     if (attendanceRecords && attendanceRecords.length > 0) {
       const sortedRecords = [...attendanceRecords].sort(
         (a, b) =>
-          new Date(b.checkDate).getTime() - new Date(a.checkDate).getTime()
+          new Date(b.checkDate + "T00:00:00").getTime() - new Date(a.checkDate + "T00:00:00").getTime()
       );
 
-      let checkDate = new Date();
-      checkDate.setHours(0, 0, 0, 0);
+      // 한국 시간 기준 어제 날짜부터 시작 (오늘은 아직 체크 안 했으므로)
+      const now = new Date();
+      const kstOffset = 9 * 60 * 60 * 1000; // 9시간을 밀리초로
+      const kstYesterday = new Date(now.getTime() + kstOffset);
+      kstYesterday.setDate(kstYesterday.getDate() - 1);
+      let expectedDateStr = kstYesterday.toISOString().split("T")[0];
 
       for (const record of sortedRecords) {
-        const recordDate = new Date(record.checkDate);
-        recordDate.setHours(0, 0, 0, 0);
-
-        const daysDiff = Math.floor(
-          (checkDate.getTime() - recordDate.getTime()) / (1000 * 60 * 60 * 24)
-        );
-
-        // 어제거나 (daysDiff === 1 && currentStreak === 0) 연속된 날짜면
-        if (daysDiff === 1 && currentStreak === 0) {
-          // 어제 출석한 경우
+        // 날짜 문자열로 직접 비교
+        if (record.checkDate === expectedDateStr) {
           currentStreak++;
-          checkDate = new Date(recordDate);
-          checkDate.setDate(checkDate.getDate() - 1);
-        } else if (daysDiff === 1) {
-          // 연속된 날짜
-          currentStreak++;
-          checkDate = new Date(recordDate);
-          checkDate.setDate(checkDate.getDate() - 1);
+          // 다음 반복에서는 하루 전 날짜를 기대
+          const currentDate = new Date(expectedDateStr + "T12:00:00"); // 정오 기준으로 설정하여 날짜 경계 문제 방지
+          currentDate.setDate(currentDate.getDate() - 1);
+          const year = currentDate.getFullYear();
+          const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+          const day = String(currentDate.getDate()).padStart(2, '0');
+          expectedDateStr = `${year}-${month}-${day}`;
         } else {
           // 연속이 끊김
           break;

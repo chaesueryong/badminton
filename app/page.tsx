@@ -140,7 +140,7 @@ export default function Home() {
                   <Button
                     asChild
                     size="lg"
-                    className="bg-white text-blue-600 hover-hover:hover:bg-white/90 shadow-xl text-base md:text-lg px-6 md:px-8 py-5 md:py-6 rounded-full font-bold transform hover-hover:hover:scale-105 transition-all"
+                    className="bg-white text-blue-600 hover-hover:hover:bg-white/90 shadow-xl text-base md:text-lg px-6 md:px-8 py-5 md:py-6 rounded-full font-bold transform  transition-all"
                   >
                     <Link href="/login">
                       시작하기
@@ -151,7 +151,7 @@ export default function Home() {
                     asChild
                     variant="outline"
                     size="lg"
-                    className="bg-transparent border-2 border-white text-white hover-hover:hover:bg-white hover-hover:hover:text-blue-600 text-base md:text-lg px-6 md:px-8 py-5 md:py-6 rounded-full font-bold transform hover-hover:hover:scale-105 transition-all"
+                    className="bg-transparent border-2 border-white text-white hover-hover:hover:bg-white hover-hover:hover:text-blue-600 text-base md:text-lg px-6 md:px-8 py-5 md:py-6 rounded-full font-bold transform  transition-all"
                   >
                     <Link href="/meetings">모임 둘러보기</Link>
                   </Button>
@@ -161,7 +161,7 @@ export default function Home() {
                   <Button
                     asChild
                     size="lg"
-                    className="bg-white text-blue-600 hover-hover:hover:bg-white/90 shadow-xl text-base md:text-lg px-6 md:px-8 py-5 md:py-6 rounded-full font-bold transform hover-hover:hover:scale-105 transition-all"
+                    className="bg-white text-blue-600 hover-hover:hover:bg-white/90 shadow-xl text-base md:text-lg px-6 md:px-8 py-5 md:py-6 rounded-full font-bold transform  transition-all"
                   >
                     <Link href="/meetings">
                       모임 찾기
@@ -172,7 +172,7 @@ export default function Home() {
                     asChild
                     variant="outline"
                     size="lg"
-                    className="bg-transparent border-2 border-white text-white hover-hover:hover:bg-white hover-hover:hover:text-blue-600 text-base md:text-lg px-6 md:px-8 py-5 md:py-6 rounded-full font-bold transform hover-hover:hover:scale-105 transition-all"
+                    className="bg-transparent border-2 border-white text-white hover-hover:hover:bg-white hover-hover:hover:text-blue-600 text-base md:text-lg px-6 md:px-8 py-5 md:py-6 rounded-full font-bold transform  transition-all"
                   >
                     <Link href="/meetings/create">모임 만들기</Link>
                   </Button>
@@ -218,7 +218,7 @@ export default function Home() {
                   <img
                     src={meeting.thumbnailImage || getDefaultImage('meeting')}
                     alt={meeting.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    className="w-full h-full object-cover  transition-transform duration-500"
                   />
                   {index < 3 && (
                     <div className="absolute top-4 right-4">
@@ -328,7 +328,7 @@ export default function Home() {
             <Link href="/meetings" className="block">
               <Card className="group hover-hover:hover:shadow-2xl transform hover-hover:hover:-translate-y-2 transition-all duration-300 border-2 hover-hover:hover:border-blue-200 bg-white cursor-pointer h-full">
                 <CardHeader className="text-center pb-4">
-                  <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 bg-gradient-to-br from-blue-400 to-blue-600 rounded-3xl flex items-center justify-center group-hover-hover:hover:scale-110 transition-transform">
+                  <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 bg-gradient-to-br from-blue-400 to-blue-600 rounded-3xl flex items-center justify-center group- transition-transform">
                     <Users className="w-8 h-8 md:w-10 md:h-10 text-white" />
                   </div>
                   <CardTitle className="text-base md:text-lg font-bold">정기 모임</CardTitle>
@@ -341,26 +341,10 @@ export default function Home() {
               </Card>
             </Link>
 
-            <Link href="/gyms" className="block">
-              <Card className="group hover-hover:hover:shadow-2xl transform hover-hover:hover:-translate-y-2 transition-all duration-300 border-2 hover-hover:hover:border-green-200 bg-white cursor-pointer h-full">
-                <CardHeader className="text-center pb-4">
-                  <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 bg-gradient-to-br from-green-400 to-green-600 rounded-3xl flex items-center justify-center group-hover-hover:hover:scale-110 transition-transform">
-                    <MapPin className="w-8 h-8 md:w-10 md:h-10 text-white" />
-                  </div>
-                  <CardTitle className="text-base md:text-lg font-bold">체육관 정보</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-center text-xs md:text-sm text-gray-600">
-                    전국 체육관 정보와<br />실시간 예약 현황
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            </Link>
-
             <Link href="/matching" className="block">
               <Card className="group hover-hover:hover:shadow-2xl transform hover-hover:hover:-translate-y-2 transition-all duration-300 border-2 hover-hover:hover:border-purple-200 bg-white cursor-pointer h-full">
                 <CardHeader className="text-center pb-4">
-                  <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 bg-gradient-to-br from-purple-400 to-purple-600 rounded-3xl flex items-center justify-center group-hover-hover:hover:scale-110 transition-transform">
+                  <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 bg-gradient-to-br from-purple-400 to-purple-600 rounded-3xl flex items-center justify-center group- transition-transform">
                     <Target className="w-8 h-8 md:w-10 md:h-10 text-white" />
                   </div>
                   <CardTitle className="text-base md:text-lg font-bold">파트너 매칭</CardTitle>
@@ -376,7 +360,7 @@ export default function Home() {
             <Link href="/leaderboard" className="block">
               <Card className="group hover-hover:hover:shadow-2xl transform hover-hover:hover:-translate-y-2 transition-all duration-300 border-2 hover-hover:hover:border-pink-200 bg-white cursor-pointer h-full">
                 <CardHeader className="text-center pb-4">
-                  <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 bg-gradient-to-br from-pink-400 to-pink-600 rounded-3xl flex items-center justify-center group-hover-hover:hover:scale-110 transition-transform">
+                  <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 bg-gradient-to-br from-pink-400 to-pink-600 rounded-3xl flex items-center justify-center group- transition-transform">
                     <Trophy className="w-8 h-8 md:w-10 md:h-10 text-white" />
                   </div>
                   <CardTitle className="text-base md:text-lg font-bold">랭킹 시스템</CardTitle>
@@ -392,7 +376,7 @@ export default function Home() {
             <Link href="/rewards" className="block">
               <Card className="group hover-hover:hover:shadow-2xl transform hover-hover:hover:-translate-y-2 transition-all duration-300 border-2 hover-hover:hover:border-orange-200 bg-white cursor-pointer h-full">
                 <CardHeader className="text-center pb-4">
-                  <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 bg-gradient-to-br from-orange-400 to-orange-600 rounded-3xl flex items-center justify-center group-hover-hover:hover:scale-110 transition-transform">
+                  <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 bg-gradient-to-br from-orange-400 to-orange-600 rounded-3xl flex items-center justify-center group- transition-transform">
                     <Gift className="w-8 h-8 md:w-10 md:h-10 text-white" />
                   </div>
                   <CardTitle className="text-base md:text-lg font-bold">리워드</CardTitle>
@@ -408,7 +392,7 @@ export default function Home() {
             <Link href="/community" className="block">
               <Card className="group hover-hover:hover:shadow-2xl transform hover-hover:hover:-translate-y-2 transition-all duration-300 border-2 hover-hover:hover:border-indigo-200 bg-white cursor-pointer h-full">
                 <CardHeader className="text-center pb-4">
-                  <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-3xl flex items-center justify-center group-hover-hover:hover:scale-110 transition-transform">
+                  <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-3xl flex items-center justify-center group- transition-transform">
                     <MessageCircle className="w-8 h-8 md:w-10 md:h-10 text-white" />
                   </div>
                   <CardTitle className="text-base md:text-lg font-bold">커뮤니티</CardTitle>
