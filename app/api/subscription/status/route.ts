@@ -1,12 +1,15 @@
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
+/**
+ * GET /api/subscription/status
+ * Get current user's subscription status for both Premium and VIP
+ */
 export async function GET(request: NextRequest) {
   try {
-    // Get user session
-    const { data: { session } } = await supabase.auth.getSession();
+    const supabase = await createClient();
 
-    // Check authentication
+    // Get authenticated user
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -15,43 +18,84 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get active subscription
-    const { data: subscription, error } = await supabase
-      .from('subscriptions')
-      .select(
-        `
-        *,
-        plan:subscription_plans(*)
-      `
-      )
+    const now = new Date().toISOString();
+
+    // Get active Premium membership
+    const { data: premiumMembership, error: premiumError } = await supabase
+      .from('premium_memberships')
+      .select('*')
       .eq('user_id', user.id)
-      .in('status', ['active', 'trial'])
-      .order('created_at', { ascending: false })
+      .eq('is_active', true)
+      .gte('end_date', now)
+      .order('end_date', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') {
-      // PGRST116 is "not found" which is okay
-      console.error('Error fetching subscription:', error);
-      return NextResponse.json({ error: 'Failed to fetch subscription' }, { status: 500 });
+    if (premiumError && premiumError.code !== 'PGRST116') {
+      console.error('Error fetching premium membership:', premiumError);
     }
 
-    if (!subscription) {
-      return NextResponse.json({
-        isPremium: false,
-        subscription: null,
-      });
+    // Get active VIP membership
+    const { data: vipMembership, error: vipError } = await supabase
+      .from('vip_memberships')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+      .gte('end_date', now)
+      .order('end_date', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (vipError && vipError.code !== 'PGRST116') {
+      console.error('Error fetching VIP membership:', vipError);
     }
 
-    // Check if subscription is still valid
-    const now = new Date();
-    const periodEnd = new Date(subscription.current_period_end);
-    const isValid = now < periodEnd;
+    // Calculate days remaining
+    const calculateDaysRemaining = (endDate: string): number => {
+      const end = new Date(endDate);
+      const today = new Date();
+      const diffTime = end.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return Math.max(0, diffDays);
+    };
 
-    return NextResponse.json({
-      isPremium: isValid && (subscription.status === 'active' || subscription.status === 'trial'),
-      subscription: isValid ? subscription : null,
-    });
+    // Prepare response
+    const response = {
+      premium: {
+        active: !!premiumMembership,
+        membership: premiumMembership
+          ? {
+              id: premiumMembership.id,
+              startDate: premiumMembership.start_date,
+              endDate: premiumMembership.end_date,
+              daysRemaining: calculateDaysRemaining(premiumMembership.end_date),
+              purchasedWith: premiumMembership.purchased_with,
+              amountPaid: premiumMembership.amount_paid,
+            }
+          : null,
+      },
+      vip: {
+        active: !!vipMembership,
+        membership: vipMembership
+          ? {
+              id: vipMembership.id,
+              startDate: vipMembership.start_date,
+              endDate: vipMembership.end_date,
+              daysRemaining: calculateDaysRemaining(vipMembership.end_date),
+              planType: vipMembership.plan_type,
+              pricePaid: vipMembership.price_paid,
+              currency: vipMembership.currency,
+              autoRenew: vipMembership.auto_renew,
+            }
+          : null,
+      },
+      hasAnyActiveSubscription: !!premiumMembership || !!vipMembership,
+      // Legacy compatibility
+      isPremium: !!premiumMembership,
+      subscription: premiumMembership || vipMembership || null,
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Error fetching subscription status:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

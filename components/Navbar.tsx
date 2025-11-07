@@ -11,7 +11,6 @@ import {
   Star,
   Gift,
   Users,
-  Building,
   Trophy,
   MessageCircle,
   Menu,
@@ -20,7 +19,10 @@ import {
   User as UserIcon,
   Bell,
   MapPin,
-  Feather
+  Feather,
+  Crown,
+  Sparkles,
+  UserPlus
 } from "lucide-react";
 
 export default function Navbar() {
@@ -33,6 +35,9 @@ export default function Navbar() {
   const [profileImage, setProfileImage] = useState<string>("");
   const [userRegion, setUserRegion] = useState<string>("");
   const [feathers, setFeathers] = useState<number>(0);
+  const [points, setPoints] = useState<number>(0);
+  const [isPremium, setIsPremium] = useState<boolean>(false);
+  const [isVIP, setIsVIP] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -41,11 +46,11 @@ export default function Navbar() {
       setUser(session?.user ?? null);
       setLoading(false);
 
-      // 닉네임, 프로필 이미지, 지역, 깃털 가져오기
+      // 닉네임, 프로필 이미지, 지역, 깃털, 포인트 가져오기
       if (session?.user) {
         supabase
           .from('users')
-          .select('nickname, profileImage, region, feathers')
+          .select('nickname, profileImage, region, feathers, points')
           .eq('id', session.user.id)
           .maybeSingle()
           .then(({ data: userData }) => {
@@ -61,6 +66,34 @@ export default function Navbar() {
             if (userData?.feathers !== undefined) {
               setFeathers(userData.feathers);
             }
+            if (userData?.points !== undefined) {
+              setPoints(userData.points);
+            }
+          });
+
+        // Check Premium membership
+        const now = new Date().toISOString();
+        supabase
+          .from('premium_memberships')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .eq('is_active', true)
+          .gte('end_date', now)
+          .maybeSingle()
+          .then(({ data }) => {
+            setIsPremium(!!data);
+          });
+
+        // Check VIP membership
+        supabase
+          .from('vip_memberships')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .eq('is_active', true)
+          .gte('end_date', now)
+          .maybeSingle()
+          .then(({ data }) => {
+            setIsVIP(!!data);
           });
       }
     });
@@ -74,7 +107,7 @@ export default function Navbar() {
       if (session?.user) {
         supabase
           .from('users')
-          .select('nickname, profileImage, region, feathers')
+          .select('nickname, profileImage, region, feathers, points')
           .eq('id', session.user.id)
           .maybeSingle()
           .then(({ data: userData }) => {
@@ -90,12 +123,43 @@ export default function Navbar() {
             if (userData?.feathers !== undefined) {
               setFeathers(userData.feathers);
             }
+            if (userData?.points !== undefined) {
+              setPoints(userData.points);
+            }
+          });
+
+        // Check Premium membership
+        const now = new Date().toISOString();
+        supabase
+          .from('premium_memberships')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .eq('is_active', true)
+          .gte('end_date', now)
+          .maybeSingle()
+          .then(({ data }) => {
+            setIsPremium(!!data);
+          });
+
+        // Check VIP membership
+        supabase
+          .from('vip_memberships')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .eq('is_active', true)
+          .gte('end_date', now)
+          .maybeSingle()
+          .then(({ data }) => {
+            setIsVIP(!!data);
           });
       } else {
         setNickname("");
         setProfileImage("");
         setUserRegion("");
         setFeathers(0);
+        setPoints(0);
+        setIsPremium(false);
+        setIsVIP(false);
       }
     });
 
@@ -130,16 +194,6 @@ export default function Navbar() {
                 모임
               </Link>
               <Link
-                href="/gyms"
-                className={`px-4 py-2 rounded-lg transition-all ${
-                  isActive('/gyms')
-                    ? 'bg-blue-50 text-blue-600 font-medium'
-                    : 'text-gray-700 hover-hover:hover:bg-gray-50'
-                }`}
-              >
-                체육관
-              </Link>
-              <Link
                 href="/community"
                 className={`px-4 py-2 rounded-lg transition-all ${
                   isActive('/community')
@@ -148,6 +202,17 @@ export default function Navbar() {
                 }`}
               >
                 커뮤니티
+              </Link>
+              <Link
+                href="/ratings"
+                className={`px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 ${
+                  pathname?.startsWith('/ratings') || pathname?.startsWith('/matches')
+                    ? 'bg-blue-50 text-blue-600 font-medium'
+                    : 'text-gray-700 hover-hover:hover:bg-gray-50'
+                }`}
+              >
+                <Trophy className="w-4 h-4" />
+                레이팅
               </Link>
               <Link
                 href="/matching"
@@ -160,17 +225,6 @@ export default function Navbar() {
                 매칭
               </Link>
               <Link
-                href="/leaderboard"
-                className={`px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 ${
-                  isActive('/leaderboard')
-                    ? 'bg-blue-50 text-blue-600 font-medium'
-                    : 'text-gray-700 hover-hover:hover:bg-gray-50'
-                }`}
-              >
-                <Trophy className="w-4 h-4" />
-                랭킹
-              </Link>
-              <Link
                 href="/rewards"
                 className={`px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 ${
                   isActive('/rewards')
@@ -180,6 +234,17 @@ export default function Navbar() {
               >
                 <Gift className="w-4 h-4" />
                 리워드
+              </Link>
+              <Link
+                href="/shop"
+                className={`px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 ${
+                  isActive('/shop')
+                    ? 'bg-blue-50 text-blue-600 font-medium'
+                    : 'text-gray-700 hover-hover:hover:bg-gray-50'
+                }`}
+              >
+                <Feather className="w-4 h-4" />
+                상점
               </Link>
             </div>
 
@@ -231,21 +296,51 @@ export default function Navbar() {
       <div className="md:hidden bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
         <div className="px-4 py-3 flex justify-between items-center">
           {/* 왼쪽: 지역 표시 */}
-          <div className="flex items-center gap-1">
-            <MapPin className="w-4 h-4 text-gray-600" />
-            <span className="text-sm font-medium text-gray-900">
-              {userRegion || "지역 미설정"}
-            </span>
-          </div>
+          {user && (
+            <div className="flex items-center gap-1">
+              <MapPin className="w-4 h-4 text-gray-600" />
+              <span className="text-sm font-medium text-gray-900">
+                {userRegion || "지역 미설정"}
+              </span>
+            </div>
+          )}
 
-          {/* 오른쪽: 깃털, 알림, 메시지 */}
-          <div className="flex items-center gap-3">
+          {/* 오른쪽: 프리미엄/VIP 뱃지, 깃털, 포인트, 알림, 메시지 */}
+          <div className={`flex items-center gap-2 ${!user ? 'ml-auto' : ''}`}>
             {user && (
               <>
-                <div className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-full border border-amber-200">
-                  <Feather className="w-4 h-4 text-amber-600" />
-                  <span className="text-xs font-semibold text-amber-700">{feathers.toLocaleString()}</span>
-                </div>
+                {isPremium && (
+                  <Link
+                    href="/shop/subscription"
+                    className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-pink-50 to-purple-50 rounded-full border border-pink-200"
+                  >
+                    <Crown className="w-3 h-3 text-pink-600" />
+                    <span className="text-[10px] font-bold text-pink-700">프리미엄</span>
+                  </Link>
+                )}
+                {isVIP && (
+                  <Link
+                    href="/shop/subscription"
+                    className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-full border border-purple-200"
+                  >
+                    <Sparkles className="w-3 h-3 text-purple-600" />
+                    <span className="text-[10px] font-bold text-purple-700">VIP</span>
+                  </Link>
+                )}
+                <Link
+                  href="/shop"
+                  className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-full border border-blue-200 hover-hover:hover:from-blue-100 hover-hover:hover:to-indigo-100 transition-all cursor-pointer"
+                >
+                  <Star className="w-3 h-3 text-blue-600" />
+                  <span className="text-[10px] font-semibold text-blue-700">{points.toLocaleString()}</span>
+                </Link>
+                <Link
+                  href="/shop"
+                  className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-full border border-amber-200 hover-hover:hover:from-amber-100 hover-hover:hover:to-yellow-100 transition-all cursor-pointer"
+                >
+                  <Feather className="w-3 h-3 text-amber-600" />
+                  <span className="text-[10px] font-semibold text-amber-700">{feathers.toLocaleString()}</span>
+                </Link>
                 <Link href="/notifications" className="relative">
                   <Bell className="w-5 h-5 text-gray-600" />
                 </Link>
@@ -271,6 +366,7 @@ export default function Navbar() {
         <div className="grid grid-cols-5 h-16">
           <Link
             href="/"
+            onClick={() => setIsMoreMenuOpen(false)}
             className={`flex flex-col items-center justify-center gap-1 transition-all ${
               isActive('/')
                 ? 'text-blue-600'
@@ -283,6 +379,7 @@ export default function Navbar() {
 
           <Link
             href={user ? "/meetings/my" : "/meetings"}
+            onClick={() => setIsMoreMenuOpen(false)}
             className={`flex flex-col items-center justify-center gap-1 transition-all ${
               isActive('/meetings') || isActive('/meetings/my')
                 ? 'text-blue-600'
@@ -294,19 +391,21 @@ export default function Navbar() {
           </Link>
 
           <Link
-            href="/matching"
+            href="/ratings"
+            onClick={() => setIsMoreMenuOpen(false)}
             className={`flex flex-col items-center justify-center gap-1 transition-all ${
-              isActive('/matching')
+              pathname?.startsWith('/ratings') || pathname?.startsWith('/matches') || pathname?.startsWith('/invitations')
                 ? 'text-blue-600'
                 : 'text-gray-500'
             }`}
           >
-            <Activity className="w-5 h-5" strokeWidth={isActive('/matching') ? 2.5 : 2} />
-            <span className="text-[10px] leading-none">매칭</span>
+            <Trophy className="w-5 h-5" strokeWidth={(pathname?.startsWith('/ratings') || pathname?.startsWith('/matches') || pathname?.startsWith('/invitations')) ? 2.5 : 2} />
+            <span className="text-[10px] leading-none">레이팅</span>
           </Link>
 
           <Link
             href="/community"
+            onClick={() => setIsMoreMenuOpen(false)}
             className={`flex flex-col items-center justify-center gap-1 transition-all ${
               isActive('/community')
                 ? 'text-blue-600'
@@ -317,27 +416,17 @@ export default function Navbar() {
             <span className="text-[10px] leading-none">커뮤니티</span>
           </Link>
 
-          <Link
-            href="/profile"
+          <button
+            onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
             className={`flex flex-col items-center justify-center gap-1 transition-all ${
-              isActive('/profile')
+              isMoreMenuOpen
                 ? 'text-blue-600'
                 : 'text-gray-500'
             }`}
           >
-            {user ? (
-              <div className={`w-5 h-5 rounded-full overflow-hidden ${isActive('/profile') ? 'ring-2 ring-blue-600' : ''}`}>
-                <img
-                  src={profileImage || getDefaultImage('profile')}
-                  alt="프로필"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ) : (
-              <UserIcon className="w-5 h-5" strokeWidth={isActive('/profile') ? 2.5 : 2} />
-            )}
-            <span className="text-[10px] leading-none">프로필</span>
-          </Link>
+            <Menu className="w-5 h-5" strokeWidth={isMoreMenuOpen ? 2.5 : 2} />
+            <span className="text-[10px] leading-none">더보기</span>
+          </button>
         </div>
       </nav>
 
@@ -349,80 +438,107 @@ export default function Navbar() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="py-2">
-              <Link
-                href="/gyms"
-                onClick={() => setIsMoreMenuOpen(false)}
-                className={`flex items-center px-4 py-3 space-x-3 transition-all ${
-                  isActive('/gyms')
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-gray-700 active:bg-gray-50'
-                }`}
-              >
-                <Building className="w-5 h-5" />
-                <span className="text-sm font-medium">체육관</span>
-              </Link>
+              {user && (
+                <>
+                  <Link
+                    href="/matches/create"
+                    onClick={() => setIsMoreMenuOpen(false)}
+                    className={`flex items-center px-4 py-3 space-x-3 transition-all ${
+                      isActive('/matches/create')
+                        ? 'bg-blue-50 text-blue-600'
+                        : 'text-gray-700 active:bg-gray-50'
+                    }`}
+                  >
+                    <Activity className="w-5 h-5" />
+                    <span className="text-sm font-medium">매치 생성</span>
+                  </Link>
+
+                  <Link
+                    href="/invitations"
+                    onClick={() => setIsMoreMenuOpen(false)}
+                    className={`flex items-center px-4 py-3 space-x-3 transition-all ${
+                      isActive('/invitations')
+                        ? 'bg-blue-50 text-blue-600'
+                        : 'text-gray-700 active:bg-gray-50'
+                    }`}
+                  >
+                    <UserPlus className="w-5 h-5" />
+                    <span className="text-sm font-medium">매치 초대</span>
+                  </Link>
+
+                  <Link
+                    href="/matches/my-sessions"
+                    onClick={() => setIsMoreMenuOpen(false)}
+                    className={`flex items-center px-4 py-3 space-x-3 transition-all ${
+                      isActive('/matches/my-sessions')
+                        ? 'bg-blue-50 text-blue-600'
+                        : 'text-gray-700 active:bg-gray-50'
+                    }`}
+                  >
+                    <Trophy className="w-5 h-5" />
+                    <span className="text-sm font-medium">내 세션</span>
+                  </Link>
+                </>
+              )}
 
               <Link
-                href="/leaderboard"
+                href="/matching"
                 onClick={() => setIsMoreMenuOpen(false)}
                 className={`flex items-center px-4 py-3 space-x-3 transition-all ${
-                  isActive('/leaderboard')
+                  isActive('/matching')
                     ? 'bg-blue-50 text-blue-600'
                     : 'text-gray-700 active:bg-gray-50'
                 }`}
               >
-                <Trophy className="w-5 h-5" />
-                <span className="text-sm font-medium">랭킹</span>
+                <Users className="w-5 h-5" />
+                <span className="text-sm font-medium">파트너 매칭</span>
               </Link>
 
-              <Link
-                href="/rewards"
-                onClick={() => setIsMoreMenuOpen(false)}
-                className={`flex items-center px-4 py-3 space-x-3 transition-all ${
-                  isActive('/rewards')
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-gray-700 active:bg-gray-50'
-                }`}
-              >
-                <Gift className="w-5 h-5" />
-                <span className="text-sm font-medium">리워드</span>
-              </Link>
+              <div className="border-t border-gray-200 my-2"></div>
+
+              {user && (
+                <>
+                  <Link
+                    href="/rewards"
+                    onClick={() => setIsMoreMenuOpen(false)}
+                    className={`flex items-center px-4 py-3 space-x-3 transition-all ${
+                      isActive('/rewards')
+                        ? 'bg-blue-50 text-blue-600'
+                        : 'text-gray-700 active:bg-gray-50'
+                    }`}
+                  >
+                    <Gift className="w-5 h-5" />
+                    <span className="text-sm font-medium">리워드</span>
+                  </Link>
+
+                  <Link
+                    href="/shop"
+                    onClick={() => setIsMoreMenuOpen(false)}
+                    className={`flex items-center px-4 py-3 space-x-3 transition-all ${
+                      isActive('/shop')
+                        ? 'bg-blue-50 text-blue-600'
+                        : 'text-gray-700 active:bg-gray-50'
+                    }`}
+                  >
+                    <Feather className="w-5 h-5" />
+                    <span className="text-sm font-medium">상점</span>
+                  </Link>
+                </>
+              )}
 
               <div className="border-t border-gray-200 mt-2 pt-2">
-                {user ? (
-                  <>
-                    <Link
-                      href="/profile"
-                      onClick={() => setIsMoreMenuOpen(false)}
-                      className={`flex items-center px-4 py-3 space-x-3 transition-all ${
-                        isActive('/profile')
-                          ? 'bg-blue-50 text-blue-600'
-                          : 'text-gray-700 active:bg-gray-50'
-                      }`}
-                    >
-                      <UserIcon className="w-5 h-5" />
-                      <span className="text-sm font-medium">내 프로필</span>
-                    </Link>
-
-                    <button
-                      onClick={async () => {
-                        await supabase.auth.signOut();
-                        window.location.href = "/";
-                      }}
-                      className="w-full flex items-center px-4 py-3 space-x-3 text-red-600 active:bg-red-50 transition-all"
-                    >
-                      <X className="w-5 h-5" />
-                      <span className="text-sm font-medium">로그아웃</span>
-                    </button>
-                  </>
-                ) : (
+                {user && (
                   <Link
-                    href="/login"
+                    href="/profile"
                     onClick={() => setIsMoreMenuOpen(false)}
-                    className="flex items-center px-4 py-3 space-x-3 text-blue-600 active:bg-blue-50 transition-all"
+                    className={`flex items-center px-4 py-3 space-x-3 transition-all ${
+                      isActive('/profile')
+                        ? 'bg-blue-50 text-blue-600'
+                        : 'text-gray-700 active:bg-gray-50'
+                    }`}
                   >
                     <UserIcon className="w-5 h-5" />
-                    <span className="text-sm font-medium">로그인</span>
+                    <span className="text-sm font-medium">프로필</span>
                   </Link>
                 )}
               </div>

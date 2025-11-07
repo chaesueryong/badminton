@@ -128,8 +128,27 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // 각 사용자의 프리미엄 상태 확인
+    const now = new Date().toISOString();
+    const usersWithPremium = await Promise.all(
+      (users || []).map(async (user) => {
+        const { data: premium } = await supabaseAdmin
+          .from("premium_memberships")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("is_active", true)
+          .gte("end_date", now)
+          .maybeSingle();
+
+        return {
+          ...user,
+          isPremium: !!premium,
+        };
+      })
+    );
+
     return NextResponse.json({
-      users: users || [],
+      users: usersWithPremium,
       pagination: {
         total: count || 0,
         page,

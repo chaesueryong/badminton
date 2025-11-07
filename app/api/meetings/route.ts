@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
+import { supabaseAdmin } from "@/lib/supabase";
 
 // GET: 모든 모임 조회 (필터링 및 페이지네이션 지원)
 export async function GET(request: NextRequest) {
@@ -136,6 +137,27 @@ export async function POST(request: NextRequest) {
     if (detailedInfo && detailedInfo.length > 2000) {
       return NextResponse.json(
         { error: "상세 정보는 2000자를 초과할 수 없습니다" },
+        { status: 400 }
+      );
+    }
+
+    // 프리미엄 회원 확인
+    const now = new Date().toISOString();
+    const { data: premium } = await supabaseAdmin
+      .from("premium_memberships")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+      .gte("end_date", now)
+      .single();
+
+    const isPremium = !!premium;
+
+    // 일반 회원은 최대 50명, 프리미엄 회원은 최대 300명
+    const MAX_PARTICIPANTS_LIMIT = isPremium ? 300 : 50;
+    if (parseInt(maxParticipants) > MAX_PARTICIPANTS_LIMIT || parseInt(maxParticipants) < 2) {
+      return NextResponse.json(
+        { error: `최소 2명 이상, 최대 ${MAX_PARTICIPANTS_LIMIT}명까지 가능합니다${!isPremium ? ' (프리미엄 회원은 최대 300명)' : ''}` },
         { status: 400 }
       );
     }

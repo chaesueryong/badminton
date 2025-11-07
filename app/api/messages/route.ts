@@ -153,36 +153,50 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 발신자의 포인트 확인
-    const { data: sender, error: senderError } = await supabaseAdmin
-      .from('users')
-      .select('points')
-      .eq('id', senderId)
+    // VIP 회원 확인 (VIP 회원은 무제한 메시지)
+    const now = new Date().toISOString();
+    const { data: vipMembership } = await supabaseAdmin
+      .from("vip_memberships")
+      .select("*")
+      .eq("user_id", senderId)
+      .eq("is_active", true)
+      .gte("end_date", now)
       .single();
 
-    if (senderError || !sender) {
-      return NextResponse.json(
-        { error: "발신자 정보를 찾을 수 없습니다" },
-        { status: 404 }
-      );
-    }
+    const isVIP = !!vipMembership;
+    const POINT_COST = isVIP ? 0 : 10;
 
-    const POINT_COST = 10;
-    if (sender.points < POINT_COST) {
-      return NextResponse.json(
-        { error: "포인트가 부족합니다. 메시지 전송에 10 포인트가 필요합니다." },
-        { status: 400 }
-      );
-    }
+    // 발신자의 포인트 확인 (VIP가 아닌 경우에만)
+    if (!isVIP) {
+      const { data: sender, error: senderError } = await supabaseAdmin
+        .from('users')
+        .select('points')
+        .eq('id', senderId)
+        .single();
 
-    // 포인트 차감
-    const { error: pointError } = await supabaseAdmin
-      .from('users')
-      .update({ points: sender.points - POINT_COST })
-      .eq('id', senderId);
+      if (senderError || !sender) {
+        return NextResponse.json(
+          { error: "발신자 정보를 찾을 수 없습니다" },
+          { status: 404 }
+        );
+      }
 
-    if (pointError) {
-      throw pointError;
+      if (sender.points < POINT_COST) {
+        return NextResponse.json(
+          { error: "포인트가 부족합니다. 메시지 전송에 10 포인트가 필요합니다." },
+          { status: 400 }
+        );
+      }
+
+      // 포인트 차감
+      const { error: pointError } = await supabaseAdmin
+        .from('users')
+        .update({ points: sender.points - POINT_COST })
+        .eq('id', senderId);
+
+      if (pointError) {
+        throw pointError;
+      }
     }
 
     // 메시지 전송
@@ -212,12 +226,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error || !message) {
-      // 오류 발생 시 포인트 복구
-      await supabaseAdmin
-        .from('users')
-        .update({ points: sender.points })
-        .eq('id', senderId);
-
       console.error("메시지 전송 실패:", error);
       return NextResponse.json(
         { error: "메시지 전송에 실패했습니다" },
@@ -225,17 +233,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 포인트 거래 내역 기록
-    await supabaseAdmin
-      .from('point_transactions')
-      .insert({
-        userId: senderId,
-        amount: -POINT_COST,
-        transactionType: 'SPEND',
-        reason: '메시지 전송',
-        relatedId: message.id,
-        relatedType: 'message',
-      });
+    // 포인트 거래 내역 기록 (VIP가 아닌 경우에만)
+    if (!isVIP && POINT_COST > 0) {
+      await supabaseAdmin
+        .from('point_transactions')
+        .insert({
+          userId: senderId,
+          amount: -POINT_COST,
+          transactionType: 'SPEND',
+          reason: '메시지 전송',
+          relatedId: message.id,
+          relatedType: 'message',
+        });
+    }
 
     return NextResponse.json({
       ...message,

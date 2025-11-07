@@ -282,7 +282,7 @@ export default function MeetingsPage() {
                 <div className="flex justify-center md:justify-start pt-2">
                   <Button
                     onClick={applyFilters}
-                    className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover-hover:hover:from-blue-700 hover-hover:hover:to-purple-700 active:scale-95 text-white px-8 py-2.5 rounded-xl font-semibold shadow-lg hover-hover:hover:shadow-xl transform hover-hover:hover:scale-105 transition-all"
+                    className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover-hover:hover:from-blue-700 hover-hover:hover:to-purple-700 active:scale-95 text-white px-8 py-2.5 rounded-xl font-semibold shadow-lg hover-hover:hover:shadow-xl transform  transition-all"
                   >
                     <Search className="w-5 h-5 mr-2" />
                     모임 검색하기
@@ -320,7 +320,7 @@ export default function MeetingsPage() {
                       <img
                         src={meeting.thumbnailImage || getDefaultImage('meeting')}
                         alt={meeting.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover  transition-transform duration-300"
                       />
                     </div>
                     <CardHeader className="p-4 sm:p-6">

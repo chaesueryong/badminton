@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
+import { supabaseAdmin } from "@/lib/supabase";
 
 export async function POST(
   request: NextRequest,
@@ -82,6 +83,7 @@ export async function POST(
       );
     }
 
+    // 정원 확인
     if (schedule.currentCount >= schedule.maxParticipants) {
       return NextResponse.json(
         { error: "참가 인원이 가득 찼습니다" },

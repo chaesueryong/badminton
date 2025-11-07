@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { Gift } from "lucide-react";
 
 interface RewardItem {
   id: string;
@@ -173,9 +174,10 @@ export default function RewardsPage() {
       <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-3xl md:text-5xl font-bold mb-3">
+          <h1 className="text-3xl md:text-5xl font-bold mb-3 flex items-center justify-center gap-3">
+            <Gift className="w-8 h-8 md:w-12 md:h-12 text-purple-600" />
             <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
-              🎁 리워드 샵
+              리워드 샵
             </span>
           </h1>
           <p className="text-gray-700 text-lg">포인트로 다양한 리워드를 교환하세요</p>
@@ -251,7 +253,7 @@ export default function RewardsPage() {
               return (
                 <div
                   key={reward.id}
-                  className={`bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover-hover:hover:shadow-2xl hover-hover:hover:scale-105 ${
+                  className={`bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover-hover:hover:shadow-2xl  ${
                     !canAfford || !isAvailable ? "opacity-60" : ""
                   }`}
                 >

@@ -10,7 +10,8 @@ import { STORAGE_BUCKETS } from "@/lib/storage";
 import Image from "next/image";
 import RegionSelect from "@/components/RegionSelect";
 import { formatPhoneNumber, unformatPhoneNumber } from "@/lib/utils/phone";
-import { Feather, Trophy, Gift, Copy, Share2 } from "lucide-react";
+import { Feather, Trophy, Gift, Copy, Share2, Crown } from "lucide-react";
+import { usePremium } from "@/lib/hooks/usePremium";
 
 const levelLabels: Record<string, string> = {
   E_GRADE: "E조",
@@ -88,6 +89,7 @@ function ProfilePageContent() {
   const [isEditing, setIsEditing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
+  const { isPremium, loading: premiumLoading } = usePremium();
   const [editFormData, setEditFormData] = useState({
     nickname: "",
     phone: "",
@@ -412,9 +414,22 @@ function ProfilePageContent() {
                       <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                     </svg>
                   )}
+                  {isOwnProfile && isPremium && (
+                    <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full p-1.5 sm:p-2 shadow-lg">
+                      <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    </div>
+                  )}
                 </div>
                 <div>
-                  <h1 className="text-xl sm:text-2xl font-bold mb-2">{profile.nickname}</h1>
+                  <div className="flex items-center justify-center sm:justify-start gap-2 mb-2">
+                    <h1 className="text-xl sm:text-2xl font-bold">{profile.nickname}</h1>
+                    {isOwnProfile && isPremium && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full text-xs font-bold text-white shadow-md">
+                        <Crown className="w-3 h-3" />
+                        PREMIUM
+                      </span>
+                    )}
+                  </div>
                   <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
                     {levelLabels[profile.level] || profile.level}
                   </span>
@@ -506,7 +521,16 @@ function ProfilePageContent() {
 
           {/* 승률 */}
           <div className="p-4 sm:p-8 border-b border-gray-200">
-            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">승률</h3>
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-base sm:text-lg font-semibold">승률</h3>
+              <button
+                onClick={() => router.push(`/matches/history/${profile.id}`)}
+                className="px-3 py-1.5 text-xs sm:text-sm font-medium text-blue-600 hover-hover:hover:bg-blue-50 rounded-lg transition-colors flex items-center gap-1"
+              >
+                <Trophy className="w-4 h-4" />
+                <span>매치 기록</span>
+              </button>
+            </div>
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
               <div className="flex-1">
                 <div className="flex justify-between text-xs sm:text-sm text-gray-600 mb-2">
@@ -839,39 +863,6 @@ function ProfilePageContent() {
               </div>
             )}
           </div>
-
-          {/* 빠른 메뉴 - 자신의 프로필일 때만 표시 */}
-          {isOwnProfile && (
-            <div className="p-4 sm:p-8 border-b border-gray-200">
-              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">빠른 메뉴</h3>
-              <div className="grid grid-cols-2 gap-3">
-                <Link
-                  href="/leaderboard"
-                  className="flex items-center gap-3 p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg hover-hover:hover:shadow-md transition-all active:scale-95"
-                >
-                  <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
-                    <Trophy className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">랭킹</p>
-                    <p className="text-xs text-gray-600">순위 확인</p>
-                  </div>
-                </Link>
-                <Link
-                  href="/rewards"
-                  className="flex items-center gap-3 p-4 bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg hover-hover:hover:shadow-md transition-all active:scale-95"
-                >
-                  <div className="w-10 h-10 bg-amber-600 rounded-full flex items-center justify-center">
-                    <Gift className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">리워드</p>
-                    <p className="text-xs text-gray-600">보상 받기</p>
-                  </div>
-                </Link>
-              </div>
-            </div>
-          )}
 
           {/* 로그아웃 버튼 - 자신의 프로필일 때만 표시 */}
           {isOwnProfile && (

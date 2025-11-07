@@ -153,11 +153,18 @@ export async function POST(request: NextRequest) {
     if (referrerId && !existingUser?.referredBy) {
       const REFERRAL_REWARD_POINTS = 100;
 
+      // 추천인의 현재 포인트 가져오기
+      const { data: referrerData } = await supabase
+        .from('users')
+        .select('points')
+        .eq('id', referrerId)
+        .single();
+
       // 추천인의 포인트 증가
       const { error: pointsError } = await supabase
         .from('users')
         .update({
-          points: supabase.raw(`COALESCE(points, 0) + ${REFERRAL_REWARD_POINTS}`)
+          points: (referrerData?.points || 0) + REFERRAL_REWARD_POINTS
         })
         .eq('id', referrerId);
 
