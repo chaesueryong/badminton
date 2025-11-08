@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 interface Meeting {
   id: string;
@@ -73,7 +74,7 @@ export default function MeetingManagePage() {
 
         // 호스트가 아니면 접근 불가
         if (currentUserId && data.hostId !== currentUserId) {
-          alert("모임 관리 권한이 없습니다");
+          toast.error("모임 관리 권한이 없습니다");
           router.push(`/meetings/${params.id}`);
         }
       }
@@ -108,7 +109,7 @@ export default function MeetingManagePage() {
       });
 
       if (response.ok) {
-        alert("일정이 생성되었습니다!");
+        toast.success("일정이 생성되었습니다!");
         setFormData({
           date: "",
           startTime: "",
@@ -122,11 +123,11 @@ export default function MeetingManagePage() {
         fetchSchedules();
       } else {
         const error = await response.json();
-        alert(error.error || "일정 생성에 실패했습니다");
+        toast.error(error.error || "일정 생성에 실패했습니다");
       }
     } catch (error) {
       console.error(error);
-      alert("오류가 발생했습니다");
+      toast.error("오류가 발생했습니다");
     } finally {
       setIsCreating(false);
     }
@@ -141,14 +142,14 @@ export default function MeetingManagePage() {
       });
 
       if (response.ok) {
-        alert("일정이 삭제되었습니다");
+        toast.success("일정이 삭제되었습니다");
         fetchSchedules();
       } else {
-        alert("일정 삭제에 실패했습니다");
+        toast.error("일정 삭제에 실패했습니다");
       }
     } catch (error) {
       console.error(error);
-      alert("오류가 발생했습니다");
+      toast.error("오류가 발생했습니다");
     }
   };
 

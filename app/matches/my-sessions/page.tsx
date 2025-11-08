@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Share2, Users, Trophy, Calendar, Copy, Check } from 'lucide-react';
+import { Share2, Users, Trophy, Calendar, Copy, Check, Feather, Coins } from 'lucide-react';
 import { MatchType, MATCH_TYPE_LABELS } from '@/types/rating';
+import { toast } from 'sonner';
 
 interface MatchSession {
   id: string;
@@ -15,6 +16,7 @@ interface MatchSession {
   bet_amount_per_player: number;
   session_date: string;
   created_at: string;
+  is_ranked: boolean;
   participants: Array<{
     user: {
       id: string;
@@ -79,7 +81,7 @@ export default function MySessionsPage() {
       }
     } else {
       copySessionLink(sessionId);
-      alert('링크가 복사되었습니다!');
+      toast.success('링크가 복사되었습니다!');
     }
   };
 
@@ -92,14 +94,14 @@ export default function MySessionsPage() {
       });
 
       if (response.ok) {
-        alert('세션이 삭제되었습니다.');
+        toast.success('세션이 삭제되었습니다.');
         fetchMySessionsInit();
       } else {
         throw new Error('Failed to delete session');
       }
     } catch (error) {
       console.error('Failed to delete session:', error);
-      alert('세션 삭제에 실패했습니다.');
+      toast.error('세션 삭제에 실패했습니다.');
     }
   };
 
@@ -152,13 +154,22 @@ export default function MySessionsPage() {
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
                       <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded">
                         {MATCH_TYPE_LABELS[session.match_type]}
                       </span>
                       <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-sm font-medium rounded">
-                        대기 중
+                        {session.status === 'PENDING' ? '대기 중' : session.status === 'IN_PROGRESS' ? '진행 중' : '완료'}
                       </span>
+                      {session.is_ranked ? (
+                        <span className="px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded">
+                          🏆 랭크 게임
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 bg-gray-100 text-gray-800 text-sm font-medium rounded">
+                          🎮 일반 게임
+                        </span>
+                      )}
                     </div>
                     <div className="text-sm text-gray-600 space-y-1">
                       <div className="flex items-center gap-2">
@@ -169,15 +180,18 @@ export default function MySessionsPage() {
                         <Users className="w-4 h-4" />
                         <span>참가자: {session.participants.length}명</span>
                       </div>
-                      {session.entry_fee_points > 0 && (
-                        <div>💎 입장료: {session.entry_fee_points} 포인트</div>
-                      )}
-                      {session.entry_fee_feathers > 0 && (
-                        <div>🪶 입장료: {session.entry_fee_feathers} 깃털</div>
-                      )}
-                      {session.bet_currency_type !== 'NONE' && (
-                        <div className="text-yellow-600">
-                          🎲 내기: {session.bet_amount_per_player} {session.bet_currency_type === 'POINTS' ? '포인트' : '깃털'}
+                      <div className="flex items-center gap-2">
+                        <Coins className="w-4 h-4 text-purple-600" />
+                        <span className="font-medium text-gray-700">
+                          입장료: {session.entry_fee_points} 포인트 / {session.entry_fee_feathers} 깃털
+                        </span>
+                      </div>
+                      {session.bet_currency_type !== 'NONE' && session.bet_amount_per_player > 0 && (
+                        <div className="flex items-center gap-2">
+                          <Trophy className="w-4 h-4 text-yellow-600" />
+                          <span className="font-medium text-yellow-700">
+                            내기: {session.bet_amount_per_player} {session.bet_currency_type === 'POINTS' ? '포인트' : '깃털'} /인
+                          </span>
                         </div>
                       )}
                     </div>

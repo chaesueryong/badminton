@@ -7,9 +7,12 @@ export async function middleware(req: NextRequest) {
   const supabase = createMiddlewareClient({ req, res })
 
   // 세션 새로고침 - OAuth 콜백 처리에 필수
+  // API route도 세션 refresh 필요!
   const { data: { session } } = await supabase.auth.getSession()
 
-  // API 경로는 미들웨어 체크 제외
+  console.log('[Middleware]', req.nextUrl.pathname, 'session:', session ? 'YES' : 'NO', session?.user?.id)
+
+  // API 경로는 체크만 안 하고, 세션 refresh는 위에서 했으므로 바로 리턴
   const isApiRoute = req.nextUrl.pathname.startsWith('/api')
   if (isApiRoute) {
     return res
@@ -19,7 +22,7 @@ export async function middleware(req: NextRequest) {
   // /profile/[id] 는 공개, /profile (본인 프로필)만 보호
   const isOwnProfile = req.nextUrl.pathname === '/profile'
   const isOtherUserProfile = req.nextUrl.pathname.startsWith('/profile/') && req.nextUrl.pathname.length > 9
-  const protectedPaths = ['/messages', '/admin']
+  const protectedPaths = ['/messages', '/admin', '/matches/history']
   const isProtectedPath = protectedPaths.some(path => req.nextUrl.pathname.startsWith(path)) || isOwnProfile
 
   // 온보딩 및 로그인 페이지
@@ -43,8 +46,17 @@ export async function middleware(req: NextRequest) {
       .eq('id', session.user.id)
       .maybeSingle()
 
+    console.log('[Middleware Profile Check]', req.nextUrl.pathname, 'user:', user ? 'OK' : 'NULL', 'error:', error?.message || 'none')
+
+    // 에러가 발생한 경우 로깅하고 계속 진행 (프로필 확인 실패해도 페이지는 보여줌)
+    if (error) {
+      console.error('Middleware profile check error:', error)
+      return res
+    }
+
     // 프로필이 완성되지 않은 경우 온보딩 페이지로 리다이렉트
-    if (error || !user || !user.name || !user.nickname || !user.level) {
+    if (!user || !user.name || !user.nickname || !user.level) {
+      console.log('[Middleware] Redirecting to onboarding - incomplete profile')
       const onboardingUrl = new URL('/onboarding', req.url)
       return NextResponse.redirect(onboardingUrl)
     }

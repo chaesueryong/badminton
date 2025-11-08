@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import ImageUpload from "@/components/ImageUpload";
 import RegionSelect from "@/components/RegionSelect";
+import { toast } from "sonner";
 
 type FeeType = "FREE" | "MONTHLY" | "QUARTERLY" | "YEARLY";
 
@@ -49,11 +50,11 @@ export default function CreateClubPage() {
         const club = await response.json();
         router.push(`/clubs/${club.id}`);
       } else {
-        alert("모임 생성에 실패했습니다");
+        toast.error("모임 생성에 실패했습니다");
       }
     } catch (error) {
       console.error(error);
-      alert("오류가 발생했습니다");
+      toast.error("오류가 발생했습니다");
     } finally {
       setIsSubmitting(false);
     }

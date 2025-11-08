@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import RegionSelect from "@/components/RegionSelect";
 import ImageUpload from "@/components/SimpleImageUpload";
 import { usePremium } from "@/lib/hooks/usePremium";
+import { toast } from "sonner";
 
 // Storage bucket name for meetings
 const STORAGE_BUCKETS = {
@@ -77,11 +78,11 @@ export default function CreateMeetingPage() {
         const meeting = await response.json();
         router.push(`/meetings/${meeting.id}`);
       } else {
-        alert("모임 생성에 실패했습니다");
+        toast.error("모임 생성에 실패했습니다");
       }
     } catch (error) {
       console.error(error);
-      alert("오류가 발생했습니다");
+      toast.error("오류가 발생했습니다");
     } finally {
       setIsSubmitting(false);
     }

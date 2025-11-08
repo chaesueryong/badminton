@@ -22,18 +22,18 @@ export function useVIP() {
         return;
       }
 
-      const now = new Date().toISOString();
-      const { data: vipMembership } = await supabase
-        .from("vip_memberships")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .eq("is_active", true)
-        .gte("end_date", now)
+      const { data: userData } = await supabase
+        .from("users")
+        .select("is_vip, vip_until")
+        .eq("id", session.user.id)
         .single();
 
-      setIsVIP(!!vipMembership);
-      if (vipMembership) {
-        setVipUntil(vipMembership.end_date);
+      // Check if user is VIP and VIP is not expired
+      const isVipActive = userData?.is_vip && userData?.vip_until && new Date(userData.vip_until) > new Date();
+
+      setIsVIP(!!isVipActive);
+      if (isVipActive && userData?.vip_until) {
+        setVipUntil(userData.vip_until);
       }
     } catch (error) {
       console.error("Failed to check VIP status:", error);

@@ -4,11 +4,11 @@ import { createClient } from '@/lib/supabase/server';
 // POST /api/matches/sessions/[sessionId]/cancel - Cancel a match and refund entry fees
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ sessionId: string }> }
+  { params }: { params: { sessionId: string } }
 ) {
   try {
     const supabase = await createClient();
-    const { sessionId } = await params;
+    const { sessionId } = params;
 
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();

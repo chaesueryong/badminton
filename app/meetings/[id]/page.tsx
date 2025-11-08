@@ -23,6 +23,7 @@ import {
   Award,
   BarChart3
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Participant {
   id: string;
@@ -140,12 +141,12 @@ export default function MeetingDetailPage() {
         const data = await response.json();
         setMeeting(data);
       } else {
-        alert("모임을 찾을 수 없습니다");
+        toast.error("모임을 찾을 수 없습니다");
         router.push("/meetings");
       }
     } catch (error) {
       console.error(error);
-      alert("오류가 발생했습니다");
+      toast.error("오류가 발생했습니다");
     } finally {
       setIsLoading(false);
     }
@@ -171,15 +172,15 @@ export default function MeetingDetailPage() {
       });
 
       if (response.ok) {
-        alert("모임 참가 신청이 완료되었습니다!");
+        toast.success("모임 참가 신청이 완료되었습니다!");
         fetchMeeting();
       } else {
         const error = await response.json();
-        alert(error.error || "참가 신청에 실패했습니다");
+        toast.error(error.error || "참가 신청에 실패했습니다");
       }
     } catch (error) {
       console.error(error);
-      alert("오류가 발생했습니다");
+      toast.error("오류가 발생했습니다");
     } finally {
       setIsJoining(false);
     }
@@ -198,7 +199,7 @@ export default function MeetingDetailPage() {
       } else {
         // 웹 공유 API를 지원하지 않는 경우 URL 복사
         await navigator.clipboard.writeText(window.location.href);
-        alert('링크가 클립보드에 복사되었습니다!');
+        toast.success('링크가 클립보드에 복사되었습니다!');
       }
     } catch (error) {
       console.error('공유 실패:', error);
@@ -216,15 +217,15 @@ export default function MeetingDetailPage() {
       });
 
       if (response.ok) {
-        alert("모임에서 탈퇴했습니다");
+        toast.success("모임에서 탈퇴했습니다");
         router.push("/meetings");
       } else {
         const error = await response.json();
-        alert(error.error || "탈퇴에 실패했습니다");
+        toast.error(error.error || "탈퇴에 실패했습니다");
       }
     } catch (error) {
       console.error(error);
-      alert("오류가 발생했습니다");
+      toast.error("오류가 발생했습니다");
     }
   };
 
@@ -243,15 +244,15 @@ export default function MeetingDetailPage() {
       });
 
       if (response.ok) {
-        alert("멤버를 강퇴했습니다");
+        toast.success("멤버를 강퇴했습니다");
         fetchMeeting();
       } else {
         const error = await response.json();
-        alert(error.error || "강퇴에 실패했습니다");
+        toast.error(error.error || "강퇴에 실패했습니다");
       }
     } catch (error) {
       console.error(error);
-      alert("오류가 발생했습니다");
+      toast.error("오류가 발생했습니다");
     }
   };
 
@@ -272,15 +273,15 @@ export default function MeetingDetailPage() {
       });
 
       if (response.ok) {
-        alert("블랙리스트에 추가했습니다");
+        toast.success("블랙리스트에 추가했습니다");
         fetchMeeting();
       } else {
         const error = await response.json();
-        alert(error.error || "블랙리스트 추가에 실패했습니다");
+        toast.error(error.error || "블랙리스트 추가에 실패했습니다");
       }
     } catch (error) {
       console.error(error);
-      alert("오류가 발생했습니다");
+      toast.error("오류가 발생했습니다");
     }
   };
 
@@ -295,16 +296,16 @@ export default function MeetingDetailPage() {
       });
 
       if (response.ok) {
-        alert("일정에 참석 신청했습니다");
+        toast.success("일정에 참석 신청했습니다");
         fetchMeeting();
         fetchSchedules();
       } else {
         const error = await response.json();
-        alert(error.error || "참석 신청에 실패했습니다");
+        toast.error(error.error || "참석 신청에 실패했습니다");
       }
     } catch (error) {
       console.error(error);
-      alert("오류가 발생했습니다");
+      toast.error("오류가 발생했습니다");
     }
   };
 
@@ -319,16 +320,16 @@ export default function MeetingDetailPage() {
       });
 
       if (response.ok) {
-        alert("일정 참석을 취소했습니다");
+        toast.success("일정 참석을 취소했습니다");
         fetchMeeting();
         fetchSchedules();
       } else {
         const error = await response.json();
-        alert(error.error || "취소에 실패했습니다");
+        toast.error(error.error || "취소에 실패했습니다");
       }
     } catch (error) {
       console.error(error);
-      alert("오류가 발생했습니다");
+      toast.error("오류가 발생했습니다");
     }
   };
 

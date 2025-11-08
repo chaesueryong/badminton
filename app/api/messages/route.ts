@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { GameSettings } from "@/config/game-settings";
 
 // GET /api/messages - 메시지 목록 조회
 export async function GET(request: NextRequest) {
@@ -154,36 +155,28 @@ export async function POST(request: NextRequest) {
     }
 
     // VIP 회원 확인 (VIP 회원은 무제한 메시지)
-    const now = new Date().toISOString();
-    const { data: vipMembership } = await supabaseAdmin
-      .from("vip_memberships")
-      .select("*")
-      .eq("user_id", senderId)
-      .eq("is_active", true)
-      .gte("end_date", now)
+    const { data: senderData, error: senderCheckError } = await supabaseAdmin
+      .from('users')
+      .select('points, is_vip, vip_until')
+      .eq('id', senderId)
       .single();
 
-    const isVIP = !!vipMembership;
-    const POINT_COST = isVIP ? 0 : 10;
+    if (senderCheckError || !senderData) {
+      return NextResponse.json(
+        { error: "발신자 정보를 찾을 수 없습니다" },
+        { status: 404 }
+      );
+    }
+
+    // Check if user is VIP and VIP is not expired
+    const isVIP = senderData.is_vip && senderData.vip_until && new Date(senderData.vip_until) > new Date();
+    const POINT_COST = isVIP ? 0 : GameSettings.messaging.points; // 메시지 전송 비용 from config
 
     // 발신자의 포인트 확인 (VIP가 아닌 경우에만)
     if (!isVIP) {
-      const { data: sender, error: senderError } = await supabaseAdmin
-        .from('users')
-        .select('points')
-        .eq('id', senderId)
-        .single();
-
-      if (senderError || !sender) {
+      if (senderData.points < POINT_COST) {
         return NextResponse.json(
-          { error: "발신자 정보를 찾을 수 없습니다" },
-          { status: 404 }
-        );
-      }
-
-      if (sender.points < POINT_COST) {
-        return NextResponse.json(
-          { error: "포인트가 부족합니다. 메시지 전송에 10 포인트가 필요합니다." },
+          { error: `포인트가 부족합니다. 메시지 전송에 ${POINT_COST} 포인트가 필요합니다.` },
           { status: 400 }
         );
       }
@@ -191,7 +184,7 @@ export async function POST(request: NextRequest) {
       // 포인트 차감
       const { error: pointError } = await supabaseAdmin
         .from('users')
-        .update({ points: sender.points - POINT_COST })
+        .update({ points: senderData.points - POINT_COST })
         .eq('id', senderId);
 
       if (pointError) {

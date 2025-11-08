@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function WritePostPage() {
   const router = useRouter();
@@ -29,11 +30,11 @@ export default function WritePostPage() {
         const post = await response.json();
         router.push(`/community/${post.id}`);
       } else {
-        alert("게시글 작성에 실패했습니다");
+        toast.error("게시글 작성에 실패했습니다");
       }
     } catch (error) {
       console.error(error);
-      alert("오류가 발생했습니다");
+      toast.error("오류가 발생했습니다");
     } finally {
       setIsSubmitting(false);
     }

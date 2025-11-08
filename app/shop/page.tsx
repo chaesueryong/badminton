@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Check, Feather } from "lucide-react";
+import { Check, Feather, Receipt, Coins } from "lucide-react";
+import { toast } from "sonner";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useRouter } from "next/navigation";
+import * as PortOne from "@portone/browser-sdk/v2";
 
 interface FeatherProduct {
   id: string;
@@ -20,9 +24,12 @@ interface UserBalance {
 }
 
 export default function ShopPage() {
+  const router = useRouter();
+  const supabase = createClientComponentClient();
   const [products, setProducts] = useState<FeatherProduct[]>([]);
   const [balance, setBalance] = useState<UserBalance>({ feathers: 0, points: 0 });
   const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<FeatherProduct | null>(null);
   const [showModal, setShowModal] = useState(false);
 
@@ -59,11 +66,66 @@ export default function ShopPage() {
     setShowModal(true);
   };
 
-  const confirmPurchase = () => {
-    // 실제 결제는 토스페이먼츠나 다른 PG사 연동 필요
-    alert("결제 기능은 추후 구현 예정입니다.");
-    setShowModal(false);
-    setSelectedProduct(null);
+  const confirmPurchase = async () => {
+    if (!selectedProduct || processing) return;
+
+    try {
+      setProcessing(true);
+
+      // 1. 사용자 인증 확인
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/login');
+        return;
+      }
+
+      // 2. 결제 ID 생성
+      const paymentId = `feather-${session.user.id}-${Date.now()}`;
+
+      // 3. 포트원 결제 요청 (일반결제 채널 사용)
+      const response = await PortOne.requestPayment({
+        storeId: process.env.NEXT_PUBLIC_PORTONE_STORE_ID || 'store-test-id',
+        channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_GENERAL || 'channel-key-general-test',
+        paymentId: paymentId,
+        orderName: selectedProduct.name,
+        totalAmount: selectedProduct.price_krw,
+        currency: 'CURRENCY_KRW',
+        payMethod: 'CARD'
+      });
+
+      if (!response || response.code != null) {
+        toast.error(`결제 실패: ${response?.message || '알 수 없는 오류'}`);
+        return;
+      }
+
+      // 4. 결제 완료 처리 API 호출
+      const completeResponse = await fetch('/api/shop/feathers/purchase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: selectedProduct.id,
+          paymentId: paymentId,
+          transactionId: response.paymentId
+        })
+      });
+
+      if (!completeResponse.ok) {
+        throw new Error('결제 완료 처리 실패');
+      }
+
+      const result = await completeResponse.json();
+      toast.success(`🎉 ${selectedProduct.feather_amount + selectedProduct.bonus_feathers}개의 깃털을 받았습니다!`);
+
+      // 잔액 새로고침
+      setBalance({ feathers: result.newBalance || 0, points: balance.points });
+      setShowModal(false);
+      setSelectedProduct(null);
+    } catch (error: any) {
+      console.error('Purchase error:', error);
+      toast.error(error.message || '결제 처리 중 오류가 발생했습니다');
+    } finally {
+      setProcessing(false);
+    }
   };
 
   return (
@@ -79,13 +141,22 @@ export default function ShopPage() {
           </h1>
           <p className="text-gray-700 text-lg mb-4">깃털을 구매하여 프리미엄 혜택과 다양한 아이템을 이용하세요</p>
 
-          {/* Subscription Link */}
-          <Link
-            href="/shop/subscription"
-            className="inline-block px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-bold text-lg shadow-lg hover-hover:hover:shadow-xl transition-all duration-300"
-          >
-            💳 프리미엄 & VIP 구독하기
-          </Link>
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link
+              href="/shop/subscription"
+              className="inline-block px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-bold text-lg shadow-lg hover-hover:hover:shadow-xl transition-all duration-300"
+            >
+              💳 프리미엄 & VIP 구독하기
+            </Link>
+            <Link
+              href="/transactions"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-gray-700 rounded-xl font-bold text-lg shadow-lg hover-hover:hover:shadow-xl hover-hover:hover:bg-gray-50 transition-all duration-300 border-2 border-gray-200"
+            >
+              <Receipt className="w-5 h-5" />
+              거래 내역
+            </Link>
+          </div>
         </div>
 
         {/* Balance */}
@@ -106,7 +177,7 @@ export default function ShopPage() {
                 <h2 className="text-lg font-medium opacity-90">보유 포인트</h2>
                 <p className="text-3xl font-bold mt-2">{balance.points.toLocaleString()}</p>
               </div>
-              <div className="text-5xl opacity-20">💎</div>
+              <Coins className="w-12 h-12 opacity-20" />
             </div>
           </div>
         </div>

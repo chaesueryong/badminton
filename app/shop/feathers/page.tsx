@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Check, Feather } from "lucide-react";
+import { toast } from "sonner";
 
 interface FeatherProduct {
   id: string;
@@ -44,7 +45,7 @@ export default function FeathersShopPage() {
 
   const confirmPurchase = () => {
     // 실제 결제는 토스페이먼츠나 다른 PG사 연동 필요
-    alert("결제 기능은 추후 구현 예정입니다.");
+    toast("결제 기능은 추후 구현 예정입니다.");
     setShowModal(false);
     setSelectedProduct(null);
   };

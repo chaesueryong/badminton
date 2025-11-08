@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { toast } from "sonner";
 
 interface User {
   id: string;
@@ -77,7 +78,7 @@ export default function AdminUsersPage() {
       });
 
       if (response.ok) {
-        alert(suspensionType === "permanent"
+        toast.success(suspensionType === "permanent"
           ? "회원이 영구 정지되었습니다"
           : `회원이 ${suspensionDays}일간 정지되었습니다`);
         setShowSuspendModal(false);
@@ -86,11 +87,11 @@ export default function AdminUsersPage() {
         setSelectedUser(null);
         fetchUsers();
       } else {
-        alert("회원 정지에 실패했습니다");
+        toast.error("회원 정지에 실패했습니다");
       }
     } catch (error) {
       console.error("Failed to suspend user:", error);
-      alert("오류가 발생했습니다");
+      toast.error("오류가 발생했습니다");
     }
   };
 
@@ -103,14 +104,14 @@ export default function AdminUsersPage() {
       });
 
       if (response.ok) {
-        alert("회원이 활성화되었습니다");
+        toast.success("회원이 활성화되었습니다");
         fetchUsers();
       } else {
-        alert("회원 활성화에 실패했습니다");
+        toast.error("회원 활성화에 실패했습니다");
       }
     } catch (error) {
       console.error("Failed to activate user:", error);
-      alert("오류가 발생했습니다");
+      toast.error("오류가 발생했습니다");
     }
   };
 

@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
 import { getDefaultImage } from "@/lib/constants";
 import {
   Activity,
-  Star,
+  Coins,
   Gift,
   Users,
   Trophy,
@@ -22,7 +22,8 @@ import {
   Feather,
   Crown,
   Sparkles,
-  UserPlus
+  UserPlus,
+  History
 } from "lucide-react";
 
 export default function Navbar() {
@@ -41,130 +42,61 @@ export default function Navbar() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 초기 세션 확인
+    const fetchUserData = async (userId: string) => {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('nickname, profileImage, region, feathers, points, is_vip, vip_until, is_premium, premium_until')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (userData) {
+        setNickname(userData.nickname || "");
+        setProfileImage(userData.profileImage || "");
+        setUserRegion(userData.region || "");
+        setFeathers(userData.feathers || 0);
+        setPoints(userData.points || 0);
+
+        const isVipActive = userData.is_vip && userData.vip_until && new Date(userData.vip_until) > new Date();
+        setIsVIP(!!isVipActive);
+
+        const isPremiumActive = userData.is_premium && userData.premium_until && new Date(userData.premium_until) > new Date();
+        setIsPremium(!!isPremiumActive);
+      }
+    };
+
+    const clearUserData = () => {
+      setNickname("");
+      setProfileImage("");
+      setUserRegion("");
+      setFeathers(0);
+      setPoints(0);
+      setIsPremium(false);
+      setIsVIP(false);
+    };
+
+    // 초기 세션 가져오기
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
-
-      // 닉네임, 프로필 이미지, 지역, 깃털, 포인트 가져오기
       if (session?.user) {
-        supabase
-          .from('users')
-          .select('nickname, profileImage, region, feathers, points')
-          .eq('id', session.user.id)
-          .maybeSingle()
-          .then(({ data: userData }) => {
-            if (userData?.nickname) {
-              setNickname(userData.nickname);
-            }
-            if (userData?.profileImage) {
-              setProfileImage(userData.profileImage);
-            }
-            if (userData?.region) {
-              setUserRegion(userData.region);
-            }
-            if (userData?.feathers !== undefined) {
-              setFeathers(userData.feathers);
-            }
-            if (userData?.points !== undefined) {
-              setPoints(userData.points);
-            }
-          });
-
-        // Check Premium membership
-        const now = new Date().toISOString();
-        supabase
-          .from('premium_memberships')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .eq('is_active', true)
-          .gte('end_date', now)
-          .maybeSingle()
-          .then(({ data }) => {
-            setIsPremium(!!data);
-          });
-
-        // Check VIP membership
-        supabase
-          .from('vip_memberships')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .eq('is_active', true)
-          .gte('end_date', now)
-          .maybeSingle()
-          .then(({ data }) => {
-            setIsVIP(!!data);
-          });
+        fetchUserData(session.user.id);
       }
     });
 
-    // 인증 상태 변경 감지
+    // 세션 변경 감지
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
-
       if (session?.user) {
-        supabase
-          .from('users')
-          .select('nickname, profileImage, region, feathers, points')
-          .eq('id', session.user.id)
-          .maybeSingle()
-          .then(({ data: userData }) => {
-            if (userData?.nickname) {
-              setNickname(userData.nickname);
-            }
-            if (userData?.profileImage) {
-              setProfileImage(userData.profileImage);
-            }
-            if (userData?.region) {
-              setUserRegion(userData.region);
-            }
-            if (userData?.feathers !== undefined) {
-              setFeathers(userData.feathers);
-            }
-            if (userData?.points !== undefined) {
-              setPoints(userData.points);
-            }
-          });
-
-        // Check Premium membership
-        const now = new Date().toISOString();
-        supabase
-          .from('premium_memberships')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .eq('is_active', true)
-          .gte('end_date', now)
-          .maybeSingle()
-          .then(({ data }) => {
-            setIsPremium(!!data);
-          });
-
-        // Check VIP membership
-        supabase
-          .from('vip_memberships')
-          .select('*')
-          .eq('user_id', session.user.id)
-          .eq('is_active', true)
-          .gte('end_date', now)
-          .maybeSingle()
-          .then(({ data }) => {
-            setIsVIP(!!data);
-          });
+        await fetchUserData(session.user.id);
       } else {
-        setNickname("");
-        setProfileImage("");
-        setUserRegion("");
-        setFeathers(0);
-        setPoints(0);
-        setIsPremium(false);
-        setIsVIP(false);
+        clearUserData();
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase]);
+  }, []);
 
   const isActive = (path: string) => pathname === path;
 
@@ -254,6 +186,25 @@ export default function Navbar() {
                 <div className="text-gray-400">로딩...</div>
               ) : user ? (
                 <>
+                  {/* VIP/프리미엄 뱃지 */}
+                  {isVIP && (
+                    <Link
+                      href="/shop/subscription"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-full border border-purple-200 hover-hover:hover:from-purple-100 hover-hover:hover:to-indigo-100 transition-all"
+                    >
+                      <Sparkles className="w-4 h-4 text-purple-600" />
+                      <span className="text-xs font-bold text-purple-700">VIP</span>
+                    </Link>
+                  )}
+                  {isPremium && (
+                    <Link
+                      href="/shop/subscription"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-pink-50 to-purple-50 rounded-full border border-pink-200 hover-hover:hover:from-pink-100 hover-hover:hover:to-purple-100 transition-all"
+                    >
+                      <Crown className="w-4 h-4 text-pink-600" />
+                      <span className="text-xs font-bold text-pink-700">프리미엄</span>
+                    </Link>
+                  )}
                   <Link
                     href="/profile"
                     className="flex items-center space-x-2 px-4 py-2 rounded-lg hover-hover:hover:bg-gray-50 transition"
@@ -331,7 +282,7 @@ export default function Navbar() {
                   href="/shop"
                   className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-full border border-blue-200 hover-hover:hover:from-blue-100 hover-hover:hover:to-indigo-100 transition-all cursor-pointer"
                 >
-                  <Star className="w-3 h-3 text-blue-600" />
+                  <Coins className="w-3 h-3 text-blue-600" />
                   <span className="text-[10px] font-semibold text-blue-700">{points.toLocaleString()}</span>
                 </Link>
                 <Link
@@ -454,16 +405,16 @@ export default function Navbar() {
                   </Link>
 
                   <Link
-                    href="/invitations"
+                    href="/matches/history"
                     onClick={() => setIsMoreMenuOpen(false)}
                     className={`flex items-center px-4 py-3 space-x-3 transition-all ${
-                      isActive('/invitations')
+                      isActive('/matches/history')
                         ? 'bg-blue-50 text-blue-600'
                         : 'text-gray-700 active:bg-gray-50'
                     }`}
                   >
-                    <UserPlus className="w-5 h-5" />
-                    <span className="text-sm font-medium">매치 초대</span>
+                    <History className="w-5 h-5" />
+                    <span className="text-sm font-medium">매치 내역</span>
                   </Link>
 
                   <Link

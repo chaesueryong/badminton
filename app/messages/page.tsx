@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import type { User } from "@supabase/supabase-js";
+import { toast } from "sonner";
 
 interface OtherUser {
   id: string;
@@ -137,7 +138,7 @@ export default function MessagesPage() {
       loadConversations(user.id);
     } catch (error) {
       console.error("메시지 전송 실패:", error);
-      alert(error instanceof Error ? error.message : "메시지 전송에 실패했습니다.");
+      toast.error(error instanceof Error ? error.message : "메시지 전송에 실패했습니다.");
     } finally {
       setSending(false);
     }

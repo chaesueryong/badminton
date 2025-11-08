@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
+import { GameSettings } from "@/config/game-settings";
 
 export async function POST(request: NextRequest) {
   try {
@@ -149,9 +150,9 @@ export async function POST(request: NextRequest) {
       result = updatedUser;
     }
 
-    // 추천인에게 포인트 지급 (신규 가입 시에만)
+    // 추천인에게 포인트 지급 (신규 가입 시에만) - from config
     if (referrerId && !existingUser?.referredBy) {
-      const REFERRAL_REWARD_POINTS = 100;
+      const REFERRAL_REWARD_POINTS = GameSettings.referral.signup;
 
       // 추천인의 현재 포인트 가져오기
       const { data: referrerData } = await supabase

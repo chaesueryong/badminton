@@ -10,8 +10,9 @@ import { STORAGE_BUCKETS } from "@/lib/storage";
 import Image from "next/image";
 import RegionSelect from "@/components/RegionSelect";
 import { formatPhoneNumber, unformatPhoneNumber } from "@/lib/utils/phone";
-import { Feather, Trophy, Gift, Copy, Share2, Crown } from "lucide-react";
+import { Feather, Trophy, Gift, Copy, Share2, Crown, Sparkles } from "lucide-react";
 import { usePremium } from "@/lib/hooks/usePremium";
+import { toast } from "sonner";
 
 const levelLabels: Record<string, string> = {
   E_GRADE: "E조",
@@ -77,6 +78,10 @@ interface UserProfile {
   createdAt: string;
   referralCode: string | null;
   referredBy: string | null;
+  is_vip: boolean | null;
+  vip_until: string | null;
+  is_premium: boolean | null;
+  premium_until: string | null;
 }
 
 function ProfilePageContent() {
@@ -134,7 +139,7 @@ function ProfilePageContent() {
     } else {
       // 모바일이 아닌 경우 클립보드에 복사
       navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
-      alert('초대 링크가 복사되었습니다!');
+      toast.success('초대 링크가 복사되었습니다!');
     }
   };
 
@@ -215,7 +220,7 @@ function ProfilePageContent() {
       } else {
         // 다른 사용자의 프로필이 없을 때
         setLoading(false);
-        alert("사용자를 찾을 수 없습니다.");
+        toast.error("사용자를 찾을 수 없습니다.");
         router.push("/");
       }
     };
@@ -319,10 +324,10 @@ function ProfilePageContent() {
       }
 
       setIsEditing(false);
-      alert("프로필이 수정되었습니다!");
+      toast.success("프로필이 수정되었습니다!");
     } catch (error) {
       console.error("프로필 수정 실패:", error);
-      alert("프로필 수정에 실패했습니다.");
+      toast.error("프로필 수정에 실패했습니다.");
     } finally {
       setSubmitting(false);
     }
@@ -373,7 +378,7 @@ function ProfilePageContent() {
       router.push("/login");
     } catch (error) {
       console.error("로그아웃 오류:", error);
-      alert("로그아웃 중 오류가 발생했습니다.");
+      toast.error("로그아웃 중 오류가 발생했습니다.");
     }
   };
 
@@ -561,6 +566,106 @@ function ProfilePageContent() {
             </div>
           </div>
 
+          {/* VIP/프리미엄 구독 정보 - 자신의 프로필일 때만 표시 */}
+          {isOwnProfile && (profile.is_vip || profile.is_premium) && (
+            <div className="p-4 sm:p-8 border-b border-gray-200">
+              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">구독 정보</h3>
+              <div className="space-y-3">
+                {/* VIP 구독 */}
+                {profile.is_vip && (
+                  <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg p-4 sm:p-6 border-2 border-purple-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-6 h-6 text-purple-600" />
+                        <h4 className="text-lg font-bold text-purple-900">VIP 멤버십</h4>
+                      </div>
+                      {profile.vip_until && new Date(profile.vip_until) > new Date() ? (
+                        <span className="px-3 py-1 bg-purple-600 text-white text-xs font-bold rounded-full">활성</span>
+                      ) : (
+                        <span className="px-3 py-1 bg-gray-400 text-white text-xs font-bold rounded-full">만료</span>
+                      )}
+                    </div>
+                    {profile.vip_until && (
+                      <div className="text-sm text-purple-700 space-y-1">
+                        <p className="font-medium">
+                          만료일: {new Date(profile.vip_until).toLocaleDateString('ko-KR', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                        {new Date(profile.vip_until) > new Date() ? (
+                          <p className="text-xs text-purple-600">
+                            {Math.ceil((new Date(profile.vip_until).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}일 남음
+                          </p>
+                        ) : (
+                          <p className="text-xs text-red-600">만료되었습니다</p>
+                        )}
+                      </div>
+                    )}
+                    <div className="mt-3 pt-3 border-t border-purple-200">
+                      <p className="text-xs text-purple-700 font-medium mb-1">VIP 혜택:</p>
+                      <ul className="text-xs text-purple-600 space-y-0.5 ml-4">
+                        <li>• 세션 생성 무제한</li>
+                        <li>• 세션 입장료 무료</li>
+                        <li>• 메시징 무제한</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {/* 프리미엄 구독 */}
+                {profile.is_premium && (
+                  <div className="bg-gradient-to-br from-pink-50 to-purple-50 rounded-lg p-4 sm:p-6 border-2 border-pink-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Crown className="w-6 h-6 text-pink-600" />
+                        <h4 className="text-lg font-bold text-pink-900">프리미엄 멤버십</h4>
+                      </div>
+                      {profile.premium_until && new Date(profile.premium_until) > new Date() ? (
+                        <span className="px-3 py-1 bg-pink-600 text-white text-xs font-bold rounded-full">활성</span>
+                      ) : (
+                        <span className="px-3 py-1 bg-gray-400 text-white text-xs font-bold rounded-full">만료</span>
+                      )}
+                    </div>
+                    {profile.premium_until && (
+                      <div className="text-sm text-pink-700 space-y-1">
+                        <p className="font-medium">
+                          만료일: {new Date(profile.premium_until).toLocaleDateString('ko-KR', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                        {new Date(profile.premium_until) > new Date() ? (
+                          <p className="text-xs text-pink-600">
+                            {Math.ceil((new Date(profile.premium_until).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}일 남음
+                          </p>
+                        ) : (
+                          <p className="text-xs text-red-600">만료되었습니다</p>
+                        )}
+                      </div>
+                    )}
+                    <div className="mt-3 pt-3 border-t border-pink-200">
+                      <p className="text-xs text-pink-700 font-medium mb-1">프리미엄 혜택:</p>
+                      <ul className="text-xs text-pink-600 space-y-0.5 ml-4">
+                        <li>• 모임인원 300명까지 제한 해제</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {/* 구독 연장 버튼 */}
+                <Link
+                  href="/shop/subscription"
+                  className="block w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-center font-bold rounded-lg hover-hover:hover:from-blue-700 hover-hover:hover:to-purple-700 transition-all shadow-md hover-hover:hover:shadow-lg"
+                >
+                  구독 연장하기
+                </Link>
+              </div>
+            </div>
+          )}
+
           {/* 초대 코드 - 자신의 프로필일 때만 표시 */}
           {isOwnProfile && profile.referralCode && (
             <div className="p-4 sm:p-8 border-b border-gray-200">
@@ -636,10 +741,10 @@ function ProfilePageContent() {
                           ...profile,
                           profileImage: url,
                         });
-                        alert("프로필 이미지가 업데이트되었습니다!");
+                        toast.success("프로필 이미지가 업데이트되었습니다!");
                       } catch (error) {
                         console.error("프로필 이미지 업데이트 실패:", error);
-                        alert("프로필 이미지 업데이트에 실패했습니다.");
+                        toast.error("프로필 이미지 업데이트에 실패했습니다.");
                       }
                     }}
                   />

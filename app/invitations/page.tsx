@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import FloatingActionButton from '@/components/FloatingActionButton';
 import { MATCH_TYPE_LABELS, MatchType } from '@/types/rating';
+import { toast } from 'sonner';
 
 interface Invitation {
   id: string;
@@ -80,11 +81,11 @@ export default function InvitationsPage() {
         throw new Error(error.error || '초대 응답 실패');
       }
 
-      alert(action === 'accept' ? '초대를 수락했습니다!' : '초대를 거절했습니다.');
+      toast.success(action === 'accept' ? '초대를 수락했습니다!' : '초대를 거절했습니다.');
       fetchInvitations();
     } catch (error: any) {
       console.error('Failed to respond to invitation:', error);
-      alert(error.message || '초대 응답에 실패했습니다.');
+      toast.error(error.message || '초대 응답에 실패했습니다.');
     } finally {
       setProcessing(null);
     }
@@ -106,11 +107,11 @@ export default function InvitationsPage() {
         throw new Error(error.error || '초대 취소 실패');
       }
 
-      alert('초대가 취소되었습니다.');
+      toast.success('초대가 취소되었습니다.');
       fetchInvitations();
     } catch (error: any) {
       console.error('Failed to cancel invitation:', error);
-      alert(error.message || '초대 취소에 실패했습니다.');
+      toast.error(error.message || '초대 취소에 실패했습니다.');
     } finally {
       setProcessing(null);
     }

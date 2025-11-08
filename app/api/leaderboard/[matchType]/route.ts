@@ -4,11 +4,11 @@ import { createClient } from '@/lib/supabase/server';
 // GET /api/leaderboard/[matchType] - Get leaderboard for specific match type
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ matchType: string }> }
+  { params }: { params: { matchType: string } }
 ) {
   try {
     const supabase = await createClient();
-    const { matchType } = await params;
+    const { matchType } = params;
     const searchParams = request.nextUrl.searchParams;
 
     const region = searchParams.get('region');

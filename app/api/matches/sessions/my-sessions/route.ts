@@ -18,7 +18,7 @@ export async function GET() {
       );
     }
 
-    // Fetch sessions where user is creator and status is PENDING
+    // Fetch sessions where user is creator and status is PENDING or IN_PROGRESS
     const { data: sessions, error } = await supabase
       .from('match_sessions')
       .select(`
@@ -31,6 +31,7 @@ export async function GET() {
         bet_amount_per_player,
         session_date,
         created_at,
+        is_ranked,
         participants:match_participants(
           user:users(
             id,
@@ -41,7 +42,7 @@ export async function GET() {
         )
       `)
       .eq('creator_id', user.id)
-      .eq('status', 'PENDING')
+      .in('status', ['PENDING', 'IN_PROGRESS'])
       .order('created_at', { ascending: false });
 
     if (error) {

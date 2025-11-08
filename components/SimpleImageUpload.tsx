@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Camera } from "lucide-react";
+import { toast } from "sonner";
 
 interface SimpleImageUploadProps {
   bucket: string;
@@ -29,14 +30,14 @@ export default function SimpleImageUpload({
     // 파일 크기 검증 (5MB)
     const MAX_FILE_SIZE = 5 * 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
-      alert("파일 크기는 5MB를 초과할 수 없습니다.");
+      toast.error("파일 크기는 5MB를 초과할 수 없습니다.");
       return;
     }
 
     // 이미지 타입 검증
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     if (!allowedTypes.includes(file.type)) {
-      alert("지원하지 않는 이미지 형식입니다. (JPG, PNG, WebP, GIF만 가능)");
+      toast.error("지원하지 않는 이미지 형식입니다. (JPG, PNG, WebP, GIF만 가능)");
       return;
     }
 
@@ -104,7 +105,7 @@ export default function SimpleImageUpload({
       }
     } catch (error) {
       console.error(error);
-      alert(error instanceof Error ? error.message : "이미지 업로드 중 오류가 발생했습니다");
+      toast.error(error instanceof Error ? error.message : "이미지 업로드 중 오류가 발생했습니다");
       setPreview(currentImage || "");
     } finally {
       setUploading(false);

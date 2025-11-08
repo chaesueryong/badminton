@@ -4,11 +4,11 @@ import { createClient } from '@/lib/supabase/server';
 // PATCH /api/invitations/[invitationId] - Respond to invitation (accept/decline)
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ invitationId: string }> }
+  { params }: { params: { invitationId: string } }
 ) {
   try {
     const supabase = await createClient();
-    const { invitationId } = await params;
+    const { invitationId } = params;
 
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -130,11 +130,11 @@ export async function PATCH(
 // DELETE /api/invitations/[invitationId] - Delete invitation
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ invitationId: string }> }
+  { params }: { params: { invitationId: string } }
 ) {
   try {
     const supabase = await createClient();
-    const { invitationId } = await params;
+    const { invitationId } = params;
 
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();

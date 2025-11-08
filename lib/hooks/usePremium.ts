@@ -22,18 +22,18 @@ export function usePremium() {
         return;
       }
 
-      const now = new Date().toISOString();
-      const { data: premium } = await supabase
-        .from("premium_memberships")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .eq("is_active", true)
-        .gte("end_date", now)
+      const { data: userData } = await supabase
+        .from("users")
+        .select("is_premium, premium_until")
+        .eq("id", session.user.id)
         .single();
 
-      setIsPremium(!!premium);
-      if (premium) {
-        setPremiumUntil(premium.end_date);
+      // Check if user is Premium and Premium is not expired
+      const isPremiumActive = userData?.is_premium && userData?.premium_until && new Date(userData.premium_until) > new Date();
+
+      setIsPremium(!!isPremiumActive);
+      if (isPremiumActive && userData?.premium_until) {
+        setPremiumUntil(userData.premium_until);
       }
     } catch (error) {
       console.error("Failed to check premium status:", error);

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import FloatingActionButton from '@/components/FloatingActionButton';
 import {
   MatchType,
@@ -68,6 +69,7 @@ interface MatchStats {
 export default function MatchHistoryPage() {
   const router = useRouter();
   const params = useParams();
+  const supabase = createClientComponentClient();
   const userId = params.id as string;
   const [matches, setMatches] = useState<MatchHistory[]>([]);
   const [stats, setStats] = useState<MatchStats | null>(null);
@@ -88,6 +90,13 @@ export default function MatchHistoryPage() {
       params.append('limit', '50');
 
       const response = await fetch(`/api/users/${userId}/matches?${params.toString()}`);
+
+      // If unauthorized, redirect to login
+      if (response.status === 401) {
+        router.push('/login');
+        return;
+      }
+
       if (response.ok) {
         const data = await response.json();
         setMatches(data.matches || []);

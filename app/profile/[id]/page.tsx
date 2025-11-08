@@ -9,6 +9,7 @@ import { STORAGE_BUCKETS } from "@/lib/storage";
 import Image from "next/image";
 import RegionSelect from "@/components/RegionSelect";
 import { Feather } from "lucide-react";
+import { toast } from "sonner";
 
 const levelLabels: Record<string, string> = {
   E_GRADE: "E조",
@@ -156,7 +157,7 @@ export default function ProfilePage() {
       } else {
         // 다른 사용자의 프로필이 없을 때
         setLoading(false);
-        alert("사용자를 찾을 수 없습니다.");
+        toast.error("사용자를 찾을 수 없습니다.");
         router.push("/");
       }
     };
@@ -235,10 +236,10 @@ export default function ProfilePage() {
       }
 
       setIsEditing(false);
-      alert("프로필이 수정되었습니다!");
+      toast.success("프로필이 수정되었습니다!");
     } catch (error) {
       console.error("프로필 수정 실패:", error);
-      alert("프로필 수정에 실패했습니다.");
+      toast.error("프로필 수정에 실패했습니다.");
     } finally {
       setSubmitting(false);
     }
@@ -435,10 +436,10 @@ export default function ProfilePage() {
                           ...profile,
                           profileImage: url,
                         });
-                        alert("프로필 이미지가 업데이트되었습니다!");
+                        toast.success("프로필 이미지가 업데이트되었습니다!");
                       } catch (error) {
                         console.error("프로필 이미지 업데이트 실패:", error);
-                        alert("프로필 이미지 업데이트에 실패했습니다.");
+                        toast.error("프로필 이미지 업데이트에 실패했습니다.");
                       }
                     }}
                   />

@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import ImageUpload from "@/components/SimpleImageUpload";
 import RegionSelect from "@/components/RegionSelect";
+import { toast } from "sonner";
 
 // Storage bucket name for meetings
 const STORAGE_BUCKETS = {
@@ -66,7 +67,7 @@ export default function MeetingEditPage() {
 
         // 호스트가 아니면 접근 불가
         if (currentUserId && data.hostId !== currentUserId) {
-          alert("모임 수정 권한이 없습니다");
+          toast.error("모임 수정 권한이 없습니다");
           router.push(`/meetings/${params.id}`);
           return;
         }
@@ -100,7 +101,7 @@ export default function MeetingEditPage() {
       }
     } catch (error) {
       console.error("Failed to fetch meeting:", error);
-      alert("모임 정보를 불러오는데 실패했습니다");
+      toast.error("모임 정보를 불러오는데 실패했습니다");
       router.push(`/meetings/${params.id}`);
     } finally {
       setIsLoading(false);
@@ -113,7 +114,7 @@ export default function MeetingEditPage() {
     if (!currentUserId || !meeting) return;
 
     if (meeting.hostId !== currentUserId) {
-      alert("모임 수정 권한이 없습니다");
+      toast.error("모임 수정 권한이 없습니다");
       return;
     }
 
@@ -149,15 +150,15 @@ export default function MeetingEditPage() {
       });
 
       if (response.ok) {
-        alert("모임이 수정되었습니다!");
+        toast.success("모임이 수정되었습니다!");
         router.push(`/meetings/${params.id}`);
       } else {
         const error = await response.json();
-        alert(error.error || "모임 수정에 실패했습니다");
+        toast.error(error.error || "모임 수정에 실패했습니다");
       }
     } catch (error) {
       console.error("Failed to update meeting:", error);
-      alert("오류가 발생했습니다");
+      toast.error("오류가 발생했습니다");
     } finally {
       setIsSaving(false);
     }
