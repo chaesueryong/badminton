@@ -16,7 +16,7 @@ export async function PATCH(
     const { postId } = params;
     const { status } = await request.json();
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('Post')
       .update({ status })
       .eq('id', postId)

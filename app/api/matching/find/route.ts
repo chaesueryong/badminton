@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
 
     // Get current user profile
-    const { data: currentUserData, error: userError } = await supabase
+    const { data: currentUserData, error: userError } = await (supabase as any)
       .from('users')
       .select('id, name, nickname, elo_rating, level, region, profile_image, games_played, wins, losses')
       .eq('id', user.id)
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
 
     // Get potential matches
     // Fetch users with similar ELO and in nearby regions
-    const { data: candidates, error: candidatesError } = await supabase
+    const { data: candidates, error: candidatesError } = await (supabase as any)
       .from('users')
       .select('id, name, nickname, elo_rating, level, region, profile_image, games_played, wins, losses')
       .neq('id', user.id)
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Convert to UserProfile format
-    const candidateProfiles: UserProfile[] = candidates.map((c) => ({
+    const candidateProfiles: UserProfile[] = candidates.map((c: any) => ({
       id: c.id,
       name: c.name,
       nickname: c.nickname,

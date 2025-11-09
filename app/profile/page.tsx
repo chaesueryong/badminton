@@ -3,15 +3,16 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import ImageUpload from "@/components/ImageUpload";
 import { STORAGE_BUCKETS } from "@/lib/storage";
 import Image from "next/image";
 import RegionSelect from "@/components/RegionSelect";
 import { formatPhoneNumber, unformatPhoneNumber } from "@/lib/utils/phone";
-import { Feather, Trophy, Gift, Copy, Share2, Crown } from "lucide-react";
+import { Feather, Trophy, Gift, Copy, Share2, Crown, Sparkles, Shield, CheckCircle } from "lucide-react";
 import { usePremium } from "@/lib/hooks/usePremium";
+import { toast } from "sonner";
 
 const levelLabels: Record<string, string> = {
   E_GRADE: "E조",
@@ -77,6 +78,13 @@ interface UserProfile {
   createdAt: string;
   referralCode: string | null;
   referredBy: string | null;
+  is_vip: boolean | null;
+  vip_until: string | null;
+  is_premium: boolean | null;
+  premium_until: string | null;
+  is_verified: boolean | null;
+  verified_name: string | null;
+  verified_at: string | null;
 }
 
 function ProfilePageContent() {
@@ -105,7 +113,7 @@ function ProfilePageContent() {
   const [editCity, setEditCity] = useState("");
   const [copySuccess, setCopySuccess] = useState(false);
 
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
 
   const copyReferralCode = () => {
     if (profile?.referralCode) {
@@ -134,7 +142,7 @@ function ProfilePageContent() {
     } else {
       // 모바일이 아닌 경우 클립보드에 복사
       navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
-      alert('초대 링크가 복사되었습니다!');
+      toast.success('초대 링크가 복사되었습니다!');
     }
   };
 
@@ -175,15 +183,15 @@ function ProfilePageContent() {
         if (isOwnProfile) {
           // birthdate를 YYYY-MM-DD에서 YYYY.MM.DD로 변환
           let formattedBirthdate = "";
-          if (profileData.birthdate) {
-            formattedBirthdate = profileData.birthdate.replace(/-/g, '.');
+          if ((profileData as any).birthdate) {
+            formattedBirthdate = (profileData as any).birthdate.replace(/-/g, '.');
           }
 
           // 지역 파싱
           let province = "";
           let city = "";
-          if (profileData.region) {
-            const parts = profileData.region.split(' ');
+          if ((profileData as any).region) {
+            const parts = (profileData as any).region.split(' ');
             if (parts.length === 2) {
               province = parts[0];
               city = parts[1];
@@ -191,14 +199,14 @@ function ProfilePageContent() {
           }
 
           const initialEditFormData = {
-            nickname: profileData.nickname || "",
-            phone: formatPhoneNumber(profileData.phone) || "",
-            region: profileData.region || "",
-            level: profileData.level || "",
-            bio: profileData.bio || "",
-            gender: profileData.gender || "",
-            preferredStyle: profileData.preferredStyle || "",
-            experience: profileData.experience || 0,
+            nickname: (profileData as any).nickname || "",
+            phone: formatPhoneNumber((profileData as any).phone) || "",
+            region: (profileData as any).region || "",
+            level: (profileData as any).level || "",
+            bio: (profileData as any).bio || "",
+            gender: (profileData as any).gender || "",
+            preferredStyle: (profileData as any).preferredStyle || "",
+            experience: (profileData as any).experience || 0,
             birthdate: formattedBirthdate,
           };
           console.log("Initial edit form data:", initialEditFormData);
@@ -215,7 +223,7 @@ function ProfilePageContent() {
       } else {
         // 다른 사용자의 프로필이 없을 때
         setLoading(false);
-        alert("사용자를 찾을 수 없습니다.");
+        toast.error("사용자를 찾을 수 없습니다.");
         router.push("/");
       }
     };
@@ -281,15 +289,15 @@ function ProfilePageContent() {
 
         // birthdate를 YYYY-MM-DD에서 YYYY.MM.DD로 변환
         let formattedBirthdate = "";
-        if (refreshedProfile.birthdate) {
-          formattedBirthdate = refreshedProfile.birthdate.replace(/-/g, '.');
+        if ((refreshedProfile as any).birthdate) {
+          formattedBirthdate = (refreshedProfile as any).birthdate.replace(/-/g, '.');
         }
 
         // 지역 파싱
         let province = "";
         let city = "";
-        if (refreshedProfile.region) {
-          const parts = refreshedProfile.region.split(' ');
+        if ((refreshedProfile as any).region) {
+          const parts = (refreshedProfile as any).region.split(' ');
           if (parts.length === 2) {
             province = parts[0];
             city = parts[1];
@@ -298,14 +306,14 @@ function ProfilePageContent() {
 
         // editFormData도 새로운 데이터로 업데이트
         setEditFormData({
-          nickname: refreshedProfile.nickname || "",
-          phone: formatPhoneNumber(refreshedProfile.phone) || "",
-          region: refreshedProfile.region || "",
-          level: refreshedProfile.level || "",
-          bio: refreshedProfile.bio || "",
-          gender: refreshedProfile.gender || "",
-          preferredStyle: refreshedProfile.preferredStyle || "",
-          experience: refreshedProfile.experience || 0,
+          nickname: (refreshedProfile as any).nickname || "",
+          phone: formatPhoneNumber((refreshedProfile as any).phone) || "",
+          region: (refreshedProfile as any).region || "",
+          level: (refreshedProfile as any).level || "",
+          bio: (refreshedProfile as any).bio || "",
+          gender: (refreshedProfile as any).gender || "",
+          preferredStyle: (refreshedProfile as any).preferredStyle || "",
+          experience: (refreshedProfile as any).experience || 0,
           birthdate: formattedBirthdate,
         });
         setEditProvince(province);
@@ -319,10 +327,10 @@ function ProfilePageContent() {
       }
 
       setIsEditing(false);
-      alert("프로필이 수정되었습니다!");
+      toast.success("프로필이 수정되었습니다!");
     } catch (error) {
       console.error("프로필 수정 실패:", error);
-      alert("프로필 수정에 실패했습니다.");
+      toast.error("프로필 수정에 실패했습니다.");
     } finally {
       setSubmitting(false);
     }
@@ -373,7 +381,7 @@ function ProfilePageContent() {
       router.push("/login");
     } catch (error) {
       console.error("로그아웃 오류:", error);
-      alert("로그아웃 중 오류가 발생했습니다.");
+      toast.error("로그아웃 중 오류가 발생했습니다.");
     }
   };
 
@@ -561,6 +569,106 @@ function ProfilePageContent() {
             </div>
           </div>
 
+          {/* VIP/프리미엄 구독 정보 - 자신의 프로필일 때만 표시 */}
+          {isOwnProfile && (profile.is_vip || profile.is_premium) && (
+            <div className="p-4 sm:p-8 border-b border-gray-200">
+              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">구독 정보</h3>
+              <div className="space-y-3">
+                {/* VIP 구독 */}
+                {profile.is_vip && (
+                  <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg p-4 sm:p-6 border-2 border-purple-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-6 h-6 text-purple-600" />
+                        <h4 className="text-lg font-bold text-purple-900">VIP 멤버십</h4>
+                      </div>
+                      {profile.vip_until && new Date(profile.vip_until) > new Date() ? (
+                        <span className="px-3 py-1 bg-purple-600 text-white text-xs font-bold rounded-full">활성</span>
+                      ) : (
+                        <span className="px-3 py-1 bg-gray-400 text-white text-xs font-bold rounded-full">만료</span>
+                      )}
+                    </div>
+                    {profile.vip_until && (
+                      <div className="text-sm text-purple-700 space-y-1">
+                        <p className="font-medium">
+                          만료일: {new Date(profile.vip_until).toLocaleDateString('ko-KR', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                        {new Date(profile.vip_until) > new Date() ? (
+                          <p className="text-xs text-purple-600">
+                            {Math.ceil((new Date(profile.vip_until).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}일 남음
+                          </p>
+                        ) : (
+                          <p className="text-xs text-red-600">만료되었습니다</p>
+                        )}
+                      </div>
+                    )}
+                    <div className="mt-3 pt-3 border-t border-purple-200">
+                      <p className="text-xs text-purple-700 font-medium mb-1">VIP 혜택:</p>
+                      <ul className="text-xs text-purple-600 space-y-0.5 ml-4">
+                        <li>• 세션 생성 무제한</li>
+                        <li>• 세션 입장료 무료</li>
+                        <li>• 메시징 무제한</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {/* 프리미엄 구독 */}
+                {profile.is_premium && (
+                  <div className="bg-gradient-to-br from-pink-50 to-purple-50 rounded-lg p-4 sm:p-6 border-2 border-pink-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Crown className="w-6 h-6 text-pink-600" />
+                        <h4 className="text-lg font-bold text-pink-900">프리미엄 멤버십</h4>
+                      </div>
+                      {profile.premium_until && new Date(profile.premium_until) > new Date() ? (
+                        <span className="px-3 py-1 bg-pink-600 text-white text-xs font-bold rounded-full">활성</span>
+                      ) : (
+                        <span className="px-3 py-1 bg-gray-400 text-white text-xs font-bold rounded-full">만료</span>
+                      )}
+                    </div>
+                    {profile.premium_until && (
+                      <div className="text-sm text-pink-700 space-y-1">
+                        <p className="font-medium">
+                          만료일: {new Date(profile.premium_until).toLocaleDateString('ko-KR', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                        {new Date(profile.premium_until) > new Date() ? (
+                          <p className="text-xs text-pink-600">
+                            {Math.ceil((new Date(profile.premium_until).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}일 남음
+                          </p>
+                        ) : (
+                          <p className="text-xs text-red-600">만료되었습니다</p>
+                        )}
+                      </div>
+                    )}
+                    <div className="mt-3 pt-3 border-t border-pink-200">
+                      <p className="text-xs text-pink-700 font-medium mb-1">프리미엄 혜택:</p>
+                      <ul className="text-xs text-pink-600 space-y-0.5 ml-4">
+                        <li>• 모임인원 300명까지 제한 해제</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {/* 구독 연장 버튼 */}
+                <Link
+                  href="/shop/subscription"
+                  className="block w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-center font-bold rounded-lg hover-hover:hover:from-blue-700 hover-hover:hover:to-purple-700 transition-all shadow-md hover-hover:hover:shadow-lg"
+                >
+                  구독 연장하기
+                </Link>
+              </div>
+            </div>
+          )}
+
           {/* 초대 코드 - 자신의 프로필일 때만 표시 */}
           {isOwnProfile && profile.referralCode && (
             <div className="p-4 sm:p-8 border-b border-gray-200">
@@ -604,6 +712,53 @@ function ProfilePageContent() {
             </div>
           )}
 
+          {/* 본인인증 상태 - 자신의 프로필일 때만 표시 */}
+          {isOwnProfile && (
+            <div className="p-4 sm:p-8 border-b border-gray-200">
+              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">본인인증</h3>
+              {profile.is_verified ? (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
+                    <div>
+                      <p className="font-semibold text-green-900">인증 완료</p>
+                      <p className="text-sm text-green-700">
+                        {profile.verified_name}님으로 본인인증이 완료되었습니다.
+                      </p>
+                    </div>
+                  </div>
+                  {profile.verified_at && (
+                    <p className="text-xs text-green-600 mt-2">
+                      인증일: {new Date(profile.verified_at).toLocaleDateString('ko-KR', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Shield className="w-6 h-6 text-blue-600 flex-shrink-0" />
+                    <div>
+                      <p className="font-semibold text-blue-900">본인인증이 필요합니다</p>
+                      <p className="text-sm text-blue-700">
+                        안전한 서비스 이용을 위해 본인인증을 진행해주세요.
+                      </p>
+                    </div>
+                  </div>
+                  <Link
+                    href="/verification"
+                    className="block w-full py-2.5 bg-blue-600 text-white text-center font-medium rounded-lg hover-hover:hover:bg-blue-700 transition-colors"
+                  >
+                    본인인증 하기
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* 상세 정보 */}
           <div className="p-4 sm:p-8 border-b border-gray-200">
             <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">상세 정보</h3>
@@ -636,10 +791,10 @@ function ProfilePageContent() {
                           ...profile,
                           profileImage: url,
                         });
-                        alert("프로필 이미지가 업데이트되었습니다!");
+                        toast.success("프로필 이미지가 업데이트되었습니다!");
                       } catch (error) {
                         console.error("프로필 이미지 업데이트 실패:", error);
-                        alert("프로필 이미지 업데이트에 실패했습니다.");
+                        toast.error("프로필 이미지 업데이트에 실패했습니다.");
                       }
                     }}
                   />

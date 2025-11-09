@@ -16,7 +16,7 @@ export async function DELETE(
     const { meetingId } = params;
 
     // 모임 정보 조회
-    const { data: meeting } = await supabase
+    const { data: meeting } = await (supabase as any)
       .from('Meeting')
       .select('hostId, title')
       .eq('id', meetingId)

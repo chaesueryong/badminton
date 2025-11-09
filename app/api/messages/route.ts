@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { GameSettings } from "@/config/game-settings";
 
 // GET /api/messages - 메시지 목록 조회
 export async function GET(request: NextRequest) {
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     if (otherUserId) {
       // 특정 사용자와의 대화 조회
-      const { data: messages, error } = await supabaseAdmin
+      const { data: messages, error } = await (supabaseAdmin as any)
         .from('messages')
         .select(`
           *,
@@ -46,7 +47,7 @@ export async function GET(request: NextRequest) {
       }
 
       // 읽지 않은 메시지 읽음 처리
-      await supabaseAdmin
+      await (supabaseAdmin as any)
         .from('messages')
         .update({ read: true })
         .eq('sender_id', otherUserId)
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
         .eq('read', false);
 
       // camelCase로 변환
-      const formattedMessages = messages?.map(msg => ({
+      const formattedMessages = messages?.map((msg: any) => ({
         ...msg,
         senderId: msg.sender_id,
         receiverId: msg.receiver_id,
@@ -154,44 +155,36 @@ export async function POST(request: NextRequest) {
     }
 
     // VIP 회원 확인 (VIP 회원은 무제한 메시지)
-    const now = new Date().toISOString();
-    const { data: vipMembership } = await supabaseAdmin
-      .from("vip_memberships")
-      .select("*")
-      .eq("user_id", senderId)
-      .eq("is_active", true)
-      .gte("end_date", now)
+    const { data: senderData, error: senderCheckError } = await (supabaseAdmin as any)
+      .from('users')
+      .select('points, is_vip, vip_until')
+      .eq('id', senderId)
       .single();
 
-    const isVIP = !!vipMembership;
-    const POINT_COST = isVIP ? 0 : 10;
+    if (senderCheckError || !senderData) {
+      return NextResponse.json(
+        { error: "발신자 정보를 찾을 수 없습니다" },
+        { status: 404 }
+      );
+    }
+
+    // Check if user is VIP and VIP is not expired
+    const isVIP = senderData.is_vip && senderData.vip_until && new Date(senderData.vip_until) > new Date();
+    const POINT_COST = isVIP ? 0 : GameSettings.messaging.points; // 메시지 전송 비용 from config
 
     // 발신자의 포인트 확인 (VIP가 아닌 경우에만)
     if (!isVIP) {
-      const { data: sender, error: senderError } = await supabaseAdmin
-        .from('users')
-        .select('points')
-        .eq('id', senderId)
-        .single();
-
-      if (senderError || !sender) {
+      if (senderData.points < POINT_COST) {
         return NextResponse.json(
-          { error: "발신자 정보를 찾을 수 없습니다" },
-          { status: 404 }
-        );
-      }
-
-      if (sender.points < POINT_COST) {
-        return NextResponse.json(
-          { error: "포인트가 부족합니다. 메시지 전송에 10 포인트가 필요합니다." },
+          { error: `포인트가 부족합니다. 메시지 전송에 ${POINT_COST} 포인트가 필요합니다.` },
           { status: 400 }
         );
       }
 
       // 포인트 차감
-      const { error: pointError } = await supabaseAdmin
+      const { error: pointError } = await (supabaseAdmin as any)
         .from('users')
-        .update({ points: sender.points - POINT_COST })
+        .update({ points: senderData.points - POINT_COST })
         .eq('id', senderId);
 
       if (pointError) {
@@ -200,7 +193,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 메시지 전송
-    const { data: message, error } = await supabaseAdmin
+    const { data: message, error } = await (supabaseAdmin as any)
       .from('messages')
       .insert({
         sender_id: senderId,
@@ -235,7 +228,7 @@ export async function POST(request: NextRequest) {
 
     // 포인트 거래 내역 기록 (VIP가 아닌 경우에만)
     if (!isVIP && POINT_COST > 0) {
-      await supabaseAdmin
+      await (supabaseAdmin as any)
         .from('point_transactions')
         .insert({
           userId: senderId,

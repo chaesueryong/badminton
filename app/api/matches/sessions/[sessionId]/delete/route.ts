@@ -4,18 +4,18 @@ import { createClient } from '@/lib/supabase/server';
 // DELETE /api/matches/sessions/[sessionId]/delete - Delete a match session
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ sessionId: string }> }
+  { params }: { params: { sessionId: string } }
 ) {
   try {
     const supabase = await createClient();
-    const { sessionId } = await params;
+    const { sessionId } = params;
 
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: '인증이 필요합니다' },
         { status: 401 }
       );
     }
@@ -23,32 +23,21 @@ export async function DELETE(
     // Get session details
     const { data: session, error: sessionError } = await supabase
       .from('match_sessions')
-      .select(`
-        *,
-        participants:match_participants(user_id)
-      `)
+      .select('*')
       .eq('id', sessionId)
       .single();
 
     if (sessionError || !session) {
       return NextResponse.json(
-        { error: 'Session not found' },
+        { error: '세션을 찾을 수 없습니다' },
         { status: 404 }
       );
     }
 
-    // Check if current user is the creator (first participant)
-    if (!session.participants || session.participants.length === 0) {
+    // Check if current user is the creator
+    if (session.creator_id !== user.id) {
       return NextResponse.json(
-        { error: 'Session has no participants' },
-        { status: 400 }
-      );
-    }
-
-    const creatorId = session.participants[0].user_id;
-    if (creatorId !== user.id) {
-      return NextResponse.json(
-        { error: 'Only the creator can delete this session' },
+        { error: '세션 생성자만 삭제할 수 있습니다' },
         { status: 403 }
       );
     }
@@ -56,72 +45,81 @@ export async function DELETE(
     // Check if session is still pending
     if (session.status !== 'PENDING') {
       return NextResponse.json(
-        { error: 'Can only delete pending sessions' },
+        { error: '대기 중인 세션만 삭제할 수 있습니다' },
         { status: 400 }
       );
     }
 
-    // Refund creation cost to creator
-    if (session.creation_cost_points > 0) {
-      const { data: userData, error: getUserError } = await supabase
-        .from('users')
-        .select('points')
-        .eq('id', creatorId)
-        .single();
+    // Check if creator is VIP
+    const { data: creatorData } = await supabase
+      .from('users')
+      .select('is_vip, vip_until, points, feathers')
+      .eq('id', user.id)
+      .single();
 
-      if (getUserError || !userData) {
-        console.error('Failed to get user for refund:', getUserError);
+    const isVip = creatorData?.is_vip && creatorData?.vip_until && new Date(creatorData.vip_until) > new Date();
+
+    // Refund creation cost to creator (only if not VIP - VIP didn't pay)
+    if (!isVip && session.creation_cost_points > 0) {
+      if (!creatorData) {
         return NextResponse.json(
-          { error: 'Failed to process refund' },
+          { error: '환불 처리에 실패했습니다' },
           { status: 500 }
         );
       }
 
       const { error: refundError } = await supabase
         .from('users')
-        .update({ points: userData.points + session.creation_cost_points })
-        .eq('id', creatorId);
+        .update({ points: creatorData.points + session.creation_cost_points })
+        .eq('id', user.id);
 
       if (refundError) {
         console.error('Failed to refund points:', refundError);
         return NextResponse.json(
-          { error: 'Failed to refund creation cost' },
+          { error: '생성 비용 환불에 실패했습니다' },
           { status: 500 }
         );
       }
     }
 
-    if (session.creation_cost_feathers > 0) {
-      const { data: userData, error: getUserError } = await supabase
-        .from('users')
-        .select('feathers')
-        .eq('id', creatorId)
-        .single();
-
-      if (getUserError || !userData) {
-        console.error('Failed to get user for refund:', getUserError);
+    if (!isVip && session.creation_cost_feathers > 0) {
+      if (!creatorData) {
         return NextResponse.json(
-          { error: 'Failed to process refund' },
+          { error: '환불 처리에 실패했습니다' },
           { status: 500 }
         );
       }
 
       const { error: refundError } = await supabase
         .from('users')
-        .update({ feathers: userData.feathers + session.creation_cost_feathers })
-        .eq('id', creatorId);
+        .update({ feathers: creatorData.feathers + session.creation_cost_feathers })
+        .eq('id', user.id);
 
       if (refundError) {
         console.error('Failed to refund feathers:', refundError);
         return NextResponse.json(
-          { error: 'Failed to refund creation cost' },
+          { error: '생성 비용 환불에 실패했습니다' },
           { status: 500 }
         );
       }
     }
 
-    // Note: No entry fee refund needed since it's not deducted on creation
-    // Entry fee is only deducted when participants join
+    // Refund entry fees and betting amounts to all participants using database function
+    console.log('Calling refund function for session:', sessionId);
+    const { data: refundData, error: refundError } = await supabase.rpc('refund_session_participants', {
+      p_match_session_id: sessionId
+    });
+
+    if (refundError) {
+      console.error('Failed to refund participants:', refundError);
+      console.error('Refund error details:', JSON.stringify(refundError, null, 2));
+      return NextResponse.json(
+        { error: '참가자 환불에 실패했습니다', details: refundError.message },
+        { status: 500 }
+      );
+    }
+
+    console.log('Refund completed successfully:', refundData);
 
     // Delete participants first (foreign key constraint)
     await supabase
@@ -138,16 +136,16 @@ export async function DELETE(
     if (deleteError) {
       console.error('Failed to delete session:', deleteError);
       return NextResponse.json(
-        { error: 'Failed to delete session' },
+        { error: '세션 삭제에 실패했습니다' },
         { status: 500 }
       );
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error in DELETE /api/matches/sessions/[id]:', error);
+    console.error('Error in DELETE /api/matches/sessions/[sessionId]/delete:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: '서버 오류가 발생했습니다' },
       { status: 500 }
     );
   }

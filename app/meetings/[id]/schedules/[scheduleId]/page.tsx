@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import { getDefaultImage } from "@/lib/constants";
 import {
   MapPin,
@@ -15,6 +15,7 @@ import {
   Shield,
   Award
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface Participant {
   id: string;
@@ -65,7 +66,7 @@ const levelLabels: Record<string, string> = {
 export default function ScheduleDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [meeting, setMeeting] = useState<Meeting | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -95,12 +96,12 @@ export default function ScheduleDetailPage() {
         const data = await response.json();
         setSchedule(data);
       } else {
-        alert("일정을 찾을 수 없습니다");
+        toast.error("일정을 찾을 수 없습니다");
         router.push(`/meetings/${params.id}`);
       }
     } catch (error) {
       console.error(error);
-      alert("오류가 발생했습니다");
+      toast.error("오류가 발생했습니다");
     } finally {
       setIsLoading(false);
     }
@@ -127,15 +128,15 @@ export default function ScheduleDetailPage() {
       });
 
       if (response.ok) {
-        alert("일정에 참석 신청했습니다");
+        toast.success("일정에 참석 신청했습니다");
         fetchSchedule();
       } else {
         const error = await response.json();
-        alert(error.error || "참석 신청에 실패했습니다");
+        toast.error(error.error || "참석 신청에 실패했습니다");
       }
     } catch (error) {
       console.error(error);
-      alert("오류가 발생했습니다");
+      toast.error("오류가 발생했습니다");
     }
   };
 
@@ -148,15 +149,15 @@ export default function ScheduleDetailPage() {
       });
 
       if (response.ok) {
-        alert("일정 참석을 취소했습니다");
+        toast.success("일정 참석을 취소했습니다");
         fetchSchedule();
       } else {
         const error = await response.json();
-        alert(error.error || "취소에 실패했습니다");
+        toast.error(error.error || "취소에 실패했습니다");
       }
     } catch (error) {
       console.error(error);
-      alert("오류가 발생했습니다");
+      toast.error("오류가 발생했습니다");
     }
   };
 

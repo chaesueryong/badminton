@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update badge display setting
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('user_badges')
       .update({ is_displayed: isDisplayed })
       .eq('user_id', user.id)

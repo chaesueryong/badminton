@@ -131,7 +131,7 @@ export default function RootLayout({
             {children}
           </main>
           <Footer />
-          <Toaster />
+          <Toaster position="top-center" duration={3000} richColors closeButton />
         </SessionProvider>
       </body>
     </html>

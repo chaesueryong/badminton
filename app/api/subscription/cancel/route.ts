@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Cancel subscription
-    await supabase.rpc('cancel_subscription', {
+    await (supabase as any).rpc('cancel_subscription', {
       p_subscription_id: subscriptionId,
       p_immediate: immediate,
       p_reason: reason || null,

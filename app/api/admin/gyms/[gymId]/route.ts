@@ -16,7 +16,7 @@ export async function PATCH(
     const { gymId } = params;
     const { approvalStatus } = await request.json();
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('Gym')
       .update({ approval_status: approvalStatus })
       .eq('id', gymId)

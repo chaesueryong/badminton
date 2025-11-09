@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { Gift } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { Gift, Coins } from "lucide-react";
+import { toast } from "sonner";
 
 interface RewardItem {
   id: string;
@@ -27,7 +29,8 @@ interface AttendanceInfo {
 }
 
 export default function RewardsPage() {
-  const supabase = createClientComponentClient();
+  const router = useRouter();
+  const supabase = createClient();
   const [rewards, setRewards] = useState<RewardItem[]>([]);
   const [pointsInfo, setPointsInfo] = useState<PointsInfo>({ points: 0, lifetimePoints: 0 });
   const [attendanceInfo, setAttendanceInfo] = useState<AttendanceInfo>({ hasCheckedToday: false, streak: 0, lastCheckDate: null });
@@ -37,8 +40,17 @@ export default function RewardsPage() {
   const [checkingAttendance, setCheckingAttendance] = useState(false);
 
   useEffect(() => {
-    fetchData();
+    checkAuth();
   }, []);
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      router.push('/login');
+      return;
+    }
+    fetchData();
+  };
 
   const fetchData = async () => {
     try {
@@ -73,7 +85,7 @@ export default function RewardsPage() {
 
   const handleAttendanceCheck = async () => {
     if (attendanceInfo.hasCheckedToday) {
-      alert("오늘은 이미 출석 체크를 완료했습니다!");
+      toast("오늘은 이미 출석 체크를 완료했습니다!");
       return;
     }
 
@@ -92,15 +104,15 @@ export default function RewardsPage() {
         if (data.streak) {
           message += `\n\n연속 출석: ${data.streak}일`;
         }
-        alert(message);
+        toast.success(message);
         fetchData();
       } else {
         const data = await response.json();
-        alert(data.error || "출석 체크에 실패했습니다");
+        toast.error(data.error || "출석 체크에 실패했습니다");
       }
     } catch (error) {
       console.error("Failed to check attendance:", error);
-      alert("오류가 발생했습니다");
+      toast.error("오류가 발생했습니다");
     } finally {
       setCheckingAttendance(false);
     }
@@ -115,7 +127,7 @@ export default function RewardsPage() {
     if (!selectedReward) return;
 
     if (pointsInfo.points < selectedReward.points_cost) {
-      alert("포인트가 부족합니다!");
+      toast.error("포인트가 부족합니다!");
       return;
     }
 
@@ -127,17 +139,17 @@ export default function RewardsPage() {
       });
 
       if (response.ok) {
-        alert("리워드를 교환했습니다!");
+        toast.success("리워드를 교환했습니다!");
         setShowRedeemModal(false);
         setSelectedReward(null);
         fetchData();
       } else {
         const data = await response.json();
-        alert(data.error || "리워드 교환에 실패했습니다");
+        toast.error(data.error || "리워드 교환에 실패했습니다");
       }
     } catch (error) {
       console.error("Failed to redeem reward:", error);
-      alert("오류가 발생했습니다");
+      toast.error("오류가 발생했습니다");
     }
   };
 
@@ -190,7 +202,7 @@ export default function RewardsPage() {
               <h2 className="text-lg font-medium opacity-90">보유 포인트</h2>
               <p className="text-4xl font-bold mt-2">{pointsInfo.points.toLocaleString()} P</p>
             </div>
-            <div className="text-6xl opacity-20">💎</div>
+            <Coins className="w-16 h-16 opacity-20" />
           </div>
         </div>
 

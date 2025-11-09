@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server';
 
 const TOSS_SECRET_KEY = process.env.TOSS_SECRET_KEY || ''
 
@@ -35,8 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     // DB에 결제 정보 저장
-    const cookieStore = cookies()
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+    const supabase = await createClient()
 
     const { data: payment, error } = await supabase
       .from('payments')

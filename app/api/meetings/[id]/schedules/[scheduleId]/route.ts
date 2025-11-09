@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createClient } from '@/lib/supabase/server';
 
 // GET /api/meetings/:id/schedules/:scheduleId - 특정 일정 조회
 export async function GET(
@@ -8,8 +7,7 @@ export async function GET(
   { params }: { params: { id: string; scheduleId: string } }
 ) {
   try {
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = await createClient();
 
     const { data: schedule, error } = await supabase
       .from("meeting_schedules")
@@ -50,8 +48,7 @@ export async function DELETE(
   { params }: { params: { id: string; scheduleId: string } }
 ) {
   try {
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = await createClient();
 
     // 인증 확인
     const {

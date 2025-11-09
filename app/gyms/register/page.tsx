@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import RegionSelect from "@/components/RegionSelect";
+import { toast } from "sonner";
 
 export default function RegisterGymPage() {
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [region, setRegion] = useState({ province: "", city: "" });
 
@@ -15,7 +16,7 @@ export default function RegisterGymPage() {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        alert("로그인이 필요합니다");
+        toast.error("로그인이 필요합니다");
         router.push("/login");
       }
     };
@@ -60,15 +61,15 @@ export default function RegisterGymPage() {
       });
 
       if (response.ok) {
-        alert("체육관 등록 신청이 완료되었습니다. 관리자 승인 후 체육관 목록에 표시됩니다.");
+        toast.success("체육관 등록 신청이 완료되었습니다. 관리자 승인 후 체육관 목록에 표시됩니다.");
         router.push("/gyms");
       } else {
         const error = await response.json();
-        alert(error.error || "체육관 등록에 실패했습니다");
+        toast.error(error.error || "체육관 등록에 실패했습니다");
       }
     } catch (error) {
       console.error(error);
-      alert("오류가 발생했습니다");
+      toast.error("오류가 발생했습니다");
     } finally {
       setIsSubmitting(false);
     }

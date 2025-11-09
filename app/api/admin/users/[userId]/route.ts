@@ -24,7 +24,7 @@ export async function PATCH(
     if (role) updates.role = role;
 
     // 사용자 상태 업데이트
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('users')
       .update(updates)
       .eq('id', userId)

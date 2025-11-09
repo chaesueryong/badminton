@@ -16,7 +16,7 @@ export async function PATCH(
       );
     }
 
-    const { data: comment, error } = await supabaseAdmin
+    const { data: comment, error } = await (supabaseAdmin as any)
       .from('comments')
       .update({ content })
       .eq('id', params.id)

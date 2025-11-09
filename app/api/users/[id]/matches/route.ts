@@ -4,11 +4,22 @@ import { createClient } from '@/lib/supabase/server';
 // GET /api/users/[id]/matches - Get user's match history
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const supabase = await createClient();
-    const { id: userId } = await params;
+    const { id: userId } = params;
+
+    // Get current user - this is REQUIRED to maintain session
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const searchParams = request.nextUrl.searchParams;
 
     const matchType = searchParams.get('matchType'); // Filter by match type

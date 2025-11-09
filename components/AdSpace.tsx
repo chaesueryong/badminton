@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 
 interface AdSpaceProps {
   slot?: string;
@@ -9,7 +9,7 @@ interface AdSpaceProps {
 }
 
 export default function AdSpace({ slot = "default", className = "" }: AdSpaceProps) {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [isAdFree, setIsAdFree] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -29,16 +29,16 @@ export default function AdSpace({ slot = "default", className = "" }: AdSpacePro
       }
 
       // Check if user has VIP membership (VIP members get ad-free experience)
-      const now = new Date().toISOString();
-      const { data: vipMembership } = await supabase
-        .from("vip_memberships")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .eq("is_active", true)
-        .gte("end_date", now)
+      const { data: userData } = await supabase
+        .from("users")
+        .select("is_vip, vip_until")
+        .eq("id", session.user.id)
         .single();
 
-      setIsAdFree(!!vipMembership);
+      // Check if user is VIP and VIP is not expired
+      const isVipActive = (userData as any)?.is_vip && (userData as any)?.vip_until && new Date((userData as any).vip_until) > new Date();
+
+      setIsAdFree(!!isVipActive);
     } catch (error) {
       console.error("Failed to check ad-free status:", error);
     } finally {

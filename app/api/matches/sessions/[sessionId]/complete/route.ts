@@ -15,7 +15,7 @@ export async function POST(
 
     if (authError || !user) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: '인증이 필요합니다' },
         { status: 401 }
       );
     }
@@ -54,22 +54,15 @@ export async function POST(
 
     if (session.status === 'CANCELLED') {
       return NextResponse.json(
-        { error: 'Match was cancelled' },
+        { error: '취소된 게임입니다' },
         { status: 400 }
       );
     }
 
-    // Check if user is a participant
-    const { data: participant } = await supabase
-      .from('match_participants')
-      .select('*')
-      .eq('match_session_id', sessionId)
-      .eq('user_id', user.id)
-      .single();
-
-    if (!participant) {
+    // Check if current user is the creator (only creator can complete the match)
+    if (session.creator_id !== user.id) {
       return NextResponse.json(
-        { error: 'You are not a participant in this match' },
+        { error: '세션 생성자만 게임을 종료할 수 있습니다' },
         { status: 403 }
       );
     }
@@ -82,27 +75,39 @@ export async function POST(
 
     if (!isValidResult) {
       return NextResponse.json(
-        { error: `Invalid result for ${session.match_type} match` },
+        { error: `${session.match_type} 경기에 유효하지 않은 결과입니다` },
         { status: 400 }
       );
     }
 
-    // Update session with result
+    // Set result and scores first (before calling complete function)
     const { error: updateError } = await supabase
       .from('match_sessions')
       .update({
-        status: 'COMPLETED',
         result: result,
         team1_score: team1Score,
-        team2_score: team2Score,
-        completed_at: new Date().toISOString()
+        team2_score: team2Score
       })
       .eq('id', sessionId);
 
     if (updateError) {
       console.error('Error updating session:', updateError);
       return NextResponse.json(
-        { error: 'Failed to update match session' },
+        { error: '매치 세션 업데이트에 실패했습니다' },
+        { status: 500 }
+      );
+    }
+
+    // Call database function to process ratings, rewards, and complete the session
+    // This function will also set status to COMPLETED
+    const { error: completeError } = await supabase.rpc('complete_match_session', {
+      p_match_session_id: sessionId
+    });
+
+    if (completeError) {
+      console.error('Error completing match session:', completeError);
+      return NextResponse.json(
+        { error: '매치 완료 처리에 실패했습니다' },
         { status: 500 }
       );
     }
@@ -140,19 +145,6 @@ export async function POST(
       }
     }
 
-    // Call database function to process ratings and rewards
-    const { error: completeError } = await supabase.rpc('complete_match_session', {
-      p_match_session_id: sessionId
-    });
-
-    if (completeError) {
-      console.error('Error completing match session:', completeError);
-      return NextResponse.json(
-        { error: 'Failed to process match completion' },
-        { status: 500 }
-      );
-    }
-
     // Get updated participants with rating changes
     const { data: updatedParticipants, error: participantsError } = await supabase
       .from('match_participants')
@@ -168,7 +160,7 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: 'Match completed successfully',
+      message: '매치가 성공적으로 완료되었습니다',
       session: {
         id: sessionId,
         result,
@@ -180,7 +172,7 @@ export async function POST(
   } catch (error) {
     console.error('Error in POST /api/matches/sessions/[sessionId]/complete:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: '서버 오류가 발생했습니다' },
       { status: 500 }
     );
   }

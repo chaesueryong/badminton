@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createClient } from '@/lib/supabase/server';
 
 // GET: 모든 체육관 조회 (필터링 및 페이지네이션 지원)
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = await createClient();
     const { searchParams } = new URL(request.url);
 
     const region = searchParams.get("region");
@@ -70,8 +68,7 @@ export async function GET(request: NextRequest) {
 // POST: 새 체육관 등록 (누구나 가능, 관리자 승인 필요)
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = await createClient();
 
     const {
       data: { user },

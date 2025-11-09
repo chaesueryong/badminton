@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     // 게시글과 작성자 정보 조회
-    const { data: post, error: postError } = await supabaseAdmin
+    const { data: post, error: postError } = await (supabaseAdmin as any)
       .from('posts')
       .select(`
         *,
@@ -31,7 +31,7 @@ export async function GET(
     }
 
     // 최상위 댓글과 작성자 정보 조회
-    const { data: comments, error: commentsError } = await supabaseAdmin
+    const { data: comments, error: commentsError } = await (supabaseAdmin as any)
       .from('comments')
       .select(`
         *,
@@ -47,7 +47,7 @@ export async function GET(
       .order('created_at', { ascending: false });
 
     // 답글과 작성자 정보 조회 (parent_id가 있는 댓글들)
-    const { data: replies } = await supabaseAdmin
+    const { data: replies } = await (supabaseAdmin as any)
       .from('comments')
       .select(`
         *,
@@ -62,7 +62,7 @@ export async function GET(
       .not('parent_id', 'is', null);
 
     // 답글을 부모 댓글에 매핑
-    const commentsWithReplies = comments?.map(comment => ({
+    const commentsWithReplies = comments?.map((comment: any) => ({
       ...comment,
       authorId: comment.author_id,
       postId: comment.post_id,
@@ -72,7 +72,7 @@ export async function GET(
         ...comment.author,
         profileImage: comment.author.profile_image,
       } : null,
-      replies: replies?.filter(reply => reply.parent_id === comment.id).map(reply => ({
+      replies: replies?.filter((reply: any) => reply.parent_id === comment.id).map((reply: any) => ({
         ...reply,
         authorId: reply.author_id,
         postId: reply.post_id,
@@ -86,7 +86,7 @@ export async function GET(
     })) || [];
 
     // 조회수 증가
-    await supabaseAdmin.rpc('increment_post_views', { post_id: params.id });
+    await (supabaseAdmin as any).rpc('increment_post_views', { post_id: params.id });
 
     return NextResponse.json({
       ...post,
@@ -123,7 +123,7 @@ export async function PATCH(
     if (body.category) updateData.category = body.category;
     if (body.images) updateData.images = body.images;
 
-    const { data: post, error } = await supabaseAdmin
+    const { data: post, error } = await (supabaseAdmin as any)
       .from('posts')
       .update(updateData)
       .eq('id', params.id)

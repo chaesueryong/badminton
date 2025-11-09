@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import FloatingActionButton from '@/components/FloatingActionButton';
 import {
   MatchType,
   MATCH_TYPE_LABELS,
@@ -247,8 +246,6 @@ export default function RatingsPage() {
           </ul>
         </div>
       </div>
-
-      <FloatingActionButton />
     </div>
   );
 }

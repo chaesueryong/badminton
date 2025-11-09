@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, useCallback } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -84,7 +84,7 @@ const formatLevelRange = (levelMin: string | null, levelMax: string | null) => {
 export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [popularMeetings, setPopularMeetings] = useState<Meeting[]>([]);
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
 
   const fetchPopularMeetings = useCallback(async () => {
     try {
@@ -109,6 +109,16 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
+      {/* 테스트 중 배너 */}
+      <div className="bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 text-white py-3 px-4 text-center font-bold text-sm md:text-base shadow-lg">
+        <div className="flex items-center justify-center gap-2 flex-wrap">
+          <Zap className="w-5 h-5 animate-pulse flex-shrink-0" />
+          <span>현재 베타 테스트 중입니다.</span>
+          <span className="block sm:inline">일부 기능이 원활하지 않을 수 있습니다.</span>
+          <Zap className="w-5 h-5 animate-pulse flex-shrink-0" />
+        </div>
+      </div>
+
       {/* Hero Section with gradient background */}
       <section className="relative bg-gradient-to-br from-blue-600 via-blue-500 to-indigo-600">
 
@@ -270,11 +280,11 @@ export default function Home() {
                   {/* 인원 및 급수 */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-blue-500" />
-                      <div className="flex items-center gap-1">
-                        <span className="font-bold text-lg text-blue-600">{meeting.currentCount}</span>
-                        <span className="text-gray-500">/</span>
-                        <span className="text-gray-600">{meeting.maxParticipants}명</span>
+                      <Users className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                      <div className="flex items-baseline gap-1">
+                        <span className="font-bold text-lg text-blue-600 leading-none">{meeting.currentCount}</span>
+                        <span className="text-gray-500 leading-none">/</span>
+                        <span className="text-gray-600 leading-none">{meeting.maxParticipants}명</span>
                       </div>
                     </div>
 

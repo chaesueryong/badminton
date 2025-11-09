@@ -4,11 +4,11 @@ import { createClient } from '@/lib/supabase/server';
 // GET /api/users/[id]/ratings - Get user's rating statistics
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const supabase = await createClient();
-    const { id: userId } = await params;
+    const { id: userId } = params;
 
     // Get user's rating data
     const { data: user, error: userError } = await supabase

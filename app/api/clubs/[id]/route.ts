@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { data: club, error: clubError } = await supabaseAdmin
+    const { data: club, error: clubError } = await (supabaseAdmin as any)
       .from('clubs')
       .select(`
         *,
@@ -30,7 +30,7 @@ export async function GET(
     }
 
     // 멤버 조회
-    const { data: members } = await supabaseAdmin
+    const { data: members } = await (supabaseAdmin as any)
       .from('club_members')
       .select(`
         *,
@@ -46,7 +46,7 @@ export async function GET(
       .order('created_at', { ascending: true });
 
     // 미래 이벤트 조회
-    const { data: events } = await supabaseAdmin
+    const { data: events } = await (supabaseAdmin as any)
       .from('events')
       .select('*')
       .eq('club_id', params.id)
@@ -64,7 +64,7 @@ export async function GET(
         ...club.manager,
         profileImage: club.manager.profile_image,
       } : null,
-      members: members?.map(member => ({
+      members: members?.map((member: any) => ({
         ...member,
         clubId: member.club_id,
         userId: member.user_id,
@@ -74,7 +74,7 @@ export async function GET(
           profileImage: member.user.profile_image,
         } : null,
       })) || [],
-      events: events?.map(event => ({
+      events: events?.map((event: any) => ({
         ...event,
         clubId: event.club_id,
         hostId: event.host_id,
@@ -118,7 +118,7 @@ export async function PATCH(
     if (body.images) updateData.images = body.images;
     if (body.tags) updateData.tags = body.tags;
 
-    const { data: club, error } = await supabaseAdmin
+    const { data: club, error } = await (supabaseAdmin as any)
       .from('clubs')
       .update(updateData)
       .eq('id', params.id)

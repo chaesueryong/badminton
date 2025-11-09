@@ -1,11 +1,11 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from "next/server";
+import { GameSettings } from "@/config/game-settings";
 
 // GET: 출석 정보 조회
 export async function GET() {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
 
     const {
       data: { session },
@@ -100,7 +100,7 @@ export async function GET() {
 // POST: 출석 체크
 export async function POST() {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
 
     const {
       data: { session },
@@ -176,14 +176,14 @@ export async function POST() {
     // 새로운 연속 출석일 (오늘 포함)
     const newStreak = currentStreak + 1;
 
-    // 기본 포인트
-    let pointsEarned = 10;
+    // 기본 포인트 (from config)
+    let pointsEarned = GameSettings.attendance.daily;
 
-    // 100일 단위 보너스 체크
+    // 100일 단위 보너스 체크 (from config)
     const bonusMessage: string[] = [];
     if (newStreak % 100 === 0) {
-      pointsEarned += 100;
-      bonusMessage.push(`🎉 ${newStreak}일 연속 출석 달성! +100 보너스!`);
+      pointsEarned += GameSettings.attendance.milestone100Days;
+      bonusMessage.push(`🎉 ${newStreak}일 연속 출석 달성! +${GameSettings.attendance.milestone100Days} 보너스!`);
     }
 
     // 출석 체크 기록 생성

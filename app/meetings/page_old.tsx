@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import RegionSelect from "@/components/RegionSelect";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 
 interface Meeting {
   id: string;
@@ -43,7 +43,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function MeetingsPage() {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);

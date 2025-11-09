@@ -16,7 +16,7 @@ export async function POST(
       );
     }
 
-    const { data: comment, error } = await supabaseAdmin
+    const { data: comment, error } = await (supabaseAdmin as any)
       .from('comments')
       .insert({
         content,

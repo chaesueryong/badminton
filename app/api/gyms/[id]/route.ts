@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { data: gym, error: gymError } = await supabaseAdmin
+    const { data: gym, error: gymError } = await (supabaseAdmin as any)
       .from('gyms')
       .select('*')
       .eq('id', params.id)
@@ -21,7 +21,7 @@ export async function GET(
     }
 
     // 리뷰 조회
-    const { data: reviews } = await supabaseAdmin
+    const { data: reviews } = await (supabaseAdmin as any)
       .from('gym_reviews')
       .select(`
         *,
@@ -37,8 +37,8 @@ export async function GET(
 
     // 이벤트 및 모임 카운트
     const [eventsCount, meetingsCount] = await Promise.all([
-      supabaseAdmin.from('events').select('id', { count: 'exact', head: true }).eq('gym_id', params.id),
-      supabaseAdmin.from('meetings').select('id', { count: 'exact', head: true }).eq('gym_id', params.id),
+      (supabaseAdmin as any).from('events').select('id', { count: 'exact', head: true }).eq('gym_id', params.id),
+      (supabaseAdmin as any).from('meetings').select('id', { count: 'exact', head: true }).eq('gym_id', params.id),
     ]);
 
     return NextResponse.json({
@@ -46,7 +46,7 @@ export async function GET(
       reviewCount: gym.review_count,
       createdAt: gym.created_at,
       updatedAt: gym.updated_at,
-      reviews: reviews?.map(review => ({
+      reviews: reviews?.map((review: any) => ({
         ...review,
         gymId: review.gym_id,
         userId: review.user_id,
@@ -88,7 +88,7 @@ export async function PATCH(
     if (body.amenities) updateData.amenities = body.amenities;
     if (body.images) updateData.images = body.images;
 
-    const { data: gym, error } = await supabaseAdmin
+    const { data: gym, error } = await (supabaseAdmin as any)
       .from('gyms')
       .update(updateData)
       .eq('id', params.id)

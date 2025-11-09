@@ -2,13 +2,14 @@
 
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import ImageUpload from "@/components/ImageUpload";
 import { STORAGE_BUCKETS } from "@/lib/storage";
 import Image from "next/image";
 import RegionSelect from "@/components/RegionSelect";
 import { Feather } from "lucide-react";
+import { toast } from "sonner";
 
 const levelLabels: Record<string, string> = {
   E_GRADE: "E조",
@@ -96,7 +97,7 @@ export default function ProfilePage() {
     birthdate: "",
   });
 
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -133,16 +134,17 @@ export default function ProfilePage() {
         console.log("Profile data loaded:", profileData);
         setProfile(profileData);
         if (isOwnProfile) {
+          const data = profileData as any;
           const initialEditFormData = {
-            nickname: profileData.nickname || "",
-            phone: profileData.phone || "",
-            region: profileData.region || "",
-            level: profileData.level || "",
-            bio: profileData.bio || "",
-            gender: profileData.gender || "",
-            preferredStyle: profileData.preferredStyle || "",
-            experience: profileData.experience || 0,
-            birthdate: profileData.birthdate || "",
+            nickname: data.nickname || "",
+            phone: data.phone || "",
+            region: data.region || "",
+            level: data.level || "",
+            bio: data.bio || "",
+            gender: data.gender || "",
+            preferredStyle: data.preferredStyle || "",
+            experience: data.experience || 0,
+            birthdate: data.birthdate || "",
           };
           console.log("Initial edit form data:", initialEditFormData);
           setEditFormData(initialEditFormData);
@@ -156,7 +158,7 @@ export default function ProfilePage() {
       } else {
         // 다른 사용자의 프로필이 없을 때
         setLoading(false);
-        alert("사용자를 찾을 수 없습니다.");
+        toast.error("사용자를 찾을 수 없습니다.");
         router.push("/");
       }
     };
@@ -212,19 +214,19 @@ export default function ProfilePage() {
 
       if (!fetchError && refreshedProfile) {
         console.log("Refreshed profile from database:", refreshedProfile);
-        setProfile(refreshedProfile);
+        setProfile(refreshedProfile as any);
 
         // editFormData도 새로운 데이터로 업데이트
         setEditFormData({
-          nickname: refreshedProfile.nickname || "",
-          phone: refreshedProfile.phone || "",
-          region: refreshedProfile.region || "",
-          level: refreshedProfile.level || "",
-          bio: refreshedProfile.bio || "",
-          gender: refreshedProfile.gender || "",
-          preferredStyle: refreshedProfile.preferredStyle || "",
-          experience: refreshedProfile.experience || 0,
-          birthdate: refreshedProfile.birthdate || "",
+          nickname: (refreshedProfile as any).nickname || "",
+          phone: (refreshedProfile as any).phone || "",
+          region: (refreshedProfile as any).region || "",
+          level: (refreshedProfile as any).level || "",
+          bio: (refreshedProfile as any).bio || "",
+          gender: (refreshedProfile as any).gender || "",
+          preferredStyle: (refreshedProfile as any).preferredStyle || "",
+          experience: (refreshedProfile as any).experience || 0,
+          birthdate: (refreshedProfile as any).birthdate || "",
         });
       } else {
         // 실패 시 API 응답 데이터 사용
@@ -235,10 +237,10 @@ export default function ProfilePage() {
       }
 
       setIsEditing(false);
-      alert("프로필이 수정되었습니다!");
+      toast.success("프로필이 수정되었습니다!");
     } catch (error) {
       console.error("프로필 수정 실패:", error);
-      alert("프로필 수정에 실패했습니다.");
+      toast.error("프로필 수정에 실패했습니다.");
     } finally {
       setSubmitting(false);
     }
@@ -435,10 +437,10 @@ export default function ProfilePage() {
                           ...profile,
                           profileImage: url,
                         });
-                        alert("프로필 이미지가 업데이트되었습니다!");
+                        toast.success("프로필 이미지가 업데이트되었습니다!");
                       } catch (error) {
                         console.error("프로필 이미지 업데이트 실패:", error);
-                        alert("프로필 이미지 업데이트에 실패했습니다.");
+                        toast.error("프로필 이미지 업데이트에 실패했습니다.");
                       }
                     }}
                   />

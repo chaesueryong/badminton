@@ -1,9 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { createClient } from "@/lib/supabase/client";
 import { MatchType, MATCH_TYPE_LABELS, MATCH_TYPE_DESCRIPTIONS } from '@/types/rating';
-import { Feather } from 'lucide-react';
+import { Feather, Coins } from 'lucide-react';
+import { toast } from 'sonner';
+import { GameSettings } from '@/config/game-settings';
 
 interface User {
   id: string;
@@ -17,24 +20,44 @@ interface User {
 
 export default function CreateMatchPage() {
   const router = useRouter();
+  const supabase = createClient();
   const [loading, setLoading] = useState(false);
 
   // Form state
   const [matchType, setMatchType] = useState<MatchType>('MS');
 
-  // Session creation cost (creator pays to create session)
-  const [creationCurrency, setCreationCurrency] = useState<'points' | 'feathers'>('feathers');
-  const creationCostPoints = 100; // Creation cost in points
-  const creationCostFeathers = 10; // Creation cost in feathers (feathers are much more valuable)
+  useEffect(() => {
+    checkAuth();
+  }, []);
 
-  // Entry fee (fixed, different values for points and feathers)
-  const entryFeePoints = 100; // Entry fee in points
-  const entryFeeFeathers = 10; // Entry fee in feathers (feathers are much more valuable)
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      router.push('/login');
+      return;
+    }
+  };
+
+  // Session creation cost (creator pays to create session) - from config
+  const [creationCurrency, setCreationCurrency] = useState<'points' | 'feathers'>('feathers');
+  const creationCostPoints = GameSettings.sessionCreation.points;
+  const creationCostFeathers = GameSettings.sessionCreation.feathers;
+
+  // Entry fee (fixed, different values for points and feathers) - from config
+  const entryFeePoints = GameSettings.sessionEntry.points;
+  const entryFeeFeathers = GameSettings.sessionEntry.feathers;
 
   // Betting state
   const [enableBetting, setEnableBetting] = useState(false);
   const [betCurrencyType, setBetCurrencyType] = useState<'points' | 'feathers'>('points');
-  const [betAmount, setBetAmount] = useState(100);
+  const [betAmount, setBetAmount] = useState<number>(GameSettings.betting.defaultAmount); // from config
+
+  // Password state
+  const [enablePassword, setEnablePassword] = useState(false);
+  const [password, setPassword] = useState('');
+
+  // Ranked mode state
+  const [isRanked, setIsRanked] = useState(true);
 
   // Fixed values
   const winnerPoints = 100;
@@ -43,6 +66,19 @@ export default function CreateMatchPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate password
+    if (enablePassword) {
+      if (!password || password.length !== 6) {
+        toast.error('비밀번호는 6자리여야 합니다');
+        return;
+      }
+      if (!/^\d{6}$/.test(password)) {
+        toast.error('비밀번호는 숫자만 입력 가능합니다');
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
@@ -57,7 +93,9 @@ export default function CreateMatchPage() {
           entryFeeFeathers: entryFeeFeathers,
           winnerPoints: 100,
           betCurrencyType: enableBetting ? betCurrencyType.toUpperCase() : 'NONE',
-          betAmountPerPlayer: enableBetting ? betAmount : 0
+          betAmountPerPlayer: enableBetting ? betAmount : 0,
+          password: enablePassword ? password : null,
+          isRanked: isRanked
         })
       });
 
@@ -72,11 +110,11 @@ export default function CreateMatchPage() {
       }
 
       const session = await response.json();
-      alert('매치 세션이 생성되었습니다!');
+      toast.success('매치 세션이 생성되었습니다!');
       router.push(`/matches/${session.id}`);
     } catch (error: any) {
       console.error('Failed to create match session:', error);
-      alert(error.message || '매치 세션 생성에 실패했습니다.');
+      toast.error(error.message || '매치 세션 생성에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -87,7 +125,7 @@ export default function CreateMatchPage() {
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">매치 세션 생성</h1>
-          <p className="text-gray-600">새로운 레이팅 매치를 생성하세요</p>
+          <p className="text-gray-600">배드민턴 경기를 만들고 친구들과 함께 즐기세요</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -119,8 +157,49 @@ export default function CreateMatchPage() {
             </div>
           </div>
 
+          {/* Ranked Mode Selection */}
+          <div className="bg-white rounded-lg shadow-sm p-6 border-2 border-green-200">
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              게임 모드 *
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setIsRanked(true)}
+                className={`p-4 rounded-lg border-2 transition-all ${
+                  isRanked
+                    ? 'border-green-600 bg-green-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="text-sm font-medium text-gray-900 mb-1">
+                  🏆 랭크 게임
+                </div>
+                <div className="text-xs text-gray-600">
+                  레이팅이 변동됩니다
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsRanked(false)}
+                className={`p-4 rounded-lg border-2 transition-all ${
+                  !isRanked
+                    ? 'border-gray-600 bg-gray-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="text-sm font-medium text-gray-900 mb-1">
+                  🎮 일반 게임
+                </div>
+                <div className="text-xs text-gray-600">
+                  레이팅이 변동되지 않습니다
+                </div>
+              </button>
+            </div>
+          </div>
+
           {/* Session Creation Cost */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="bg-white rounded-lg shadow-sm p-6 border-2 border-indigo-200">
             <label className="block text-sm font-medium text-gray-700 mb-3">
               세션 생성 비용
             </label>
@@ -134,7 +213,7 @@ export default function CreateMatchPage() {
                     onChange={(e) => setCreationCurrency(e.target.value as 'points')}
                     className="mr-2"
                   />
-                  <span className="text-sm">💎 포인트 ({creationCostPoints})</span>
+                  <span className="text-sm flex items-center gap-1"><Coins className="w-4 h-4" /> 포인트 ({creationCostPoints})</span>
                 </label>
                 <label className="flex items-center">
                   <input
@@ -150,9 +229,17 @@ export default function CreateMatchPage() {
                   </span>
                 </label>
               </div>
-              <p className="text-xs text-gray-600">
-                세션 생성 시 생성자가 지불합니다.
-              </p>
+              <div className="p-3 bg-indigo-50 rounded-lg space-y-1">
+                <p className="text-xs text-indigo-800">
+                  ✓ 세션 생성 시 생성자가 지불합니다
+                </p>
+                <p className="text-xs text-indigo-800">
+                  ✓ 세션 삭제 시 생성 비용이 환불됩니다
+                </p>
+                <p className="text-xs text-indigo-700 font-medium mt-2">
+                  ※ 입장료는 환불되지 않습니다
+                </p>
+              </div>
             </div>
           </div>
 
@@ -161,18 +248,14 @@ export default function CreateMatchPage() {
             <label className="block text-sm font-medium text-gray-700 mb-3">
               입장료
             </label>
-            <div className="space-y-2">
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  <strong>💎 포인트:</strong> {entryFeePoints}
-                </p>
-              </div>
-              <div className="p-3 bg-amber-50 rounded-lg">
-                <p className="text-sm text-amber-800 flex items-center gap-1">
-                  <Feather className="w-4 h-4" />
-                  <strong>깃털:</strong> {entryFeeFeathers}
-                </p>
-              </div>
+            <div className="p-4 bg-gradient-to-r from-blue-50 to-amber-50 rounded-lg">
+              <p className="text-sm font-medium text-gray-800 flex items-center gap-2">
+                <Coins className="w-5 h-5 text-purple-600" />
+                <span>{entryFeePoints} 포인트</span>
+                <span className="text-gray-400">또는</span>
+                <Feather className="w-5 h-5 text-amber-600" />
+                <span>{entryFeeFeathers} 깃털</span>
+              </p>
               <p className="text-xs text-gray-600 mt-2">
                 참가자가 세션 참가 시 포인트 또는 깃털 중 선택하여 지불합니다.
               </p>
@@ -216,7 +299,7 @@ export default function CreateMatchPage() {
                         onChange={(e) => setBetCurrencyType(e.target.value as 'points')}
                         className="mr-2"
                       />
-                      <span className="text-sm">💎 포인트</span>
+                      <span className="text-sm flex items-center gap-1"><Coins className="w-4 h-4" /> 포인트</span>
                     </label>
                     <label className="flex items-center">
                       <input
@@ -260,6 +343,45 @@ export default function CreateMatchPage() {
                     </p>
                   </div>
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* Password Protection */}
+          <div className="bg-white rounded-lg shadow-sm p-6 border-2 border-purple-200">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-1">
+                  🔒 비밀번호 보호
+                </label>
+                <p className="text-xs text-gray-600">
+                  세션에 비밀번호를 설정하여 참가를 제한할 수 있습니다
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={enablePassword}
+                  onChange={(e) => setEnablePassword(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
+              </label>
+            </div>
+
+            {enablePassword && (
+              <div className="pt-4 border-t border-gray-200">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  비밀번호 (6자리 숫자)
+                </label>
+                <input
+                  type="text"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  maxLength={6}
+                  placeholder="123456"
+                  className="w-full px-4 py-2 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
               </div>
             )}
           </div>
