@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { data: user, error } = await supabaseAdmin
+    const { data: user, error } = await (supabaseAdmin as any)
       .from('users')
       .select(`
         id,
@@ -41,11 +41,11 @@ export async function GET(
 
     // 관련 카운트 조회
     const [clubsCount, membershipsCount, eventsCount, meetingsCount, postsCount] = await Promise.all([
-      supabaseAdmin.from('clubs').select('id', { count: 'exact', head: true }).eq('host_id', params.id),
-      supabaseAdmin.from('club_members').select('id', { count: 'exact', head: true }).eq('user_id', params.id),
-      supabaseAdmin.from('events').select('id', { count: 'exact', head: true }).eq('host_id', params.id),
-      supabaseAdmin.from('meetings').select('id', { count: 'exact', head: true }).eq('host_id', params.id),
-      supabaseAdmin.from('posts').select('id', { count: 'exact', head: true }).eq('author_id', params.id),
+      (supabaseAdmin as any).from('clubs').select('id', { count: 'exact', head: true }).eq('host_id', params.id),
+      (supabaseAdmin as any).from('club_members').select('id', { count: 'exact', head: true }).eq('user_id', params.id),
+      (supabaseAdmin as any).from('events').select('id', { count: 'exact', head: true }).eq('host_id', params.id),
+      (supabaseAdmin as any).from('meetings').select('id', { count: 'exact', head: true }).eq('host_id', params.id),
+      (supabaseAdmin as any).from('posts').select('id', { count: 'exact', head: true }).eq('author_id', params.id),
     ]);
 
     return NextResponse.json({
@@ -117,7 +117,7 @@ export async function PATCH(
 
     console.log("API PATCH - Data to update:", snakeCaseData);
 
-    const { data: user, error } = await supabaseAdmin
+    const { data: user, error } = await (supabaseAdmin as any)
       .from('users')
       .update(snakeCaseData)
       .eq('id', params.id)

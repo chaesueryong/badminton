@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import RegionSelect from "@/components/RegionSelect";
 import { Filter, X, Crown } from "lucide-react";
 
@@ -125,7 +125,7 @@ interface User {
 }
 
 export default function MatchingPage() {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);

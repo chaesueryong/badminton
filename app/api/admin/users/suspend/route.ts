@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createClient } from '@/lib/supabase/server';
 
 // POST: 사용자 계정 정지
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = await createClient();
 
     // 관리자 권한 확인
     const {
@@ -95,8 +93,7 @@ export async function POST(request: NextRequest) {
 // DELETE: 사용자 계정 정지 해제
 export async function DELETE(request: NextRequest) {
   try {
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = await createClient();
 
     // 관리자 권한 확인
     const {

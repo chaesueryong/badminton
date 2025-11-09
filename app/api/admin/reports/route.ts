@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { targetType, targetId, reason, description } = body;
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('reports')
       .insert({
         target_type: targetType,

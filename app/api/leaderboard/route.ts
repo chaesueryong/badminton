@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0');
 
     // Fetch from users table
-    let query = supabase
+    let query = (supabase as any)
       .from('users')
       .select('id, nickname, profileImage, region, level, rating, totalGames, wins')
       .order('rating', { ascending: false })
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 승률 계산 및 필드 매핑
-    const formattedLeaderboard = (leaderboard || []).map((entry, index) => ({
+    const formattedLeaderboard = (leaderboard || []).map((entry: any, index: number) => ({
       ...entry,
       win_rate: entry.totalGames > 0 ? (entry.wins / entry.totalGames) * 100 : 0,
       rank: offset + index + 1,

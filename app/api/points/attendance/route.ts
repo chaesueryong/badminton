@@ -1,12 +1,11 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from "next/server";
 import { GameSettings } from "@/config/game-settings";
 
 // GET: 출석 정보 조회
 export async function GET() {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
 
     const {
       data: { session },
@@ -101,7 +100,7 @@ export async function GET() {
 // POST: 출석 체크
 export async function POST() {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
 
     const {
       data: { session },

@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import RegionSelect from "@/components/RegionSelect";
 import { toast } from "sonner";
 
 export default function RegisterGymPage() {
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [region, setRegion] = useState({ province: "", city: "" });
 

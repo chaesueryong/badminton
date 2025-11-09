@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     if (otherUserId) {
       // 특정 사용자와의 대화 조회
-      const { data: messages, error } = await supabaseAdmin
+      const { data: messages, error } = await (supabaseAdmin as any)
         .from('messages')
         .select(`
           *,
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       }
 
       // 읽지 않은 메시지 읽음 처리
-      await supabaseAdmin
+      await (supabaseAdmin as any)
         .from('messages')
         .update({ read: true })
         .eq('sender_id', otherUserId)
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
         .eq('read', false);
 
       // camelCase로 변환
-      const formattedMessages = messages?.map(msg => ({
+      const formattedMessages = messages?.map((msg: any) => ({
         ...msg,
         senderId: msg.sender_id,
         receiverId: msg.receiver_id,
@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
     }
 
     // VIP 회원 확인 (VIP 회원은 무제한 메시지)
-    const { data: senderData, error: senderCheckError } = await supabaseAdmin
+    const { data: senderData, error: senderCheckError } = await (supabaseAdmin as any)
       .from('users')
       .select('points, is_vip, vip_until')
       .eq('id', senderId)
@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
       }
 
       // 포인트 차감
-      const { error: pointError } = await supabaseAdmin
+      const { error: pointError } = await (supabaseAdmin as any)
         .from('users')
         .update({ points: senderData.points - POINT_COST })
         .eq('id', senderId);
@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 메시지 전송
-    const { data: message, error } = await supabaseAdmin
+    const { data: message, error } = await (supabaseAdmin as any)
       .from('messages')
       .insert({
         sender_id: senderId,
@@ -228,7 +228,7 @@ export async function POST(request: NextRequest) {
 
     // 포인트 거래 내역 기록 (VIP가 아닌 경우에만)
     if (!isVIP && POINT_COST > 0) {
-      await supabaseAdmin
+      await (supabaseAdmin as any)
         .from('point_transactions')
         .insert({
           userId: senderId,

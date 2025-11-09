@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 
 // GET /api/transactions/history - 전체 거래 내역 조회
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = await createClient();
 
     // 사용자 인증 확인
     const { data: { user }, error: authError } = await supabase.auth.getUser();

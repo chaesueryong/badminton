@@ -28,7 +28,7 @@ export async function createNotification(
       message,
       link,
       read: false,
-    })
+    } as any)
     .select()
     .single()
 
@@ -84,10 +84,10 @@ export async function getUnreadNotificationCount(userId: string) {
 
 // 알림 읽음 처리
 export async function markNotificationAsRead(notificationId: string) {
-  const { error } = await supabase
-    .from('notifications')
+  const { error } = await ((supabase
+    .from('notifications') as any)
     .update({ read: true })
-    .eq('id', notificationId)
+    .eq('id', notificationId))
 
   if (error) {
     console.error('Mark as read error:', error)
@@ -99,11 +99,11 @@ export async function markNotificationAsRead(notificationId: string) {
 
 // 모든 알림 읽음 처리
 export async function markAllNotificationsAsRead(userId: string) {
-  const { error } = await supabase
-    .from('notifications')
+  const { error } = await ((supabase
+    .from('notifications') as any)
     .update({ read: true })
     .eq('userId', userId)
-    .eq('read', false)
+    .eq('read', false))
 
   if (error) {
     console.error('Mark all as read error:', error)

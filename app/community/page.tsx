@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 
 // 임시 데이터
 const mockPosts = [
@@ -96,7 +96,7 @@ interface Post {
 }
 
 export default function CommunityPage() {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);

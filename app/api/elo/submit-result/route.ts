@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get current ELO ratings and games played for both players
-    const { data: players, error: playersError } = await supabase
+    const { data: players, error: playersError } = await (supabase as any)
       .from('users')
       .select('id, elo_rating, games_played')
       .in('id', [player1Id, player2Id]);
@@ -56,8 +56,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch player data' }, { status: 500 });
     }
 
-    const player1Data = players.find((p) => p.id === player1Id);
-    const player2Data = players.find((p) => p.id === player2Id);
+    const player1Data = players.find((p: any) => p.id === player1Id);
+    const player2Data = players.find((p: any) => p.id === player2Id);
 
     if (!player1Data || !player2Data) {
       return NextResponse.json({ error: 'Player not found' }, { status: 404 });
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     );
 
     // Create match result record
-    const { data: matchResult, error: matchError } = await supabase
+    const { data: matchResult, error: matchError } = await (supabase as any)
       .from('match_results')
       .insert({
         player1_id: player1Id,
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
       if (result !== 'draw') {
         const winnerId = result === 'player1_win' ? player1Id : player2Id;
         // Award points via function
-        await supabase.rpc('award_points', {
+        await (supabase as any).rpc('award_points', {
           p_user_id: winnerId,
           p_action_type: 'win_match',
           p_source_id: matchResult.id,

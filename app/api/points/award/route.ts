@@ -1,6 +1,5 @@
 import { supabase } from '@/lib/supabase';
 import { NextRequest, NextResponse } from 'next/server';
-import { ActionType } from '@/lib/points';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,7 +17,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { actionType, sourceId, description } = body as {
-      actionType: ActionType;
+      actionType: string;
       sourceId?: string;
       description?: string;
     };
@@ -28,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Call the award_points function
-    const { data, error } = await supabase.rpc('award_points', {
+    const { data, error } = await (supabase as any).rpc('award_points', {
       p_user_id: user.id,
       p_action_type: actionType,
       p_source_id: sourceId || null,

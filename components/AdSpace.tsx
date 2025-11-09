@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 
 interface AdSpaceProps {
   slot?: string;
@@ -9,7 +9,7 @@ interface AdSpaceProps {
 }
 
 export default function AdSpace({ slot = "default", className = "" }: AdSpaceProps) {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [isAdFree, setIsAdFree] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -36,7 +36,7 @@ export default function AdSpace({ slot = "default", className = "" }: AdSpacePro
         .single();
 
       // Check if user is VIP and VIP is not expired
-      const isVipActive = userData?.is_vip && userData?.vip_until && new Date(userData.vip_until) > new Date();
+      const isVipActive = (userData as any)?.is_vip && (userData as any)?.vip_until && new Date((userData as any).vip_until) > new Date();
 
       setIsAdFree(!!isVipActive);
     } catch (error) {

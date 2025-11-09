@@ -28,24 +28,24 @@ export async function POST(request: NextRequest) {
       .select('*, achievement:achievements(*)')
       .eq('user_id', user.id)
       .eq('achievement_id', achievementId)
-      .single();
+      .maybeSingle();
 
     if (fetchError || !userAchievement) {
       return NextResponse.json({ error: 'Achievement not found' }, { status: 404 });
     }
 
     // Check if already claimed
-    if (userAchievement.status === 'claimed') {
+    if ((userAchievement as any).status === 'claimed') {
       return NextResponse.json({ error: 'Achievement already claimed' }, { status: 400 });
     }
 
     // Check if completed
-    if (userAchievement.status !== 'completed') {
+    if ((userAchievement as any).status !== 'completed') {
       return NextResponse.json({ error: 'Achievement not yet completed' }, { status: 400 });
     }
 
     // Mark as claimed
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase as any)
       .from('user_achievements')
       .update({
         status: 'claimed',
@@ -61,17 +61,17 @@ export async function POST(request: NextRequest) {
 
     // Award points (already awarded on completion, but you can add bonus here)
     // Award badge if linked
-    if (userAchievement.achievement.badge_id) {
-      await supabase.rpc('award_badge', {
+    if ((userAchievement as any).achievement.badge_id) {
+      await (supabase as any).rpc('award_badge', {
         p_user_id: user.id,
-        p_badge_id: userAchievement.achievement.badge_id,
+        p_badge_id: (userAchievement as any).achievement.badge_id,
       });
     }
 
     return NextResponse.json({
       success: true,
       message: 'Achievement claimed!',
-      pointsAwarded: userAchievement.achievement.points_reward,
+      pointsAwarded: (userAchievement as any).achievement.points_reward,
     });
   } catch (error) {
     console.error('Error claiming achievement:', error);

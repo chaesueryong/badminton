@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 
 interface Gym {
   id: string;
@@ -18,7 +18,7 @@ interface Gym {
 }
 
 export default function AdminGymsPage() {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [gyms, setGyms] = useState<Gym[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");

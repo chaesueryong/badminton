@@ -2,16 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import { Crown, Sparkles, Check, X } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import * as PortOne from "@portone/browser-sdk/v2";
+import Script from "next/script";
 import type { SubscriptionPlan } from "@/types/subscription";
 
 export default function SubscriptionPage() {
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -73,20 +73,60 @@ export default function SubscriptionPage() {
       const { paymentId, plan, user } = await checkoutResponse.json();
 
       // 2. 포트원 결제 요청 (정기결제 채널 사용)
-      // TODO: 실제 포트원 Store ID와 Channel Key로 변경 필요
-      const response = await PortOne.requestPayment({
-        storeId: process.env.NEXT_PUBLIC_PORTONE_STORE_ID || 'store-test-id',
-        channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_SUBSCRIPTION || 'channel-key-subscription-test',
+      const PortOne = (window as any).PortOne;
+      if (!PortOne) {
+        throw new Error('PortOne SDK가 로드되지 않았습니다.');
+      }
+
+      // 실제 모바일 기기 감지 (User Agent 기반)
+      const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      console.log('[Device Detection]', {
+        userAgent: navigator.userAgent,
+        isMobileDevice
+      });
+
+      const paymentRequest: any = {
+        storeId: process.env.NEXT_PUBLIC_PORTONE_STORE_ID!,
         paymentId: paymentId,
         orderName: plan.name,
         totalAmount: plan.price,
         currency: 'CURRENCY_KRW',
-        payMethod: 'CARD'
-      });
+        channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_SUBSCRIPTION!,
+        payMethod: 'CARD',
+      };
 
+      // windowType 설정 (실제 모바일 기기에서만 REDIRECTION 사용)
+      if (isMobileDevice) {
+        // 실제 모바일 기기: REDIRECTION 방식
+        paymentRequest.windowType = {
+          pc: 'REDIRECTION',
+          mobile: 'REDIRECTION'
+        };
+        paymentRequest.redirectUrl = `${window.location.origin}/shop/subscription/callback?paymentId=${paymentId}&planId=${selectedPlan.id}`;
+        console.log('[Mobile Device - REDIRECTION]', JSON.stringify(paymentRequest, null, 2));
+      } else {
+        // PC (화면 크기 무관): IFRAME 방식만 가능
+        paymentRequest.windowType = {
+          pc: 'IFRAME',
+          mobile: 'IFRAME'
+        };
+        console.log('[PC - IFRAME]', JSON.stringify(paymentRequest, null, 2));
+      }
+
+      // 포트원 결제 요청 (IFRAME 모드)
+      const response = await PortOne.requestPayment(paymentRequest);
+
+      console.log('[Payment Response]', response);
+
+      // IFRAME 방식인 경우에만 아래 로직 실행
       if (!response || response.code != null) {
         // 결제 실패
-        toast.error(`결제 실패: ${response?.message || '알 수 없는 오류'}`);
+        if (response?.code === 'PORTONE_ERROR' || response?.message?.includes('취소')) {
+          toast.info('결제가 취소되었습니다');
+        } else {
+          toast.error(`결제 실패: ${response?.message || '알 수 없는 오류'}`);
+        }
         return;
       }
 
@@ -125,8 +165,10 @@ export default function SubscriptionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-8 pb-20 md:pb-8">
-      <div className="max-w-6xl mx-auto px-4">
+    <>
+      <Script src="https://cdn.portone.io/v2/browser-sdk.js" strategy="afterInteractive" />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-8 pb-20 md:pb-8">
+        <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="mb-8 text-center">
           <div className="flex items-center justify-center gap-3 mb-4">
@@ -298,6 +340,7 @@ export default function SubscriptionPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
 
     // Users can only view their own history unless they're admin
     if (userId !== user.id) {
-      const { data: userData } = await supabase
+      const { data: userData } = await (supabase as any)
         .from('users')
         .select('role')
         .eq('id', user.id)

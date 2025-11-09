@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import { Gift, Coins } from "lucide-react";
 import { toast } from "sonner";
 
@@ -30,7 +30,7 @@ interface AttendanceInfo {
 
 export default function RewardsPage() {
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [rewards, setRewards] = useState<RewardItem[]>([]);
   const [pointsInfo, setPointsInfo] = useState<PointsInfo>({ points: 0, lifetimePoints: 0 });
   const [attendanceInfo, setAttendanceInfo] = useState<AttendanceInfo>({ hasCheckedToday: false, streak: 0, lastCheckDate: null });

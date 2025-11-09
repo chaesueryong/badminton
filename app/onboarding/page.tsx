@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import RegionSelect from "@/components/RegionSelect";
 import { formatPhoneNumber, unformatPhoneNumber } from "@/lib/utils/phone";
 
@@ -17,7 +17,7 @@ const levels = [
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [userEmail, setUserEmail] = useState("");

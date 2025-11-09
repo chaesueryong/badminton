@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import RegionSelect from "@/components/RegionSelect";
 
 interface Gym {
@@ -22,7 +22,7 @@ interface Gym {
 }
 
 export default function GymsPage() {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [gyms, setGyms] = useState<Gym[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);

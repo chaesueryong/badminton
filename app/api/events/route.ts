@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get("type");
     const date = searchParams.get("date");
 
-    let query = supabaseAdmin
+    let query = (supabaseAdmin as any)
       .from('events')
       .select(`
         *,
@@ -60,8 +60,8 @@ export async function GET(request: NextRequest) {
 
     // 각 이벤트의 참가자 수 조회
     const eventsWithCount = await Promise.all(
-      (events || []).map(async (event) => {
-        const { count } = await supabaseAdmin
+      (events || []).map(async (event: any) => {
+        const { count } = await (supabaseAdmin as any)
           .from('event_participants')
           .select('id', { count: 'exact', head: true })
           .eq('event_id', event.id);
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: event, error } = await supabaseAdmin
+    const { data: event, error } = await (supabaseAdmin as any)
       .from('events')
       .insert({
         club_id: clubId,

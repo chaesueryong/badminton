@@ -14,7 +14,7 @@ export async function PATCH(
 
     const { notificationId } = params;
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('notifications')
       .update({ read: true, read_at: new Date().toISOString() })
       .eq('id', notificationId)

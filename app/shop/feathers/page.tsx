@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { Check, Feather } from "lucide-react";
 import { toast } from "sonner";
+import Script from "next/script";
 
 interface FeatherProduct {
   id: string;
@@ -15,14 +18,26 @@ interface FeatherProduct {
 }
 
 export default function FeathersShopPage() {
+  const router = useRouter();
+  const supabase = createClient();
   const [products, setProducts] = useState<FeatherProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<FeatherProduct | null>(null);
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
+    checkAuth();
     fetchProducts();
   }, []);
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      router.push('/login');
+      return;
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -43,16 +58,116 @@ export default function FeathersShopPage() {
     setShowModal(true);
   };
 
-  const confirmPurchase = () => {
-    // 실제 결제는 토스페이먼츠나 다른 PG사 연동 필요
-    toast("결제 기능은 추후 구현 예정입니다.");
-    setShowModal(false);
-    setSelectedProduct(null);
+  const confirmPurchase = async () => {
+    console.log('[confirmPurchase] Started');
+    if (!selectedProduct || processing) return;
+
+    try {
+      setProcessing(true);
+      console.log('[confirmPurchase] Processing started');
+
+      // 1. 결제 준비
+      const checkoutResponse = await fetch('/api/shop/feathers/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: selectedProduct.id })
+      });
+
+      if (!checkoutResponse.ok) {
+        const error = await checkoutResponse.json();
+        throw new Error(error.error || '결제 준비 실패');
+      }
+
+      const { paymentId, product, user } = await checkoutResponse.json();
+
+      // 2. 포트원 결제 요청 (일반결제 채널 사용)
+      const PortOne = (window as any).PortOne;
+      if (!PortOne) {
+        throw new Error('PortOne SDK가 로드되지 않았습니다.');
+      }
+
+      // 실제 모바일 기기 감지 (User Agent 기반)
+      const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      console.log('[Device Detection]', {
+        userAgent: navigator.userAgent,
+        isMobileDevice
+      });
+
+      const paymentRequest: any = {
+        storeId: process.env.NEXT_PUBLIC_PORTONE_STORE_ID!,
+        paymentId: paymentId,
+        orderName: product.name,
+        totalAmount: product.price_krw,
+        currency: 'CURRENCY_KRW',
+        channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_GENERAL!,
+        payMethod: 'CARD',
+      };
+
+      // windowType 설정 (실제 모바일 기기에서만 REDIRECTION 사용)
+      if (isMobileDevice) {
+        // 실제 모바일 기기: REDIRECTION 방식
+        paymentRequest.windowType = {
+          pc: 'REDIRECTION',
+          mobile: 'REDIRECTION'
+        };
+        paymentRequest.redirectUrl = `${window.location.origin}/shop/feathers/callback?paymentId=${paymentId}&productId=${selectedProduct.id}`;
+        console.log('[Mobile Device - REDIRECTION]', JSON.stringify(paymentRequest, null, 2));
+      } else {
+        // PC (화면 크기 무관): IFRAME 방식만 가능
+        paymentRequest.windowType = {
+          pc: 'IFRAME',
+          mobile: 'IFRAME'
+        };
+        console.log('[PC - IFRAME]', JSON.stringify(paymentRequest, null, 2));
+      }
+      // 포트원 결제 요청 (IFRAME 모드)
+      const response = await PortOne.requestPayment(paymentRequest);
+
+      console.log('[Payment Response]', response);
+
+      // IFRAME 방식인 경우에만 아래 로직 실행
+      if (!response || response.code != null) {
+        // 결제 실패
+        if (response?.code === 'PORTONE_ERROR' || response?.message?.includes('취소')) {
+          toast.info('결제가 취소되었습니다');
+        } else {
+          toast.error(`결제 실패: ${response?.message || '알 수 없는 오류'}`);
+        }
+        return;
+      }
+
+      // 3. 결제 완료 처리
+      const completeResponse = await fetch('/api/shop/feathers/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentId: paymentId,
+          transactionId: response.paymentId,
+          productId: selectedProduct.id
+        })
+      });
+
+      if (!completeResponse.ok) {
+        throw new Error('결제 완료 처리 실패');
+      }
+
+      toast.success('깃털 구매가 완료되었습니다! 🎉');
+      setShowModal(false);
+      router.push('/profile');
+    } catch (error: any) {
+      console.error('Purchase error:', error);
+      toast.error(error.message || '구매 처리 중 오류가 발생했습니다');
+    } finally {
+      setProcessing(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 py-8 pb-20 md:pb-8">
-      <div className="max-w-6xl mx-auto px-4">
+    <>
+      <Script src="https://cdn.portone.io/v2/browser-sdk.js" strategy="afterInteractive" />
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 py-8 pb-20 md:pb-8">
+        <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="mb-8 text-center">
           <h1 className="text-3xl md:text-5xl font-bold mb-3 flex items-center justify-center gap-3">
@@ -228,16 +343,18 @@ export default function FeathersShopPage() {
               <div className="space-y-3">
                 <button
                   onClick={confirmPurchase}
-                  className="w-full px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-600 text-white rounded-xl hover-hover:hover:from-amber-600 hover-hover:hover:to-yellow-700 transition-all duration-300 shadow-lg hover-hover:hover:shadow-xl font-medium"
+                  disabled={processing}
+                  className="w-full px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-600 text-white rounded-xl hover-hover:hover:from-amber-600 hover-hover:hover:to-yellow-700 transition-all duration-300 shadow-lg hover-hover:hover:shadow-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  결제하기
+                  {processing ? '처리 중...' : '결제하기'}
                 </button>
                 <button
                   onClick={() => {
                     setShowModal(false);
                     setSelectedProduct(null);
                   }}
-                  className="w-full px-6 py-3 border-2 border-gray-300 rounded-xl hover-hover:hover:bg-gray-50 transition-all duration-300 font-medium"
+                  disabled={processing}
+                  className="w-full px-6 py-3 border-2 border-gray-300 rounded-xl hover-hover:hover:bg-gray-50 transition-all duration-300 font-medium disabled:opacity-50"
                 >
                   취소
                 </button>
@@ -246,6 +363,7 @@ export default function FeathersShopPage() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }

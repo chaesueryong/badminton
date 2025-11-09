@@ -23,7 +23,7 @@ export async function POST(
       );
     }
 
-    const { data: review, error } = await supabaseAdmin
+    const { data: review, error } = await (supabaseAdmin as any)
       .from('gym_reviews')
       .insert({
         gym_id: params.id,
@@ -51,16 +51,16 @@ export async function POST(
     }
 
     // 체육관 평점 업데이트
-    const { data: allReviews } = await supabaseAdmin
+    const { data: allReviews } = await (supabaseAdmin as any)
       .from('gym_reviews')
       .select('rating')
       .eq('gym_id', params.id);
 
     if (allReviews && allReviews.length > 0) {
-      const totalRating = allReviews.reduce((sum, r) => sum + r.rating, 0);
+      const totalRating = allReviews.reduce((sum: number, r: any) => sum + r.rating, 0);
       const avgRating = totalRating / allReviews.length;
 
-      await supabaseAdmin
+      await (supabaseAdmin as any)
         .from('gyms')
         .update({
           rating: avgRating,

@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { data: event, error: eventError } = await supabaseAdmin
+    const { data: event, error: eventError } = await (supabaseAdmin as any)
       .from('events')
       .select(`
         *,
@@ -32,7 +32,7 @@ export async function GET(
     }
 
     // 참가자 정보 조회
-    const { data: participants } = await supabaseAdmin
+    const { data: participants } = await (supabaseAdmin as any)
       .from('event_participants')
       .select(`
         *,
@@ -63,7 +63,7 @@ export async function GET(
         ...event.host,
         profileImage: event.host.profile_image,
       } : null,
-      participants: participants?.map(p => ({
+      participants: participants?.map((p: any) => ({
         ...p,
         eventId: p.event_id,
         userId: p.user_id,
@@ -108,7 +108,7 @@ export async function PATCH(
     if (body.isRecurring !== undefined) updateData.is_recurring = body.isRecurring;
     if (body.recurringDay) updateData.recurring_day = body.recurringDay;
 
-    const { data: event, error } = await supabaseAdmin
+    const { data: event, error } = await (supabaseAdmin as any)
       .from('events')
       .update(updateData)
       .eq('id', params.id)

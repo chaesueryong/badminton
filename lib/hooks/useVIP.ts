@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 
 export function useVIP() {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [isVIP, setIsVIP] = useState(false);
   const [loading, setLoading] = useState(true);
   const [vipUntil, setVipUntil] = useState<string | null>(null);
@@ -29,11 +29,11 @@ export function useVIP() {
         .single();
 
       // Check if user is VIP and VIP is not expired
-      const isVipActive = userData?.is_vip && userData?.vip_until && new Date(userData.vip_until) > new Date();
+      const isVipActive = (userData as any)?.is_vip && (userData as any)?.vip_until && new Date((userData as any).vip_until) > new Date();
 
       setIsVIP(!!isVipActive);
-      if (isVipActive && userData?.vip_until) {
-        setVipUntil(userData.vip_until);
+      if (isVipActive && (userData as any)?.vip_until) {
+        setVipUntil((userData as any).vip_until);
       }
     } catch (error) {
       console.error("Failed to check VIP status:", error);

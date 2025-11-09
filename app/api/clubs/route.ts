@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createClient } from '@/lib/supabase/server';
 
 // GET: 모든 클럽 조회 (필터링 지원)
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = await createClient();
     const { searchParams } = new URL(request.url);
 
     const region = searchParams.get("region");
@@ -50,8 +48,7 @@ export async function GET(request: NextRequest) {
 // POST: 새 클럽 생성
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = await createClient();
 
     const {
       data: { user },

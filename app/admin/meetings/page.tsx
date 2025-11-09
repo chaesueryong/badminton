@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 
 interface Meeting {
   id: string;
@@ -18,7 +18,7 @@ interface Meeting {
 }
 
 export default function AdminMeetingsPage() {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");

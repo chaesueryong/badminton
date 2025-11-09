@@ -1,5 +1,4 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server'
 
 // PATCH /api/clubs/[id]/members/[memberId] - 멤버 역할 변경 (매니저 임명/해임)
@@ -8,8 +7,7 @@ export async function PATCH(
   { params }: { params: { id: string; memberId: string } }
 ) {
   try {
-    const cookieStore = cookies()
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+    const supabase = await createClient()
 
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) {
@@ -70,8 +68,7 @@ export async function DELETE(
   { params }: { params: { id: string; memberId: string } }
 ) {
   try {
-    const cookieStore = cookies()
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+    const supabase = await createClient()
 
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) {

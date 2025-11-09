@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import { getDefaultImage } from "@/lib/constants";
 import {
   MapPin,
@@ -110,7 +110,7 @@ interface Schedule {
 export default function MeetingDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [meeting, setMeeting] = useState<Meeting | null>(null);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -1003,7 +1003,7 @@ export default function MeetingDetailPage() {
 
       {/* 플로팅 버튼 */}
       <div className="fixed bottom-16 left-0 right-0 bg-white border-t shadow-lg md:hidden z-40">
-        <div className="md:container md:mx-auto md:px-4 md:max-w-5xl py-3">
+        <div className="px-4 py-3">
           <div className="flex items-center justify-between gap-3 sm:gap-4">
             <div className="flex items-center gap-6 sm:gap-8">
               <button onClick={handleShare} className="flex flex-col items-center hover:opacity-70 transition">

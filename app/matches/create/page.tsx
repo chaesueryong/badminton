@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from "@/lib/supabase/client";
 import { MatchType, MATCH_TYPE_LABELS, MATCH_TYPE_DESCRIPTIONS } from '@/types/rating';
 import { Feather, Coins } from 'lucide-react';
 import { toast } from 'sonner';
@@ -20,7 +20,7 @@ interface User {
 
 export default function CreateMatchPage() {
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [loading, setLoading] = useState(false);
 
   // Form state
@@ -50,7 +50,7 @@ export default function CreateMatchPage() {
   // Betting state
   const [enableBetting, setEnableBetting] = useState(false);
   const [betCurrencyType, setBetCurrencyType] = useState<'points' | 'feathers'>('points');
-  const [betAmount, setBetAmount] = useState(GameSettings.betting.defaultAmount); // from config
+  const [betAmount, setBetAmount] = useState<number>(GameSettings.betting.defaultAmount); // from config
 
   // Password state
   const [enablePassword, setEnablePassword] = useState(false);

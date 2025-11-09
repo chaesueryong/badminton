@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get reward details
-    const { data: reward, error: rewardError } = await supabase
+    const { data: reward, error: rewardError } = await (supabase as any)
       .from('rewards_catalog')
       .select('*')
       .eq('id', rewardId)
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user's current points
-    const { data: userData, error: userError } = await supabase
+    const { data: userData, error: userError } = await (supabase as any)
       .from('users')
       .select('points')
       .eq('id', user.id)
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Spend points using the function
-    const { data: spendResult, error: spendError } = await supabase.rpc('spend_points', {
+    const { data: spendResult, error: spendError } = await (supabase as any).rpc('spend_points', {
       p_user_id: user.id,
       p_amount: reward.points_cost,
       p_source_type: 'reward_redemption',
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create redemption record
-    const { data: redemption, error: redemptionError } = await supabase
+    const { data: redemption, error: redemptionError } = await (supabase as any)
       .from('rewards_redemptions')
       .insert({
         user_id: user.id,
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
 
     // Update stock if applicable
     if (reward.stock !== null) {
-      await supabase
+      await (supabase as any)
         .from('rewards_catalog')
         .update({ stock: reward.stock - 1 })
         .eq('id', rewardId);

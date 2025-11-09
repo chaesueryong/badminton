@@ -70,7 +70,7 @@ export async function logAdminAction(params: {
         target_id: params.targetId,
         details: params.details || null,
         ip_address: params.ipAddress || null,
-      });
+      } as any);
 
     if (error) {
       console.error('Log admin action error:', error);
@@ -103,7 +103,7 @@ export async function createNotification(params: {
         title: params.title,
         message: params.message,
         link: params.link || null,
-      });
+      } as any);
 
     if (error) {
       console.error('Create notification error:', error);

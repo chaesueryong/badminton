@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { usePathname } from "next/navigation";
 import { getDefaultImage } from "@/lib/constants";
@@ -27,7 +27,6 @@ import {
 } from "lucide-react";
 
 export default function Navbar() {
-  const supabase = createClientComponentClient();
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
@@ -42,25 +41,36 @@ export default function Navbar() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const supabase = createClient();
+
     const fetchUserData = async (userId: string) => {
-      const { data: userData } = await supabase
-        .from('users')
-        .select('nickname, profileImage, region, feathers, points, is_vip, vip_until, is_premium, premium_until')
-        .eq('id', userId)
-        .maybeSingle();
+      try {
+        const { data: userData, error } = await supabase
+          .from('users')
+          .select('nickname, profileImage, region, feathers, points, is_vip, vip_until, is_premium, premium_until')
+          .eq('id', userId)
+          .maybeSingle();
 
-      if (userData) {
-        setNickname(userData.nickname || "");
-        setProfileImage(userData.profileImage || "");
-        setUserRegion(userData.region || "");
-        setFeathers(userData.feathers || 0);
-        setPoints(userData.points || 0);
+        if (error) {
+          console.error('사용자 데이터 조회 실패:', error);
+          return;
+        }
 
-        const isVipActive = userData.is_vip && userData.vip_until && new Date(userData.vip_until) > new Date();
-        setIsVIP(!!isVipActive);
+        if (userData) {
+          setNickname((userData as any).nickname || "");
+          setProfileImage((userData as any).profileImage || "");
+          setUserRegion((userData as any).region || "");
+          setFeathers((userData as any).feathers || 0);
+          setPoints((userData as any).points || 0);
 
-        const isPremiumActive = userData.is_premium && userData.premium_until && new Date(userData.premium_until) > new Date();
-        setIsPremium(!!isPremiumActive);
+          const isVipActive = (userData as any).is_vip && (userData as any).vip_until && new Date((userData as any).vip_until) > new Date();
+          setIsVIP(!!isVipActive);
+
+          const isPremiumActive = (userData as any).is_premium && (userData as any).premium_until && new Date((userData as any).premium_until) > new Date();
+          setIsPremium(!!isPremiumActive);
+        }
+      } catch (error) {
+        console.error('사용자 데이터 조회 에러:', error);
       }
     };
 
@@ -75,18 +85,24 @@ export default function Navbar() {
     };
 
     // 초기 세션 가져오기
+    console.log('[Navbar] 세션 가져오기 시작');
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('[Navbar] 세션 결과:', session ? '있음' : '없음', session?.user?.id);
       setUser(session?.user ?? null);
       setLoading(false);
       if (session?.user) {
+        console.log('[Navbar] 사용자 데이터 가져오기 시작:', session.user.id);
         fetchUserData(session.user.id);
       }
+    }).catch(err => {
+      console.error('세션 조회 실패:', err);
+      setLoading(false);
     });
 
     // 세션 변경 감지
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         await fetchUserData(session.user.id);
@@ -222,6 +238,7 @@ export default function Navbar() {
                   </Link>
                   <button
                     onClick={async () => {
+                      const supabase = createClient();
                       await supabase.auth.signOut();
                       window.location.href = "/";
                     }}

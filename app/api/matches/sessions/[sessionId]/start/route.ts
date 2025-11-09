@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 
 // POST /api/matches/sessions/[sessionId]/start - Start a match session (creator only)
 export async function POST(
@@ -8,8 +7,7 @@ export async function POST(
   { params }: { params: { sessionId: string } }
 ) {
   try {
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = await createClient();
     const { sessionId } = params;
 
     // Get current user

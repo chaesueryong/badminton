@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 import { GameSettings } from '@/config/game-settings';
 
 // GET /api/matches/sessions - Get all match sessions
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = await createClient();
     const searchParams = request.nextUrl.searchParams;
 
     const matchType = searchParams.get('matchType');
@@ -69,8 +67,7 @@ export async function GET(request: NextRequest) {
 // POST /api/matches/sessions - Create a new match session
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = await createClient();
 
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();

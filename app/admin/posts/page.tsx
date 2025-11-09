@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 
 interface Post {
   id: string;
@@ -18,7 +18,7 @@ interface Post {
 }
 
 export default function AdminPostsPage() {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");

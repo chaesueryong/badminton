@@ -3,14 +3,14 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import ImageUpload from "@/components/ImageUpload";
 import { STORAGE_BUCKETS } from "@/lib/storage";
 import Image from "next/image";
 import RegionSelect from "@/components/RegionSelect";
 import { formatPhoneNumber, unformatPhoneNumber } from "@/lib/utils/phone";
-import { Feather, Trophy, Gift, Copy, Share2, Crown, Sparkles } from "lucide-react";
+import { Feather, Trophy, Gift, Copy, Share2, Crown, Sparkles, Shield, CheckCircle } from "lucide-react";
 import { usePremium } from "@/lib/hooks/usePremium";
 import { toast } from "sonner";
 
@@ -82,6 +82,9 @@ interface UserProfile {
   vip_until: string | null;
   is_premium: boolean | null;
   premium_until: string | null;
+  is_verified: boolean | null;
+  verified_name: string | null;
+  verified_at: string | null;
 }
 
 function ProfilePageContent() {
@@ -110,7 +113,7 @@ function ProfilePageContent() {
   const [editCity, setEditCity] = useState("");
   const [copySuccess, setCopySuccess] = useState(false);
 
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
 
   const copyReferralCode = () => {
     if (profile?.referralCode) {
@@ -180,15 +183,15 @@ function ProfilePageContent() {
         if (isOwnProfile) {
           // birthdate를 YYYY-MM-DD에서 YYYY.MM.DD로 변환
           let formattedBirthdate = "";
-          if (profileData.birthdate) {
-            formattedBirthdate = profileData.birthdate.replace(/-/g, '.');
+          if ((profileData as any).birthdate) {
+            formattedBirthdate = (profileData as any).birthdate.replace(/-/g, '.');
           }
 
           // 지역 파싱
           let province = "";
           let city = "";
-          if (profileData.region) {
-            const parts = profileData.region.split(' ');
+          if ((profileData as any).region) {
+            const parts = (profileData as any).region.split(' ');
             if (parts.length === 2) {
               province = parts[0];
               city = parts[1];
@@ -196,14 +199,14 @@ function ProfilePageContent() {
           }
 
           const initialEditFormData = {
-            nickname: profileData.nickname || "",
-            phone: formatPhoneNumber(profileData.phone) || "",
-            region: profileData.region || "",
-            level: profileData.level || "",
-            bio: profileData.bio || "",
-            gender: profileData.gender || "",
-            preferredStyle: profileData.preferredStyle || "",
-            experience: profileData.experience || 0,
+            nickname: (profileData as any).nickname || "",
+            phone: formatPhoneNumber((profileData as any).phone) || "",
+            region: (profileData as any).region || "",
+            level: (profileData as any).level || "",
+            bio: (profileData as any).bio || "",
+            gender: (profileData as any).gender || "",
+            preferredStyle: (profileData as any).preferredStyle || "",
+            experience: (profileData as any).experience || 0,
             birthdate: formattedBirthdate,
           };
           console.log("Initial edit form data:", initialEditFormData);
@@ -286,15 +289,15 @@ function ProfilePageContent() {
 
         // birthdate를 YYYY-MM-DD에서 YYYY.MM.DD로 변환
         let formattedBirthdate = "";
-        if (refreshedProfile.birthdate) {
-          formattedBirthdate = refreshedProfile.birthdate.replace(/-/g, '.');
+        if ((refreshedProfile as any).birthdate) {
+          formattedBirthdate = (refreshedProfile as any).birthdate.replace(/-/g, '.');
         }
 
         // 지역 파싱
         let province = "";
         let city = "";
-        if (refreshedProfile.region) {
-          const parts = refreshedProfile.region.split(' ');
+        if ((refreshedProfile as any).region) {
+          const parts = (refreshedProfile as any).region.split(' ');
           if (parts.length === 2) {
             province = parts[0];
             city = parts[1];
@@ -303,14 +306,14 @@ function ProfilePageContent() {
 
         // editFormData도 새로운 데이터로 업데이트
         setEditFormData({
-          nickname: refreshedProfile.nickname || "",
-          phone: formatPhoneNumber(refreshedProfile.phone) || "",
-          region: refreshedProfile.region || "",
-          level: refreshedProfile.level || "",
-          bio: refreshedProfile.bio || "",
-          gender: refreshedProfile.gender || "",
-          preferredStyle: refreshedProfile.preferredStyle || "",
-          experience: refreshedProfile.experience || 0,
+          nickname: (refreshedProfile as any).nickname || "",
+          phone: formatPhoneNumber((refreshedProfile as any).phone) || "",
+          region: (refreshedProfile as any).region || "",
+          level: (refreshedProfile as any).level || "",
+          bio: (refreshedProfile as any).bio || "",
+          gender: (refreshedProfile as any).gender || "",
+          preferredStyle: (refreshedProfile as any).preferredStyle || "",
+          experience: (refreshedProfile as any).experience || 0,
           birthdate: formattedBirthdate,
         });
         setEditProvince(province);
@@ -706,6 +709,53 @@ function ProfilePageContent() {
                   <p className="text-xs text-gray-500">가입 시 초대 코드를 입력하도록 안내해주세요.</p>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* 본인인증 상태 - 자신의 프로필일 때만 표시 */}
+          {isOwnProfile && (
+            <div className="p-4 sm:p-8 border-b border-gray-200">
+              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">본인인증</h3>
+              {profile.is_verified ? (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
+                    <div>
+                      <p className="font-semibold text-green-900">인증 완료</p>
+                      <p className="text-sm text-green-700">
+                        {profile.verified_name}님으로 본인인증이 완료되었습니다.
+                      </p>
+                    </div>
+                  </div>
+                  {profile.verified_at && (
+                    <p className="text-xs text-green-600 mt-2">
+                      인증일: {new Date(profile.verified_at).toLocaleDateString('ko-KR', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Shield className="w-6 h-6 text-blue-600 flex-shrink-0" />
+                    <div>
+                      <p className="font-semibold text-blue-900">본인인증이 필요합니다</p>
+                      <p className="text-sm text-blue-700">
+                        안전한 서비스 이용을 위해 본인인증을 진행해주세요.
+                      </p>
+                    </div>
+                  </div>
+                  <Link
+                    href="/verification"
+                    className="block w-full py-2.5 bg-blue-600 text-white text-center font-medium rounded-lg hover-hover:hover:bg-blue-700 transition-colors"
+                  >
+                    본인인증 하기
+                  </Link>
+                </div>
+              )}
             </div>
           )}
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
 type ClubMember = {
@@ -48,7 +48,7 @@ const levelLabels: Record<string, string> = {
 export default function ClubDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [user, setUser] = useState<User | null>(null);
   const [club, setClub] = useState<Club | null>(null);
   const [members, setMembers] = useState<ClubMember[]>([]);
@@ -112,7 +112,7 @@ export default function ClubDetailPage() {
         const currentMember = membersData.find(
           (m: any) => m.user.id === session.user.id
         );
-        setCurrentUserRole(currentMember?.role ?? null);
+        setCurrentUserRole((currentMember as any)?.role ?? null);
       }
     }
 

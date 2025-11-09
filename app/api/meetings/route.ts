@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createClient } from '@/lib/supabase/server';
 import { supabaseAdmin } from "@/lib/supabase";
 import { GameSettings } from "@/config/game-settings";
 
 // GET: 모든 모임 조회 (필터링 및 페이지네이션 지원)
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = await createClient();
     const { searchParams } = new URL(request.url);
 
     const region = searchParams.get("region");
@@ -84,8 +82,7 @@ export async function GET(request: NextRequest) {
 // POST: 새 모임 생성
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const supabase = await createClient();
 
     const {
       data: { user },
@@ -143,7 +140,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 프리미엄 회원 확인
-    const { data: userData } = await supabaseAdmin
+    const { data: userData } = await (supabaseAdmin as any)
       .from("users")
       .select("is_premium, premium_until")
       .eq("id", user.id)

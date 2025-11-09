@@ -17,7 +17,7 @@ export async function POST(
     }
 
     // 일정 확인
-    const { data: event, error: eventError } = await supabaseAdmin
+    const { data: event, error: eventError } = await (supabaseAdmin as any)
       .from('events')
       .select('*')
       .eq('id', params.id)
@@ -62,7 +62,7 @@ export async function POST(
     }
 
     // 참가자 추가
-    const { data: participant, error: participantError } = await supabaseAdmin
+    const { data: participant, error: participantError } = await (supabaseAdmin as any)
       .from('event_participants')
       .insert({
         event_id: params.id,
@@ -80,7 +80,7 @@ export async function POST(
     }
 
     // 현재 인원 업데이트
-    await supabaseAdmin.rpc('increment_event_participants', { event_id: params.id });
+    await (supabaseAdmin as any).rpc('increment_event_participants', { event_id: params.id });
 
     return NextResponse.json({
       ...participant,
@@ -114,7 +114,7 @@ export async function DELETE(
     }
 
     // 참가자 찾기
-    const { data: participant, error: findError } = await supabaseAdmin
+    const { data: participant, error: findError } = await (supabaseAdmin as any)
       .from('event_participants')
       .select('id')
       .eq('event_id', params.id)
@@ -143,7 +143,7 @@ export async function DELETE(
     }
 
     // 현재 인원 업데이트
-    await supabaseAdmin.rpc('decrement_event_participants', { event_id: params.id });
+    await (supabaseAdmin as any).rpc('decrement_event_participants', { event_id: params.id });
 
     return NextResponse.json({ success: true });
   } catch (error) {

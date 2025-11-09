@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { ArrowUpRight, ArrowDownLeft, Receipt, Feather, TrendingUp, Filter, Coins, ShoppingBag, Plus, Minus, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
@@ -19,7 +19,7 @@ interface Transaction {
 
 export default function TransactionsPage() {
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'feathers' | 'points' | 'purchases'>('all');

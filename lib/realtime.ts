@@ -53,7 +53,7 @@ export async function sendMessage(
       receiverId,
       content,
       read: false,
-    })
+    } as any)
     .select()
     .single()
 
@@ -85,12 +85,12 @@ export async function getMessages(userId1: string, userId2: string) {
 
 // 메시지 읽음 처리
 export async function markMessagesAsRead(userId: string, otherUserId: string) {
-  const { error } = await supabase
-    .from('messages')
+  const { error } = await ((supabase
+    .from('messages') as any)
     .update({ read: true })
     .eq('receiverId', userId)
     .eq('senderId', otherUserId)
-    .eq('read', false)
+    .eq('read', false))
 
   if (error) {
     console.error('Mark as read error:', error)

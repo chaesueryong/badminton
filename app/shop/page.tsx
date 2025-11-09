@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Check, Feather, Receipt, Coins } from "lucide-react";
 import { toast } from "sonner";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import * as PortOne from "@portone/browser-sdk/v2";
+import Script from "next/script";
 
 interface FeatherProduct {
   id: string;
@@ -25,7 +25,7 @@ interface UserBalance {
 
 export default function ShopPage() {
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [products, setProducts] = useState<FeatherProduct[]>([]);
   const [balance, setBalance] = useState<UserBalance>({ feathers: 0, points: 0 });
   const [loading, setLoading] = useState(true);
@@ -82,23 +82,76 @@ export default function ShopPage() {
       // 2. 결제 ID 생성
       const paymentId = `feather-${session.user.id}-${Date.now()}`;
 
-      // 3. 포트원 결제 요청 (일반결제 채널 사용)
-      const response = await PortOne.requestPayment({
-        storeId: process.env.NEXT_PUBLIC_PORTONE_STORE_ID || 'store-test-id',
-        channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_GENERAL || 'channel-key-general-test',
+      // 3. 포트원 SDK 확인
+      const PortOne = (window as any).PortOne;
+      console.log('[PortOne SDK]', PortOne ? 'Loaded' : 'Not Loaded');
+      if (!PortOne) {
+        throw new Error('PortOne SDK가 로드되지 않았습니다.');
+      }
+
+      // 4. 실제 모바일 기기 감지 (User Agent 기반)
+      const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      console.log('[Device Detection]', {
+        userAgent: navigator.userAgent,
+        isMobileDevice,
+        screenWidth: window.innerWidth,
+        screenHeight: window.innerHeight
+      });
+
+      console.log('[Selected Product]', selectedProduct);
+
+      // 5. 결제 요청 객체 구성
+      const paymentRequest: any = {
+        storeId: process.env.NEXT_PUBLIC_PORTONE_STORE_ID!,
+        channelKey: process.env.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_GENERAL!,
         paymentId: paymentId,
         orderName: selectedProduct.name,
         totalAmount: selectedProduct.price_krw,
         currency: 'CURRENCY_KRW',
-        payMethod: 'CARD'
-      });
+        payMethod: 'CARD',
+      };
 
+      console.log('[Payment Request Base]', paymentRequest);
+
+      // windowType 설정 (실제 모바일 기기에서만 REDIRECTION 사용)
+      if (isMobileDevice) {
+        // 실제 모바일 기기: REDIRECTION 방식
+        paymentRequest.windowType = {
+          pc: 'REDIRECTION',
+          mobile: 'REDIRECTION'
+        };
+        paymentRequest.redirectUrl = `${window.location.origin}/shop/feathers/callback?paymentId=${paymentId}&productId=${selectedProduct.id}`;
+        console.log('[Mobile Device - REDIRECTION]', JSON.stringify(paymentRequest, null, 2));
+      } else {
+        // PC (화면 크기 무관): IFRAME 방식만 가능
+        paymentRequest.windowType = {
+          pc: 'IFRAME',
+          mobile: 'IFRAME'
+        };
+        console.log('[PC - IFRAME]', JSON.stringify(paymentRequest, null, 2));
+      }
+
+      console.log('[About to call requestPayment]');
+      // 6. 포트원 결제 요청
+      const response = await PortOne.requestPayment(paymentRequest);
+
+      console.log('[Payment Response]', response);
+      console.log('[Payment Response Type]', typeof response);
+      console.log('[Payment Response Keys]', response ? Object.keys(response) : 'null');
+
+      // IFRAME 방식인 경우에만 아래 로직 실행
       if (!response || response.code != null) {
-        toast.error(`결제 실패: ${response?.message || '알 수 없는 오류'}`);
+        // 사용자가 취소했거나 결제 실패
+        if (response?.code === 'PORTONE_ERROR' || response?.message?.includes('취소')) {
+          toast.info('결제가 취소되었습니다');
+        } else {
+          toast.error(`결제 실패: ${response?.message || '알 수 없는 오류'}`);
+        }
         return;
       }
 
-      // 4. 결제 완료 처리 API 호출
+      // 7. 결제 완료 처리 API 호출
       const completeResponse = await fetch('/api/shop/feathers/purchase', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -129,8 +182,10 @@ export default function ShopPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 py-8 pb-20 md:pb-8">
-      <div className="max-w-6xl mx-auto px-4">
+    <>
+      <Script src="https://cdn.portone.io/v2/browser-sdk.js" strategy="afterInteractive" />
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 py-8 pb-20 md:pb-8">
+        <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="mb-8 text-center">
           <h1 className="text-3xl md:text-5xl font-bold mb-3 flex items-center justify-center gap-3">
@@ -353,7 +408,8 @@ export default function ShopPage() {
             </div>
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

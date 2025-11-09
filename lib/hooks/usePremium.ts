@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@/lib/supabase/client";
 
 export function usePremium() {
-  const supabase = createClientComponentClient();
+  const supabase = createClient();
   const [isPremium, setIsPremium] = useState(false);
   const [loading, setLoading] = useState(true);
   const [premiumUntil, setPremiumUntil] = useState<string | null>(null);
@@ -29,11 +29,11 @@ export function usePremium() {
         .single();
 
       // Check if user is Premium and Premium is not expired
-      const isPremiumActive = userData?.is_premium && userData?.premium_until && new Date(userData.premium_until) > new Date();
+      const isPremiumActive = (userData as any)?.is_premium && (userData as any)?.premium_until && new Date((userData as any).premium_until) > new Date();
 
       setIsPremium(!!isPremiumActive);
-      if (isPremiumActive && userData?.premium_until) {
-        setPremiumUntil(userData.premium_until);
+      if (isPremiumActive && (userData as any)?.premium_until) {
+        setPremiumUntil((userData as any).premium_until);
       }
     } catch (error) {
       console.error("Failed to check premium status:", error);
