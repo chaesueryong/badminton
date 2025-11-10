@@ -250,6 +250,7 @@ export default function Navbar() {
               ) : (
                 <Link
                   href="/login"
+                  onClick={() => setIsMoreMenuOpen(false)}
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-lg hover-hover:hover:from-blue-700 hover-hover:hover:to-indigo-700 active:scale-95 transition-all shadow-md hover-hover:hover:shadow-lg"
                 >
                   로그인
@@ -320,6 +321,10 @@ export default function Navbar() {
             {!loading && !user && (
               <Link
                 href="/login"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  setIsMoreMenuOpen(false);
+                }}
                 className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-full shadow-md"
               >
                 로그인
