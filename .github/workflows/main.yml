@@ -40,7 +40,9 @@ jobs:
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
             SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
             NEXT_PUBLIC_SITE_URL=https://badmate.club
+            SITE_URL=https://badmate.club
             NEXT_PUBLIC_PORTONE_STORE_ID=${{ secrets.NEXT_PUBLIC_PORTONE_STORE_ID }}
+            PORTONE_API_KEY=${{ secrets.PORTONE_API_KEY }}
             PORTONE_API_SECRET=${{ secrets.PORTONE_API_SECRET }}
             NEXT_PUBLIC_PORTONE_CHANNEL_KEY_GENERAL=${{ secrets.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_GENERAL }}
             NEXT_PUBLIC_PORTONE_CHANNEL_KEY_SUBSCRIPTION=${{ secrets.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_SUBSCRIPTION }}
@@ -77,11 +79,12 @@ jobs:
               -e NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }} \
               -e SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }} \
               -e NEXT_PUBLIC_SITE_URL=https://badmate.club \
+              -e SITE_URL=https://badmate.club \
               -e NEXT_PUBLIC_PORTONE_STORE_ID=${{ secrets.NEXT_PUBLIC_PORTONE_STORE_ID }} \
+              -e PORTONE_API_KEY=${{ secrets.PORTONE_API_KEY }} \
               -e PORTONE_API_SECRET=${{ secrets.PORTONE_API_SECRET }} \
               -e NEXT_PUBLIC_PORTONE_CHANNEL_KEY_GENERAL=${{ secrets.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_GENERAL }} \
               -e NEXT_PUBLIC_PORTONE_CHANNEL_KEY_SUBSCRIPTION=${{ secrets.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_SUBSCRIPTION }} \
-              -e SITE_URL=https://badmate.club \
               --restart unless-stopped \
               ghcr.io/${{ github.repository }}/badminton-prod:latest
 
