@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 
-export default function VerificationCallbackPage() {
+function VerificationCallbackContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('본인인증 결과를 확인하고 있습니다...');
   const router = useRouter();
@@ -106,5 +106,23 @@ export default function VerificationCallbackPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function VerificationCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
+          <div className="text-center">
+            <Loader2 className="w-16 h-16 text-blue-600 mx-auto mb-4 animate-spin" />
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">처리 중</h1>
+            <p className="text-gray-600">본인인증 결과를 확인하고 있습니다...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <VerificationCallbackContent />
+    </Suspense>
   );
 }

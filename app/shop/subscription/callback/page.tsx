@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function SubscriptionCallbackPage() {
+function SubscriptionCallbackContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('결제 결과를 확인하고 있습니다...');
   const router = useRouter();
@@ -148,5 +148,20 @@ export default function SubscriptionCallbackPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SubscriptionCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <Loader2 className="w-16 h-16 text-purple-500 mx-auto mb-4 animate-spin" />
+          <p className="text-gray-600">결제 결과를 확인하고 있습니다...</p>
+        </div>
+      </div>
+    }>
+      <SubscriptionCallbackContent />
+    </Suspense>
   );
 }
