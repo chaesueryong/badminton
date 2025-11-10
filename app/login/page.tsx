@@ -33,10 +33,20 @@ export default function LoginPage() {
     try {
       setError('');
 
+      // 환경 변수가 있으면 사용, 없으면 window.location.origin 사용
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+      const redirectUrl = `${siteUrl}/auth/callback`;
+
+      console.log('[OAuth] Redirect URL:', redirectUrl);
+      console.log('[OAuth] Environment:', {
+        NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+        windowOrigin: window.location.origin
+      });
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: redirectUrl,
         },
       });
 
