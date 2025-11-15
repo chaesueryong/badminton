@@ -33,12 +33,23 @@ export default function LoginPage() {
     try {
       setError('');
 
-      // 환경 변수가 있으면 사용, 없으면 window.location.origin 사용
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
-      const redirectUrl = `${siteUrl}/auth/callback`;
+      // Determine redirect URL based on environment
+      let redirectUrl: string;
+
+      if (process.env.NODE_ENV === 'development') {
+        // Development: use window.location.origin
+        redirectUrl = `${window.location.origin}/auth/callback`;
+      } else if (process.env.NEXT_PUBLIC_SITE_URL) {
+        // Production with environment variable
+        redirectUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`;
+      } else {
+        // Fallback to window.location.origin
+        redirectUrl = `${window.location.origin}/auth/callback`;
+      }
 
       console.log('[OAuth] Redirect URL:', redirectUrl);
       console.log('[OAuth] Environment:', {
+        NODE_ENV: process.env.NODE_ENV,
         NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
         windowOrigin: window.location.origin
       });
