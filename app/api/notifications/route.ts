@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 
 // GET /api/notifications - 사용자 알림 목록 조회
 export async function GET(request: NextRequest) {
+  const supabase = await createClient();
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) {

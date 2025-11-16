@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from '@/lib/supabase/server';
-import { supabaseAdmin } from "@/lib/supabase";
 import { GameSettings } from "@/config/game-settings";
 
 // GET: 모든 모임 조회 (필터링 및 페이지네이션 지원)
@@ -140,7 +139,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 프리미엄 회원 확인
-    const { data: userData } = await (supabaseAdmin as any)
+    const { data: userData } = await supabase
       .from("users")
       .select("is_premium, premium_until")
       .eq("id", user.id)

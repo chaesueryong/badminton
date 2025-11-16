@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { checkAdminAuth } from '@/lib/adminAuth';
 
 // GET /api/admin/posts - 게시글 목록 조회
 export async function GET(request: NextRequest) {
   try {
+    const supabase = await createClient();
     const { user, isAdmin } = await checkAdminAuth();
     if (!isAdmin || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });

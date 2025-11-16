@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClient } from '@/lib/supabase/server';
 
 // POST /api/posts/:id/comments - 댓글 작성
 export async function POST(
@@ -7,6 +7,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
+    const supabase = await createClient();
     const { content, authorId, parentId } = await request.json();
 
     if (!content || !authorId) {
@@ -16,7 +17,7 @@ export async function POST(
       );
     }
 
-    const { data: comment, error } = await (supabaseAdmin as any)
+    const { data: comment, error } = await supabase
       .from('comments')
       .insert({
         content,

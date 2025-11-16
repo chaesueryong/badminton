@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 
 // GET /api/posts/:id - 게시글 상세 조회
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const supabase = await createClient();
   try {
     // 게시글과 작성자 정보 조회
-    const { data: post, error: postError } = await (supabaseAdmin as any)
+    const { data: post, error: postError } = await supabase
       .from('posts')
       .select(`
         *,
@@ -31,7 +32,7 @@ export async function GET(
     }
 
     // 최상위 댓글과 작성자 정보 조회
-    const { data: comments, error: commentsError } = await (supabaseAdmin as any)
+    const { data: comments, error: commentsError } = await supabase
       .from('comments')
       .select(`
         *,
@@ -47,7 +48,7 @@ export async function GET(
       .order('created_at', { ascending: false });
 
     // 답글과 작성자 정보 조회 (parent_id가 있는 댓글들)
-    const { data: replies } = await (supabaseAdmin as any)
+    const { data: replies } = await supabase
       .from('comments')
       .select(`
         *,
@@ -86,7 +87,7 @@ export async function GET(
     })) || [];
 
     // 조회수 증가
-    await (supabaseAdmin as any).rpc('increment_post_views', { post_id: params.id });
+    await supabase.rpc('increment_post_views', { post_id: params.id });
 
     return NextResponse.json({
       ...post,
@@ -113,6 +114,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const supabase = await createClient();
   try {
     const body = await request.json();
 
@@ -123,7 +125,7 @@ export async function PATCH(
     if (body.category) updateData.category = body.category;
     if (body.images) updateData.images = body.images;
 
-    const { data: post, error } = await (supabaseAdmin as any)
+    const { data: post, error } = await supabase
       .from('posts')
       .update(updateData)
       .eq('id', params.id)
@@ -166,8 +168,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const supabase = await createClient();
   try {
-    const { error } = await supabaseAdmin
+    const { error } = await supabase
       .from('posts')
       .delete()
       .eq('id', params.id);

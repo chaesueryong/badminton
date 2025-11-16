@@ -1,7 +1,8 @@
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
+  const supabase = await createClient();
   try {
     // Get user session
     const { data: { session } } = await supabase.auth.getSession();
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get match result
-    const { data: matchResult, error: fetchError } = await (supabase as any)
+    const { data: matchResult, error: fetchError } = await supabase
       .from('match_results')
       .select('*')
       .eq('id', matchResultId)
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
       updateData.player2_confirmed = true;
     }
 
-    const { data: updatedMatch, error: updateError } = await (supabase as any)
+    const { data: updatedMatch, error: updateError } = await supabase
       .from('match_results')
       .update(updateData)
       .eq('id', matchResultId)
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
             ? updatedMatch.player1_id
             : updatedMatch.player2_id;
 
-        await (supabase as any).rpc('award_points', {
+        await supabase.rpc('award_points', {
           p_user_id: winnerId,
           p_action_type: 'win_match',
           p_source_id: matchResultId,

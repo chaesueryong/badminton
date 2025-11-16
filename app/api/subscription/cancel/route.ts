@@ -1,8 +1,9 @@
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
     // Get user session
     const { data: { session } } = await supabase.auth.getSession();
 
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Cancel subscription
-    await (supabase as any).rpc('cancel_subscription', {
+    await supabase.rpc('cancel_subscription', {
       p_subscription_id: subscriptionId,
       p_immediate: immediate,
       p_reason: reason || null,

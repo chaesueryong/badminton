@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClient } from '@/lib/supabase/server';
 
 // GET /api/gyms/:id - 체육관 상세 조회
 export async function GET(
@@ -7,7 +7,8 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { data: gym, error: gymError } = await (supabaseAdmin as any)
+    const supabase = await createClient();
+    const { data: gym, error: gymError } = await supabase
       .from('gyms')
       .select('*')
       .eq('id', params.id)
@@ -21,7 +22,7 @@ export async function GET(
     }
 
     // 리뷰 조회
-    const { data: reviews } = await (supabaseAdmin as any)
+    const { data: reviews } = await supabase
       .from('gym_reviews')
       .select(`
         *,
@@ -37,8 +38,8 @@ export async function GET(
 
     // 이벤트 및 모임 카운트
     const [eventsCount, meetingsCount] = await Promise.all([
-      (supabaseAdmin as any).from('events').select('id', { count: 'exact', head: true }).eq('gym_id', params.id),
-      (supabaseAdmin as any).from('meetings').select('id', { count: 'exact', head: true }).eq('gym_id', params.id),
+      supabase.from('events').select('id', { count: 'exact', head: true }).eq('gym_id', params.id),
+      supabase.from('meetings').select('id', { count: 'exact', head: true }).eq('gym_id', params.id),
     ]);
 
     return NextResponse.json({
@@ -76,6 +77,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    const supabase = await createClient();
     const body = await request.json();
 
     // camelCase를 snake_case로 변환
@@ -88,7 +90,7 @@ export async function PATCH(
     if (body.amenities) updateData.amenities = body.amenities;
     if (body.images) updateData.images = body.images;
 
-    const { data: gym, error } = await (supabaseAdmin as any)
+    const { data: gym, error } = await supabase
       .from('gyms')
       .update(updateData)
       .eq('id', params.id)
@@ -124,7 +126,8 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { error } = await supabaseAdmin
+    const supabase = await createClient();
+    const { error } = await supabase
       .from('gyms')
       .delete()
       .eq('id', params.id);

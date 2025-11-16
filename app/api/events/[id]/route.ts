@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClient } from '@/lib/supabase/server';
 
 // GET /api/events/:id - 일정 상세 조회
 export async function GET(
@@ -7,7 +7,8 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { data: event, error: eventError } = await (supabaseAdmin as any)
+    const supabase = await createClient();
+    const { data: event, error: eventError } = await supabase
       .from('events')
       .select(`
         *,
@@ -32,7 +33,7 @@ export async function GET(
     }
 
     // 참가자 정보 조회
-    const { data: participants } = await (supabaseAdmin as any)
+    const { data: participants } = await supabase
       .from('event_participants')
       .select(`
         *,
@@ -89,6 +90,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    const supabase = await createClient();
     const body = await request.json();
 
     // camelCase를 snake_case로 변환
@@ -108,7 +110,7 @@ export async function PATCH(
     if (body.isRecurring !== undefined) updateData.is_recurring = body.isRecurring;
     if (body.recurringDay) updateData.recurring_day = body.recurringDay;
 
-    const { data: event, error } = await (supabaseAdmin as any)
+    const { data: event, error } = await supabase
       .from('events')
       .update(updateData)
       .eq('id', params.id)
@@ -160,7 +162,8 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { error } = await supabaseAdmin
+    const supabase = await createClient();
+    const { error } = await supabase
       .from('events')
       .delete()
       .eq('id', params.id);

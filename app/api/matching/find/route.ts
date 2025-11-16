@@ -1,8 +1,9 @@
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { findBestMatches, UserProfile } from '@/lib/matching';
 
 export async function GET(request: NextRequest) {
+  const supabase = await createClient();
   try {
     // Get user session
     const { data: { session } } = await supabase.auth.getSession();
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
 
     // Get current user profile
-    const { data: currentUserData, error: userError } = await (supabase as any)
+    const { data: currentUserData, error: userError } = await supabase
       .from('users')
       .select('id, name, nickname, elo_rating, level, region, profile_image, games_played, wins, losses')
       .eq('id', user.id)
@@ -51,7 +52,7 @@ export async function GET(request: NextRequest) {
 
     // Get potential matches
     // Fetch users with similar ELO and in nearby regions
-    const { data: candidates, error: candidatesError } = await (supabase as any)
+    const { data: candidates, error: candidatesError } = await supabase
       .from('users')
       .select('id, name, nickname, elo_rating, level, region, profile_image, games_played, wins, losses')
       .neq('id', user.id)

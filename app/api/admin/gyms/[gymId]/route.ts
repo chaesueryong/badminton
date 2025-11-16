@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { checkAdminAuth, logAdminAction } from '@/lib/adminAuth';
 
 // PATCH /api/admin/gyms/[gymId] - 체육관 승인 상태 변경
@@ -8,6 +8,7 @@ export async function PATCH(
   { params }: { params: { gymId: string } }
 ) {
   try {
+    const supabase = await createClient();
     const { user, isAdmin } = await checkAdminAuth();
     if (!isAdmin || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
@@ -16,7 +17,7 @@ export async function PATCH(
     const { gymId } = params;
     const { approvalStatus } = await request.json();
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('Gym')
       .update({ approval_status: approvalStatus })
       .eq('id', gymId)
@@ -47,6 +48,7 @@ export async function DELETE(
   { params }: { params: { gymId: string } }
 ) {
   try {
+    const supabase = await createClient();
     const { user, isAdmin } = await checkAdminAuth();
     if (!isAdmin || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });

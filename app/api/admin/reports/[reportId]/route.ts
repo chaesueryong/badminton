@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { checkAdminAuth, logAdminAction, createNotification } from '@/lib/adminAuth';
 
 // PATCH /api/admin/reports/[reportId] - 신고 처리
@@ -8,6 +8,7 @@ export async function PATCH(
   { params }: { params: { reportId: string } }
 ) {
   try {
+    const supabase = await createClient();
     const { user, isAdmin } = await checkAdminAuth();
     if (!isAdmin || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
@@ -16,7 +17,7 @@ export async function PATCH(
     const { reportId } = params;
     const { status, resolutionNote } = await request.json();
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('reports')
       .update({
         status,

@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 
 // GET /api/events - 일정 목록 조회
 export async function GET(request: NextRequest) {
+  const supabase = await createClient();
   try {
     const { searchParams } = new URL(request.url);
     const clubId = searchParams.get("clubId");
     const type = searchParams.get("type");
     const date = searchParams.get("date");
 
-    let query = (supabaseAdmin as any)
+    let query = supabase
       .from('events')
       .select(`
         *,
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
     // 각 이벤트의 참가자 수 조회
     const eventsWithCount = await Promise.all(
       (events || []).map(async (event: any) => {
-        const { count } = await (supabaseAdmin as any)
+        const { count } = await supabase
           .from('event_participants')
           .select('id', { count: 'exact', head: true })
           .eq('event_id', event.id);
@@ -98,6 +99,7 @@ export async function GET(request: NextRequest) {
 
 // POST /api/events - 일정 생성
 export async function POST(request: NextRequest) {
+  const supabase = await createClient();
   try {
     const body = await request.json();
     const {
@@ -125,7 +127,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: event, error } = await (supabaseAdmin as any)
+    const { data: event, error } = await supabase
       .from('events')
       .insert({
         club_id: clubId,

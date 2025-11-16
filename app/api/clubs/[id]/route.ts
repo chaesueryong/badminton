@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClient } from '@/lib/supabase/server';
 
 // GET /api/clubs/:id - 클럽 상세 조회
 export async function GET(
@@ -7,7 +7,8 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { data: club, error: clubError } = await (supabaseAdmin as any)
+    const supabase = await createClient();
+    const { data: club, error: clubError } = await supabase
       .from('clubs')
       .select(`
         *,
@@ -30,7 +31,7 @@ export async function GET(
     }
 
     // 멤버 조회
-    const { data: members } = await (supabaseAdmin as any)
+    const { data: members } = await supabase
       .from('club_members')
       .select(`
         *,
@@ -46,7 +47,7 @@ export async function GET(
       .order('created_at', { ascending: true });
 
     // 미래 이벤트 조회
-    const { data: events } = await (supabaseAdmin as any)
+    const { data: events } = await supabase
       .from('events')
       .select('*')
       .eq('club_id', params.id)
@@ -104,6 +105,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    const supabase = await createClient();
     const body = await request.json();
 
     // camelCase를 snake_case로 변환
@@ -118,7 +120,7 @@ export async function PATCH(
     if (body.images) updateData.images = body.images;
     if (body.tags) updateData.tags = body.tags;
 
-    const { data: club, error } = await (supabaseAdmin as any)
+    const { data: club, error } = await supabase
       .from('clubs')
       .update(updateData)
       .eq('id', params.id)
@@ -163,7 +165,8 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { error } = await supabaseAdmin
+    const supabase = await createClient();
+    const { error } = await supabase
       .from('clubs')
       .delete()
       .eq('id', params.id);

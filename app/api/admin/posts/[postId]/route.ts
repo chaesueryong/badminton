@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { checkAdminAuth, logAdminAction, createNotification } from '@/lib/adminAuth';
 
 // PATCH /api/admin/posts/[postId] - 게시글 상태 변경
@@ -8,6 +8,7 @@ export async function PATCH(
   { params }: { params: { postId: string } }
 ) {
   try {
+    const supabase = await createClient();
     const { user, isAdmin } = await checkAdminAuth();
     if (!isAdmin || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
@@ -16,7 +17,7 @@ export async function PATCH(
     const { postId } = params;
     const { status } = await request.json();
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('Post')
       .update({ status })
       .eq('id', postId)
@@ -57,6 +58,7 @@ export async function DELETE(
   { params }: { params: { postId: string } }
 ) {
   try {
+    const supabase = await createClient();
     const { user, isAdmin } = await checkAdminAuth();
     if (!isAdmin || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });

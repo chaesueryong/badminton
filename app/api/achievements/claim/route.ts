@@ -1,7 +1,8 @@
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
+  const supabase = await createClient();
   try {
     // Get user session
     const { data: { session } } = await supabase.auth.getSession();
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Mark as claimed
-    const { error: updateError } = await (supabase as any)
+    const { error: updateError } = await supabase
       .from('user_achievements')
       .update({
         status: 'claimed',
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
     // Award points (already awarded on completion, but you can add bonus here)
     // Award badge if linked
     if ((userAchievement as any).achievement.badge_id) {
-      await (supabase as any).rpc('award_badge', {
+      await supabase.rpc('award_badge', {
         p_user_id: user.id,
         p_badge_id: (userAchievement as any).achievement.badge_id,
       });

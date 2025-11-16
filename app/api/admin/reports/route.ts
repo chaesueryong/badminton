@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { checkAdminAuth } from '@/lib/adminAuth';
 
 // GET /api/admin/reports - 신고 목록 조회
 export async function GET(request: NextRequest) {
   try {
+    const supabase = await createClient();
     const { user, isAdmin } = await checkAdminAuth();
     if (!isAdmin || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
@@ -46,6 +47,7 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/reports - 신고 생성 (사용자용)
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -54,7 +56,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { targetType, targetId, reason, description } = body;
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('reports')
       .insert({
         target_type: targetType,
