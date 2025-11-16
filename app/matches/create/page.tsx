@@ -20,7 +20,6 @@ interface User {
 
 export default function CreateMatchPage() {
   const router = useRouter();
-  const supabase = createClient();
   const [loading, setLoading] = useState(false);
 
   // Form state
@@ -31,6 +30,7 @@ export default function CreateMatchPage() {
   }, []);
 
   const checkAuth = async () => {
+    const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       router.push('/login');

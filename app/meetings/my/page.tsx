@@ -53,7 +53,6 @@ const statusConfig: Record<string, { label: string; variant: "success" | "second
 };
 
 export default function MyMeetingsPage() {
-  const supabase = createClient();
   const router = useRouter();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -65,6 +64,7 @@ export default function MyMeetingsPage() {
   }, []);
 
   const checkAuthAndFetchMeetings = async () => {
+    const supabase = createClient();
     setIsLoading(true);
 
     try {

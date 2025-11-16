@@ -8,12 +8,12 @@ import { toast } from "sonner";
 
 export default function RegisterGymPage() {
   const router = useRouter();
-  const supabase = createClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [region, setRegion] = useState({ province: "", city: "" });
 
   useEffect(() => {
     const checkAuth = async () => {
+      const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         toast.error("로그인이 필요합니다");
@@ -21,7 +21,7 @@ export default function RegisterGymPage() {
       }
     };
     checkAuth();
-  }, [router, supabase]);
+  }, [router]);
 
   const handleRegionChange = (province: string, city: string) => {
     setRegion({ province, city });

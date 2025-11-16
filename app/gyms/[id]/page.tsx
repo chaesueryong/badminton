@@ -36,7 +36,6 @@ interface Review {
 export default function GymDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const supabase = createClient();
   const [gym, setGym] = useState<Gym | null>(null);
   const [loading, setLoading] = useState(true);
   const [showReviewForm, setShowReviewForm] = useState(false);
@@ -48,6 +47,7 @@ export default function GymDetailPage() {
   useEffect(() => {
     const fetchGym = async () => {
       try {
+        const supabase = createClient();
         // 현재 사용자 확인
         const { data: { user } } = await supabase.auth.getUser();
         setCurrentUser(user);

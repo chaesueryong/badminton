@@ -113,8 +113,6 @@ function ProfilePageContent() {
   const [editCity, setEditCity] = useState("");
   const [copySuccess, setCopySuccess] = useState(false);
 
-  const supabase = createClient();
-
   const copyReferralCode = () => {
     if (profile?.referralCode) {
       navigator.clipboard.writeText(profile.referralCode);
@@ -147,6 +145,8 @@ function ProfilePageContent() {
   };
 
   useEffect(() => {
+    const supabase = createClient();
+
     const fetchUserProfile = async () => {
       const { data: { session } } = await supabase.auth.getSession();
 
@@ -243,7 +243,7 @@ function ProfilePageContent() {
     });
 
     return () => subscription.unsubscribe();
-  }, [router, supabase, userId]);
+  }, [router, userId]);
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -377,6 +377,7 @@ function ProfilePageContent() {
     if (!confirm("정말 로그아웃 하시겠습니까?")) return;
 
     try {
+      const supabase = createClient();
       await supabase.auth.signOut();
       router.push("/login");
     } catch (error) {

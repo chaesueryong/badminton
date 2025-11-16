@@ -11,10 +11,12 @@ The project has been **fully migrated** from the legacy `@supabase/supabase-js` 
 ### 1. Client Files Updated
 - ✅ `lib/supabase/client.ts` - Now uses `createBrowserClient` from `@supabase/ssr`
 - ✅ `lib/supabase/server.ts` - Now uses `createServerClient` with proper cookie handling
-- ✅ `components/Navbar.tsx` - Added timeout protection for session fetching
+- ✅ `components/Navbar.tsx` - Removed all debug logs, added mounted flag for proper cleanup
 - ✅ `app/auth/callback/route.ts` - Improved redirect URL handling
 - ✅ `app/login/page.tsx` - Enhanced OAuth redirect logic
-- ✅ `lib/supabase-provider.tsx` - Updated to use client createClient
+- ✅ `lib/supabase-provider.tsx` - Updated to use useMemo for client stability
+- ✅ `lib/storage.ts` - Migrated to new client pattern
+- ✅ `app/page.tsx` - Fixed checkUser function
 
 ### 2. API Routes Migrated (All 51 files)
 
@@ -51,7 +53,14 @@ The project has been **fully migrated** from the legacy `@supabase/supabase-js` 
 - ✅ Admin Gyms (2 files)
 - ✅ Admin Reports (2 files)
 
-### 3. Migration Pattern
+### 3. Page Components Migrated (31+ files)
+
+All page components have been updated to avoid infinite loops by:
+- Moving `createClient()` calls inside useEffect hooks
+- Removing supabase from dependency arrays
+- Creating clients locally in event handlers
+
+### 4. Migration Pattern
 
 #### Old Pattern (DEPRECATED - No longer in use):
 ```typescript
@@ -78,8 +87,15 @@ export async function GET(request: NextRequest) {
 import { createClient } from '@/lib/supabase/client';
 
 export default function MyComponent() {
-  const supabase = createClient();
-  // Use supabase client
+  useEffect(() => {
+    const supabase = createClient();
+    // Use supabase client inside useEffect
+  }, []);
+
+  const handleClick = () => {
+    const supabase = createClient();
+    // Use supabase client in event handlers
+  };
 }
 ```
 
@@ -90,6 +106,7 @@ export default function MyComponent() {
 3. **Type Safety**: Better TypeScript support with @supabase/ssr
 4. **Performance**: Optimized for server-side rendering and static generation
 5. **Security**: Proper separation of server and client operations
+6. **No Infinite Loops**: Proper client lifecycle management prevents re-render issues
 
 ## File Structure
 
@@ -117,13 +134,21 @@ All features have been tested and verified:
 **Problem**: Old pattern used singleton clients that didn't respect request-scoped authentication
 **Solution**: Each request now creates a fresh client with proper cookie context
 
-### Issue 2: Session Timeout
-**Problem**: Navbar would hang indefinitely if session fetch failed
-**Solution**: Added 5-second timeout with proper error handling
+### Issue 2: Infinite Re-render Loops
+**Problem**: Component-level `createClient()` in dependency arrays caused infinite loops
+**Solution**: Moved client creation inside useEffect/handlers, removed from dependencies
 
 ### Issue 3: Production OAuth Redirects
 **Problem**: OAuth callbacks failed in production due to URL mismatch
 **Solution**: Implemented environment-aware redirect URL handling with x-forwarded-host support
+
+### Issue 4: Module Resolution Errors
+**Problem**: Old `lib/supabase.ts` file causing import errors after migration
+**Solution**: Deleted legacy files, cleared .next cache
+
+### Issue 5: Storage Utilities
+**Problem**: Storage functions used singleton supabase instance
+**Solution**: Updated all storage functions to create client locally
 
 ## Additional Improvements from Broomi
 
@@ -131,10 +156,19 @@ All features have been tested and verified:
 - ✅ GitHub Actions: Implemented old Docker image cleanup
 - ✅ Auth Callback: Enhanced environment-based URL routing
 - ✅ Login Page: Improved OAuth redirect logic
-- ✅ Navbar: Added session fetch timeout protection
+- ✅ Navbar: Simplified session management with mounted flag
+- ✅ Supabase Provider: Used useMemo for client stability
+
+## Key Learnings
+
+1. **Always create Supabase client locally** in functions/hooks, never at component level
+2. **Never include recreated objects** (like supabase client) in dependency arrays
+3. **Use mounted flags** to prevent state updates after component unmount
+4. **Clear .next cache** after major structural changes
+5. **Follow broomi patterns** for consistency and reliability
 
 ## References
 
 - [Supabase SSR Documentation](https://supabase.com/docs/guides/auth/server-side/nextjs)
 - [Next.js App Router Guide](https://nextjs.org/docs/app)
-- [Migration Completed](2025-01-16)
+- [Migration Completed](2025-01-17)

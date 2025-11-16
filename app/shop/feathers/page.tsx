@@ -19,7 +19,6 @@ interface FeatherProduct {
 
 export default function FeathersShopPage() {
   const router = useRouter();
-  const supabase = createClient();
   const [products, setProducts] = useState<FeatherProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -32,6 +31,7 @@ export default function FeathersShopPage() {
   }, []);
 
   const checkAuth = async () => {
+    const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       router.push('/login');

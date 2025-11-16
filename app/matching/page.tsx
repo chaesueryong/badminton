@@ -125,7 +125,6 @@ interface User {
 }
 
 export default function MatchingPage() {
-  const supabase = createClient();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -152,6 +151,7 @@ export default function MatchingPage() {
   }, [page]);
 
   const getCurrentUser = async () => {
+    const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
     setCurrentUserId(session?.user?.id || null);
   };

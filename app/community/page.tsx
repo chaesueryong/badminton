@@ -96,7 +96,6 @@ interface Post {
 }
 
 export default function CommunityPage() {
-  const supabase = createClient();
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -140,6 +139,7 @@ export default function CommunityPage() {
 
   useEffect(() => {
     const checkAuth = async () => {
+      const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
       setIsLoggedIn(!!session);
     };

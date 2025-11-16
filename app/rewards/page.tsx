@@ -30,7 +30,6 @@ interface AttendanceInfo {
 
 export default function RewardsPage() {
   const router = useRouter();
-  const supabase = createClient();
   const [rewards, setRewards] = useState<RewardItem[]>([]);
   const [pointsInfo, setPointsInfo] = useState<PointsInfo>({ points: 0, lifetimePoints: 0 });
   const [attendanceInfo, setAttendanceInfo] = useState<AttendanceInfo>({ hasCheckedToday: false, streak: 0, lastCheckDate: null });
@@ -44,6 +43,7 @@ export default function RewardsPage() {
   }, []);
 
   const checkAuth = async () => {
+    const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       router.push('/login');

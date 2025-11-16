@@ -18,10 +18,10 @@ export default function VerificationPage() {
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
-  const supabase = createClient();
 
   useEffect(() => {
     const checkUser = async () => {
+      const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session) {
@@ -46,7 +46,7 @@ export default function VerificationPage() {
     };
 
     checkUser();
-  }, [router, supabase]);
+  }, [router]);
 
   useEffect(() => {
     // PortOne SDK 로드

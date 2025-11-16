@@ -22,7 +22,6 @@ interface Gym {
 }
 
 export default function GymsPage() {
-  const supabase = createClient();
   const [gyms, setGyms] = useState<Gym[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -42,6 +41,7 @@ export default function GymsPage() {
   }, [page]);
 
   const checkAuth = async () => {
+    const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
     setIsLoggedIn(!!session);
   };

@@ -39,7 +39,6 @@ interface Stats {
 }
 
 export default function AdminDashboard() {
-  const supabase = createClient();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
@@ -50,6 +49,7 @@ export default function AdminDashboard() {
 
   const fetchStats = async () => {
     try {
+      const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         setError("로그인이 필요합니다");

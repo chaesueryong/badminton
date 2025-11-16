@@ -22,13 +22,13 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const supabase = createClient();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState<string>("");
 
   useEffect(() => {
     const verifyAdmin = async () => {
+      const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
 
       if (!session?.user) {
@@ -62,7 +62,7 @@ export default function AdminLayout({
     };
 
     verifyAdmin();
-  }, [router, supabase]);
+  }, [router]);
 
   if (loading) {
     return (

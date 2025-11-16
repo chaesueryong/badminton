@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 export default function LoginPage() {
   const [error, setError] = useState('');
   const router = useRouter();
-  const supabase = createClient();
 
   useEffect(() => {
     // URL에서 에러 메시지 확인
@@ -20,6 +19,7 @@ export default function LoginPage() {
 
     // 이미 로그인된 경우 홈으로 리다이렉트
     const checkSession = async () => {
+      const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         const redirect = params.get('redirect') || '/';
@@ -27,7 +27,7 @@ export default function LoginPage() {
       }
     };
     checkSession();
-  }, [router, supabase]);
+  }, [router]);
 
   const handleSocialLogin = async (provider: 'google' | 'kakao') => {
     try {
@@ -54,6 +54,7 @@ export default function LoginPage() {
         windowOrigin: window.location.origin
       });
 
+      const supabase = createClient();
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {

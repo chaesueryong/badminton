@@ -97,10 +97,9 @@ export default function ProfilePage() {
     birthdate: "",
   });
 
-  const supabase = createClient();
-
   useEffect(() => {
     const fetchUserProfile = async () => {
+      const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
 
       // Check if user is logged in
@@ -178,7 +177,7 @@ export default function ProfilePage() {
     });
 
     return () => subscription.unsubscribe();
-  }, [router, supabase, userId]);
+  }, [router, userId]);
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

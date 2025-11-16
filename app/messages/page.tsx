@@ -32,7 +32,6 @@ interface Conversation {
 
 export default function MessagesPage() {
   const router = useRouter();
-  const supabase = createClient();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -67,6 +66,7 @@ export default function MessagesPage() {
 
   useEffect(() => {
     const initUser = async () => {
+      const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
         router.push("/login");
@@ -86,6 +86,7 @@ export default function MessagesPage() {
 
     initUser();
 
+    const supabase = createClient();
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {

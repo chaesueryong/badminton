@@ -11,7 +11,6 @@ import type { SubscriptionPlan } from "@/types/subscription";
 
 export default function SubscriptionPage() {
   const router = useRouter();
-  const supabase = createClient();
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -24,6 +23,7 @@ export default function SubscriptionPage() {
   }, []);
 
   const checkAuth = async () => {
+    const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       router.push('/login');

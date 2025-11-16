@@ -25,7 +25,6 @@ interface UserBalance {
 
 export default function ShopPage() {
   const router = useRouter();
-  const supabase = createClient();
   const [products, setProducts] = useState<FeatherProduct[]>([]);
   const [balance, setBalance] = useState<UserBalance>({ feathers: 0, points: 0 });
   const [loading, setLoading] = useState(true);

@@ -18,7 +18,6 @@ interface Post {
 }
 
 export default function AdminPostsPage() {
-  const supabase = createClient();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");

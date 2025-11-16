@@ -19,7 +19,6 @@ interface Transaction {
 
 export default function TransactionsPage() {
   const router = useRouter();
-  const supabase = createClient();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'feathers' | 'points' | 'purchases'>('all');
@@ -30,6 +29,7 @@ export default function TransactionsPage() {
   }, [filter]);
 
   const checkAuth = async () => {
+    const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       router.push('/login');
