@@ -17,7 +17,6 @@ const levels = [
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const supabase = createClient();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [userEmail, setUserEmail] = useState("");
@@ -27,6 +26,7 @@ export default function OnboardingPage() {
 
   useEffect(() => {
     const getUserData = async () => {
+      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUserEmail(user.email || "");
@@ -35,7 +35,7 @@ export default function OnboardingPage() {
       }
     };
     getUserData();
-  }, [router, supabase]);
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

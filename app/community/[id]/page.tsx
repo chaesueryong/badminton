@@ -34,7 +34,6 @@ interface Post {
 export default function PostDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const supabase = createClient();
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -46,6 +45,7 @@ export default function PostDetailPage() {
   useEffect(() => {
     const fetchPost = async () => {
       try {
+        const supabase = createClient();
         // 현재 사용자 확인
         const { data: { user } } = await supabase.auth.getUser();
         setCurrentUser(user);

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { checkAdminAuth, logAdminAction, createNotification } from '@/lib/adminAuth';
 
 // DELETE /api/admin/meetings/[meetingId] - 모임 삭제
@@ -8,6 +8,7 @@ export async function DELETE(
   { params }: { params: { meetingId: string } }
 ) {
   try {
+    const supabase = await createClient();
     const { user, isAdmin } = await checkAdminAuth();
     if (!isAdmin || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
@@ -16,7 +17,7 @@ export async function DELETE(
     const { meetingId } = params;
 
     // 모임 정보 조회
-    const { data: meeting } = await (supabase as any)
+    const { data: meeting } = await supabase
       .from('Meeting')
       .select('hostId, title')
       .eq('id', meetingId)

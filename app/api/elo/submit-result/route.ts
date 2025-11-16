@@ -1,8 +1,9 @@
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { calculateNewEloRatings, getKFactor } from '@/lib/elo';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
+  const supabase = await createClient();
   try {
     // Get user session
     const { data: { session } } = await supabase.auth.getSession();
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get current ELO ratings and games played for both players
-    const { data: players, error: playersError } = await (supabase as any)
+    const { data: players, error: playersError } = await supabase
       .from('users')
       .select('id, elo_rating, games_played')
       .in('id', [player1Id, player2Id]);
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
     );
 
     // Create match result record
-    const { data: matchResult, error: matchError } = await (supabase as any)
+    const { data: matchResult, error: matchError } = await supabase
       .from('match_results')
       .insert({
         player1_id: player1Id,
@@ -114,7 +115,7 @@ export async function POST(request: NextRequest) {
       if (result !== 'draw') {
         const winnerId = result === 'player1_win' ? player1Id : player2Id;
         // Award points via function
-        await (supabase as any).rpc('award_points', {
+        await supabase.rpc('award_points', {
           p_user_id: winnerId,
           p_action_type: 'win_match',
           p_source_id: matchResult.id,

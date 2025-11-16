@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { checkAdminAuth, logAdminAction, createNotification } from '@/lib/adminAuth';
 
 // PATCH /api/admin/users/[userId] - 사용자 상태 변경
@@ -8,6 +8,7 @@ export async function PATCH(
   { params }: { params: { userId: string } }
 ) {
   try {
+    const supabase = await createClient();
     // 어드민 권한 확인
     const { user, isAdmin } = await checkAdminAuth();
     if (!isAdmin || !user) {
@@ -24,7 +25,7 @@ export async function PATCH(
     if (role) updates.role = role;
 
     // 사용자 상태 업데이트
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('users')
       .update(updates)
       .eq('id', userId)
@@ -75,6 +76,7 @@ export async function DELETE(
   { params }: { params: { userId: string } }
 ) {
   try {
+    const supabase = await createClient();
     // 어드민 권한 확인
     const { user, isAdmin } = await checkAdminAuth();
     if (!isAdmin || !user) {

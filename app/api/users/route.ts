@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 
 // API 라우트는 동적으로 렌더링
 export const dynamic = 'force-dynamic';
 
 // GET /api/users - 사용자 목록 조회 (검색)
 export async function GET(request: NextRequest) {
+  const supabase = await createClient();
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search");
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
       orderColumn = 'points';
     }
 
-    let query = supabaseAdmin
+    let query = supabase
       .from('users')
       .select(`
         id,
@@ -132,7 +133,7 @@ export async function GET(request: NextRequest) {
     const now = new Date().toISOString();
     const usersWithPremium = await Promise.all(
       (users || []).map(async (user: any) => {
-        const { data: premium } = await (supabaseAdmin as any)
+        const { data: premium } = await supabase
           .from("premium_memberships")
           .select("id")
           .eq("user_id", user.id)

@@ -1,7 +1,8 @@
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
+  const supabase = await createClient();
   try {
     // Get user session
     const { data: { session } } = await supabase.auth.getSession();
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0');
 
     // Fetch from users table
-    let query = (supabase as any)
+    let query = supabase
       .from('users')
       .select('id, nickname, profileImage, region, level, rating, totalGames, wins')
       .order('rating', { ascending: false })

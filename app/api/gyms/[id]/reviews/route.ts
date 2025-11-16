@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClient } from '@/lib/supabase/server';
 
 // POST /api/gyms/:id/reviews - 리뷰 작성
 export async function POST(
@@ -7,6 +7,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
+    const supabase = await createClient();
     const { userId, rating, content } = await request.json();
 
     if (!userId || !rating || !content) {
@@ -23,7 +24,7 @@ export async function POST(
       );
     }
 
-    const { data: review, error } = await (supabaseAdmin as any)
+    const { data: review, error } = await supabase
       .from('gym_reviews')
       .insert({
         gym_id: params.id,
@@ -51,7 +52,7 @@ export async function POST(
     }
 
     // 체육관 평점 업데이트
-    const { data: allReviews } = await (supabaseAdmin as any)
+    const { data: allReviews } = await supabase
       .from('gym_reviews')
       .select('rating')
       .eq('gym_id', params.id);
@@ -60,7 +61,7 @@ export async function POST(
       const totalRating = allReviews.reduce((sum: number, r: any) => sum + r.rating, 0);
       const avgRating = totalRating / allReviews.length;
 
-      await (supabaseAdmin as any)
+      await supabase
         .from('gyms')
         .update({
           rating: avgRating,

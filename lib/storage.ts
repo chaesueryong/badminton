@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { createClient } from './supabase/client'
 
 export const STORAGE_BUCKETS = {
   PROFILES: 'profiles',
@@ -13,6 +13,7 @@ export async function uploadImage(
   path?: string
 ): Promise<{ url: string; path: string } | null> {
   try {
+    const supabase = createClient()
     const fileExt = file.name.split('.').pop()
     const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`
     const filePath = path ? `${path}/${fileName}` : fileName
@@ -49,6 +50,7 @@ export async function deleteImage(
   path: string
 ): Promise<boolean> {
   try {
+    const supabase = createClient()
     const { error } = await supabase.storage.from(bucket).remove([path])
 
     if (error) {
@@ -65,6 +67,7 @@ export async function deleteImage(
 
 // 이미지 URL 가져오기
 export function getImageUrl(bucket: string, path: string): string {
+  const supabase = createClient()
   const { data } = supabase.storage.from(bucket).getPublicUrl(path)
   return data.publicUrl
 }

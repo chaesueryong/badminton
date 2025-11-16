@@ -84,7 +84,6 @@ const formatLevelRange = (levelMin: string | null, levelMax: string | null) => {
 export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [popularMeetings, setPopularMeetings] = useState<Meeting[]>([]);
-  const supabase = createClient();
 
   const fetchPopularMeetings = useCallback(async () => {
     try {
@@ -100,6 +99,7 @@ export default function Home() {
 
   useEffect(() => {
     const checkUser = async () => {
+      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       setIsLoggedIn(!!user);
     };

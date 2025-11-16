@@ -48,7 +48,6 @@ const levelLabels: Record<string, string> = {
 export default function ClubDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const supabase = createClient();
   const [user, setUser] = useState<User | null>(null);
   const [club, setClub] = useState<Club | null>(null);
   const [members, setMembers] = useState<ClubMember[]>([]);
@@ -61,6 +60,7 @@ export default function ClubDetailPage() {
   }, [params.id]);
 
   const loadData = async () => {
+    const supabase = createClient();
     setLoading(true);
 
     // 사용자 세션 확인

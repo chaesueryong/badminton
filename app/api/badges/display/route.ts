@@ -1,7 +1,8 @@
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
+  const supabase = await createClient();
   try {
     // Get user session
     const { data: { session } } = await supabase.auth.getSession();
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update badge display setting
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from('user_badges')
       .update({ is_displayed: isDisplayed })
       .eq('user_id', user.id)

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import { GameSettings } from "@/config/game-settings";
 
 // GET /api/messages - 메시지 목록 조회
 export async function GET(request: NextRequest) {
+  const supabase = await createClient();
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
 
     if (otherUserId) {
       // 특정 사용자와의 대화 조회
-      const { data: messages, error } = await (supabaseAdmin as any)
+      const { data: messages, error } = await supabase
         .from('messages')
         .select(`
           *,
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
       }
 
       // 읽지 않은 메시지 읽음 처리
-      await (supabaseAdmin as any)
+      await supabase
         .from('messages')
         .update({ read: true })
         .eq('sender_id', otherUserId)
@@ -73,7 +74,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(formattedMessages);
     } else {
       // 대화 목록 조회 (마지막 메시지 기준)
-      const { data: messages, error } = await supabaseAdmin
+      const { data: messages, error } = await supabase
         .from('messages')
         .select(`
           *,
@@ -144,6 +145,7 @@ export async function GET(request: NextRequest) {
 
 // POST /api/messages - 메시지 전송
 export async function POST(request: NextRequest) {
+  const supabase = await createClient();
   try {
     const { senderId, receiverId, content } = await request.json();
 
@@ -155,7 +157,7 @@ export async function POST(request: NextRequest) {
     }
 
     // VIP 회원 확인 (VIP 회원은 무제한 메시지)
-    const { data: senderData, error: senderCheckError } = await (supabaseAdmin as any)
+    const { data: senderData, error: senderCheckError } = await supabase
       .from('users')
       .select('points, is_vip, vip_until')
       .eq('id', senderId)
@@ -182,7 +184,7 @@ export async function POST(request: NextRequest) {
       }
 
       // 포인트 차감
-      const { error: pointError } = await (supabaseAdmin as any)
+      const { error: pointError } = await supabase
         .from('users')
         .update({ points: senderData.points - POINT_COST })
         .eq('id', senderId);
@@ -193,7 +195,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 메시지 전송
-    const { data: message, error } = await (supabaseAdmin as any)
+    const { data: message, error } = await supabase
       .from('messages')
       .insert({
         sender_id: senderId,
@@ -228,7 +230,7 @@ export async function POST(request: NextRequest) {
 
     // 포인트 거래 내역 기록 (VIP가 아닌 경우에만)
     if (!isVIP && POINT_COST > 0) {
-      await (supabaseAdmin as any)
+      await supabase
         .from('point_transactions')
         .insert({
           userId: senderId,

@@ -1,7 +1,8 @@
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
+  const supabase = await createClient();
   try {
     // Get user session
     const { data: { session } } = await supabase.auth.getSession();
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayDate = yesterday.toISOString().split('T')[0];
 
-    const { data: yesterdayCheckin } = await (supabase as any)
+    const { data: yesterdayCheckin } = await supabase
       .from('daily_checkins')
       .select('current_streak, longest_streak')
       .eq('user_id', user.id)
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
       longestStreak = Math.max(currentStreak, yesterdayCheckin.longest_streak);
     } else {
       // Check if there's any previous checkin to get longest_streak
-      const { data: previousCheckin } = await (supabase as any)
+      const { data: previousCheckin } = await supabase
         .from('daily_checkins')
         .select('longest_streak')
         .eq('user_id', user.id)
@@ -68,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create checkin record
-    const { data: checkin, error } = await (supabase as any)
+    const { data: checkin, error } = await supabase
       .from('daily_checkins')
       .insert({
         user_id: user.id,
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Award points for daily checkin
-    await (supabase as any).rpc('award_points', {
+    await supabase.rpc('award_points', {
       p_user_id: user.id,
       p_action_type: 'daily_checkin',
       p_source_id: checkin.id,
@@ -93,13 +94,13 @@ export async function POST(request: NextRequest) {
 
     // Check for streak milestones and award bonus points
     if (currentStreak === 7) {
-      await (supabase as any).rpc('award_points', {
+      await supabase.rpc('award_points', {
         p_user_id: user.id,
         p_action_type: 'streak_7_days',
         p_source_id: checkin.id,
       });
     } else if (currentStreak === 30) {
-      await (supabase as any).rpc('award_points', {
+      await supabase.rpc('award_points', {
         p_user_id: user.id,
         p_action_type: 'streak_30_days',
         p_source_id: checkin.id,
@@ -120,6 +121,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  const supabase = await createClient();
   try {
     // Get user session
     const { data: { session } } = await supabase.auth.getSession();
@@ -134,7 +136,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get latest checkin
-    const { data: checkin, error } = await (supabase as any)
+    const { data: checkin, error } = await supabase
       .from('daily_checkins')
       .select('*')
       .eq('user_id', user.id)

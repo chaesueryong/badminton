@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { checkAdminAuth, logAdminAction, createNotification } from '@/lib/adminAuth';
 
 // GET /api/admin/users - 사용자 목록 조회
 export async function GET(request: NextRequest) {
   try {
+    const supabase = await createClient();
     // 어드민 권한 확인
     const { user, isAdmin } = await checkAdminAuth();
     if (!isAdmin || !user) {

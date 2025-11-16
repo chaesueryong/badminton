@@ -1,8 +1,9 @@
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
     // Get user session
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user;
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get reward details
-    const { data: reward, error: rewardError } = await (supabase as any)
+    const { data: reward, error: rewardError } = await supabase
       .from('rewards_catalog')
       .select('*')
       .eq('id', rewardId)
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user's current points
-    const { data: userData, error: userError } = await (supabase as any)
+    const { data: userData, error: userError } = await supabase
       .from('users')
       .select('points')
       .eq('id', user.id)
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Spend points using the function
-    const { data: spendResult, error: spendError } = await (supabase as any).rpc('spend_points', {
+    const { data: spendResult, error: spendError } = await supabase.rpc('spend_points', {
       p_user_id: user.id,
       p_amount: reward.points_cost,
       p_source_type: 'reward_redemption',
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create redemption record
-    const { data: redemption, error: redemptionError } = await (supabase as any)
+    const { data: redemption, error: redemptionError } = await supabase
       .from('rewards_redemptions')
       .insert({
         user_id: user.id,
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
 
     // Update stock if applicable
     if (reward.stock !== null) {
-      await (supabase as any)
+      await supabase
         .from('rewards_catalog')
         .update({ stock: reward.stock - 1 })
         .eq('id', rewardId);

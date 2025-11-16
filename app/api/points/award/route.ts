@@ -1,8 +1,9 @@
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
     // Get user session
     const { data: { session } } = await supabase.auth.getSession();
 
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Call the award_points function
-    const { data, error } = await (supabase as any).rpc('award_points', {
+    const { data, error } = await supabase.rpc('award_points', {
       p_user_id: user.id,
       p_action_type: actionType,
       p_source_id: sourceId || null,

@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 
 // GET /api/users/:id - 사용자 프로필 조회
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const supabase = await createClient();
   try {
-    const { data: user, error } = await (supabaseAdmin as any)
+    const { data: user, error } = await supabase
       .from('users')
       .select(`
         id,
@@ -41,11 +42,11 @@ export async function GET(
 
     // 관련 카운트 조회
     const [clubsCount, membershipsCount, eventsCount, meetingsCount, postsCount] = await Promise.all([
-      (supabaseAdmin as any).from('clubs').select('id', { count: 'exact', head: true }).eq('host_id', params.id),
-      (supabaseAdmin as any).from('club_members').select('id', { count: 'exact', head: true }).eq('user_id', params.id),
-      (supabaseAdmin as any).from('events').select('id', { count: 'exact', head: true }).eq('host_id', params.id),
-      (supabaseAdmin as any).from('meetings').select('id', { count: 'exact', head: true }).eq('host_id', params.id),
-      (supabaseAdmin as any).from('posts').select('id', { count: 'exact', head: true }).eq('author_id', params.id),
+      supabase.from('clubs').select('id', { count: 'exact', head: true }).eq('host_id', params.id),
+      supabase.from('club_members').select('id', { count: 'exact', head: true }).eq('user_id', params.id),
+      supabase.from('events').select('id', { count: 'exact', head: true }).eq('host_id', params.id),
+      supabase.from('meetings').select('id', { count: 'exact', head: true }).eq('host_id', params.id),
+      supabase.from('posts').select('id', { count: 'exact', head: true }).eq('author_id', params.id),
     ]);
 
     return NextResponse.json({
@@ -72,6 +73,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const supabase = await createClient();
   try {
     const body = await request.json();
     console.log("API PATCH - Received data:", body);
@@ -117,7 +119,7 @@ export async function PATCH(
 
     console.log("API PATCH - Data to update:", snakeCaseData);
 
-    const { data: user, error } = await (supabaseAdmin as any)
+    const { data: user, error } = await supabase
       .from('users')
       .update(snakeCaseData)
       .eq('id', params.id)

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 
 // PATCH /api/notifications/[notificationId] - 알림 읽음 처리
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { notificationId: string } }
 ) {
+  const supabase = await createClient();
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) {
@@ -14,7 +15,7 @@ export async function PATCH(
 
     const { notificationId } = params;
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('notifications')
       .update({ read: true, read_at: new Date().toISOString() })
       .eq('id', notificationId)
@@ -37,6 +38,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { notificationId: string } }
 ) {
+  const supabase = await createClient();
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) {

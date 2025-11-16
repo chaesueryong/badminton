@@ -18,7 +18,6 @@ interface Gym {
 }
 
 export default function AdminGymsPage() {
-  const supabase = createClient();
   const [gyms, setGyms] = useState<Gym[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");

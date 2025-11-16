@@ -63,7 +63,6 @@ const formatLevelRange = (levelMin: string | null, levelMax: string | null) => {
 };
 
 export default function MeetingsPage() {
-  const supabase = createClient();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -79,6 +78,7 @@ export default function MeetingsPage() {
 
   useEffect(() => {
     const checkAuth = async () => {
+      const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
       setIsLoggedIn(!!session);
     };

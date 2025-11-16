@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClient } from '@/lib/supabase/server';
 
 // PATCH /api/comments/:id - 댓글 수정
 export async function PATCH(
@@ -7,6 +7,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    const supabase = await createClient();
     const { content } = await request.json();
 
     if (!content) {
@@ -16,7 +17,7 @@ export async function PATCH(
       );
     }
 
-    const { data: comment, error } = await (supabaseAdmin as any)
+    const { data: comment, error } = await supabase
       .from('comments')
       .update({ content })
       .eq('id', params.id)
@@ -65,7 +66,8 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const { error } = await supabaseAdmin
+    const supabase = await createClient();
+    const { error } = await supabase
       .from('comments')
       .delete()
       .eq('id', params.id);

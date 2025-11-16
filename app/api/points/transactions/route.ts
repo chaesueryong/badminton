@@ -1,7 +1,8 @@
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
+  const supabase = await createClient();
   try {
     // Get user session
     const { data: { session } } = await supabase.auth.getSession();
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     // Users can only view their own transactions unless they're admin
     if (userId !== user.id) {
-      const { data: userData } = await (supabase as any)
+      const { data: userData } = await supabase
         .from('users')
         .select('role')
         .eq('id', user.id)

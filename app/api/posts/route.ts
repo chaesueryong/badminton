@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
 import { createClient } from '@/lib/supabase/server';
 
 // GET /api/posts - 게시글 목록 조회
 export async function GET(request: NextRequest) {
+  const supabase = await createClient();
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20");
 
-    let query = (supabaseAdmin as any)
+    let query = supabase
       .from('posts')
       .select(`
         *,
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     // 각 게시글의 댓글 수 조회
     const postsWithCount = await Promise.all(
       (posts || []).map(async (post: any) => {
-        const { count } = await (supabaseAdmin as any)
+        const { count } = await supabase
           .from('comments')
           .select('id', { count: 'exact', head: true })
           .eq('postId', post.id);
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: post, error } = await (supabaseAdmin as any)
+    const { data: post, error } = await supabase
       .from('posts')
       .insert({
         title,

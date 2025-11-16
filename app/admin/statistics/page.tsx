@@ -38,7 +38,6 @@ interface Stats {
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'];
 
 export default function StatisticsPage() {
-  const supabase = createClient();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -48,6 +47,7 @@ export default function StatisticsPage() {
 
   const fetchStats = async () => {
     try {
+      const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 

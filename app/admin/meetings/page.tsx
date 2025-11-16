@@ -18,7 +18,6 @@ interface Meeting {
 }
 
 export default function AdminMeetingsPage() {
-  const supabase = createClient();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");

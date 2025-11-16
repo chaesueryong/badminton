@@ -1,8 +1,9 @@
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
     // Get user session
     const { data: { session } } = await supabase.auth.getSession();
 
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get plan details
-    const { data: plan, error: planError } = await (supabase as any)
+    const { data: plan, error: planError } = await supabase
       .from('subscription_plans')
       .select('*')
       .eq('id', planId)
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
     // Apply coupon if provided
     let discountApplied = 0;
     if (couponCode) {
-      const { data: coupon } = await (supabase as any)
+      const { data: coupon } = await supabase
         .from('subscription_coupons')
         .select('*')
         .eq('code', couponCode)
@@ -109,7 +110,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create subscription
-    const { data: subscription, error: subError } = await (supabase as any)
+    const { data: subscription, error: subError } = await supabase
       .from('subscriptions')
       .insert({
         user_id: user.id,
@@ -133,14 +134,14 @@ export async function POST(request: NextRequest) {
 
     // Record coupon redemption if used
     if (couponCode && discountApplied > 0) {
-      const { data: coupon } = await (supabase as any)
+      const { data: coupon } = await supabase
         .from('subscription_coupons')
         .select('id')
         .eq('code', couponCode)
         .single();
 
       if (coupon) {
-        await (supabase as any).from('coupon_redemptions').insert({
+        await supabase.from('coupon_redemptions').insert({
           coupon_id: coupon.id,
           user_id: user.id,
           subscription_id: subscription.id,
@@ -148,7 +149,7 @@ export async function POST(request: NextRequest) {
         });
 
         // Update redemption count
-        await (supabase as any).rpc('increment', {
+        await supabase.rpc('increment', {
           table_name: 'subscription_coupons',
           row_id: coupon.id,
           column_name: 'current_redemptions',
@@ -157,7 +158,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Activate subscription
-    await (supabase as any).rpc('activate_subscription', {
+    await supabase.rpc('activate_subscription', {
       p_subscription_id: subscription.id,
     });
 
