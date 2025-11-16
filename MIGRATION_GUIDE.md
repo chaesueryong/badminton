@@ -6,7 +6,7 @@ The project has been migrated from the legacy `@supabase/supabase-js` to the mod
 ## Changes Made
 
 ### 1. Client Files Updated
-- ✅ `lib/supabase/client.ts` - Now uses `createBrowserClient` from `@supabase/ssr`
+- ✅ `lib/supabase/client.ts`  - Now uses `createBrowserClient` from `@supabase/ssr`
 - ✅ `lib/supabase/server.ts` - Now uses `createServerClient` with proper cookie handling
 - ✅ `components/Navbar.tsx` - Added timeout protection for session fetching
 - ✅ `app/auth/callback/route.ts` - Improved redirect URL handling
