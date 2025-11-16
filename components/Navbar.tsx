@@ -86,18 +86,34 @@ export default function Navbar() {
 
     // 초기 세션 가져오기
     console.log('[Navbar] 세션 가져오기 시작');
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('[Navbar] 세션 결과:', session ? '있음' : '없음', session?.user?.id);
-      setUser(session?.user ?? null);
+
+    // Timeout for session fetch
+    const sessionTimeout = setTimeout(() => {
+      console.warn('[Navbar] 세션 가져오기 타임아웃 (5초)');
       setLoading(false);
-      if (session?.user) {
-        console.log('[Navbar] 사용자 데이터 가져오기 시작:', session.user.id);
-        fetchUserData(session.user.id);
-      }
-    }).catch(err => {
-      console.error('세션 조회 실패:', err);
-      setLoading(false);
-    });
+    }, 5000);
+
+    supabase.auth.getSession()
+      .then(({ data: { session }, error }) => {
+        clearTimeout(sessionTimeout);
+        if (error) {
+          console.error('[Navbar] 세션 조회 에러:', error);
+          setLoading(false);
+          return;
+        }
+        console.log('[Navbar] 세션 결과:', session ? '있음' : '없음', session?.user?.id);
+        setUser(session?.user ?? null);
+        setLoading(false);
+        if (session?.user) {
+          console.log('[Navbar] 사용자 데이터 가져오기 시작:', session.user.id);
+          fetchUserData(session.user.id);
+        }
+      })
+      .catch(err => {
+        clearTimeout(sessionTimeout);
+        console.error('[Navbar] 세션 조회 실패:', err);
+        setLoading(false);
+      });
 
     // 세션 변경 감지
     const {
@@ -111,7 +127,10 @@ export default function Navbar() {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(sessionTimeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const isActive = (path: string) => pathname === path;
