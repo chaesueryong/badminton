@@ -98,8 +98,9 @@ export default function ProfilePage() {
   });
 
   useEffect(() => {
+    const supabase = createClient();
+
     const fetchUserProfile = async () => {
-      const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
 
       // Check if user is logged in
@@ -205,6 +206,7 @@ export default function ProfilePage() {
       console.log("Received updated profile:", updatedProfile);
 
       // Supabase에서 최신 데이터 다시 가져오기
+      const supabase = createClient();
       const { data: refreshedProfile, error: fetchError } = await supabase
         .from('users')
         .select('*')

@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { createClient } from './supabase/server';
 import { User } from '@supabase/supabase-js';
 
 /**
@@ -6,6 +6,7 @@ import { User } from '@supabase/supabase-js';
  */
 export async function isAdmin(userId: string): Promise<boolean> {
   try {
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from('user_roles')
       .select('role_id, roles(name)')
@@ -30,10 +31,7 @@ export async function isAdmin(userId: string): Promise<boolean> {
  */
 export async function checkAdminAuth(request?: Request): Promise<{ user: User | null; isAdmin: boolean }> {
   try {
-    // Route Handler에서 호출된 경우, cookies를 직접 가져올 수 없으므로
-    // 클라이언트가 전달한 세션을 사용하거나 auth helper 사용
-    // 여기서는 supabaseAdmin을 import해서 사용하도록 변경이 필요
-    // 하지만 현재는 단순하게 supabase client 사용
+    const supabase = await createClient();
     const { data: { session } } = await supabase.auth.getSession();
 
     if (!session?.user) {
@@ -61,6 +59,7 @@ export async function logAdminAction(params: {
   ipAddress?: string;
 }): Promise<boolean> {
   try {
+    const supabase = await createClient();
     const { error } = await supabase
       .from('admin_logs')
       .insert({
@@ -95,6 +94,7 @@ export async function createNotification(params: {
   link?: string;
 }): Promise<boolean> {
   try {
+    const supabase = await createClient();
     const { error } = await supabase
       .from('notifications')
       .insert({
@@ -122,6 +122,8 @@ export async function createNotification(params: {
  */
 export async function requireAdmin(request: Request): Promise<{ authorized: boolean; userId?: string; error?: string }> {
   try {
+    const supabase = await createClient();
+
     // Authorization 헤더에서 토큰 추출
     const authHeader = request.headers.get('authorization');
     if (!authHeader) {

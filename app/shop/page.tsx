@@ -72,6 +72,7 @@ export default function ShopPage() {
       setProcessing(true);
 
       // 1. 사용자 인증 확인
+      const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         router.push('/login');

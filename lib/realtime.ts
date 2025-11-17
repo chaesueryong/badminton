@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { createClient } from './supabase/client'
 import { RealtimeChannel } from '@supabase/supabase-js'
 
 // 메시지 타입
@@ -16,6 +16,7 @@ export function subscribeToMessages(
   userId: string,
   onMessage: (message: Message) => void
 ): RealtimeChannel {
+  const supabase = createClient()
   const channel = supabase
     .channel(`messages:${userId}`)
     .on(
@@ -37,6 +38,7 @@ export function subscribeToMessages(
 
 // 구독 해제
 export function unsubscribeFromMessages(channel: RealtimeChannel) {
+  const supabase = createClient()
   supabase.removeChannel(channel)
 }
 
@@ -46,6 +48,7 @@ export async function sendMessage(
   receiverId: string,
   content: string
 ) {
+  const supabase = createClient()
   const { data, error } = await supabase
     .from('messages')
     .insert({
@@ -67,6 +70,7 @@ export async function sendMessage(
 
 // 메시지 목록 가져오기
 export async function getMessages(userId1: string, userId2: string) {
+  const supabase = createClient()
   const { data, error } = await supabase
     .from('messages')
     .select('*')
@@ -85,6 +89,7 @@ export async function getMessages(userId1: string, userId2: string) {
 
 // 메시지 읽음 처리
 export async function markMessagesAsRead(userId: string, otherUserId: string) {
+  const supabase = createClient()
   const { error } = await ((supabase
     .from('messages') as any)
     .update({ read: true })
@@ -102,6 +107,7 @@ export async function markMessagesAsRead(userId: string, otherUserId: string) {
 
 // 읽지 않은 메시지 수
 export async function getUnreadCount(userId: string) {
+  const supabase = createClient()
   const { count, error } = await supabase
     .from('messages')
     .select('*', { count: 'exact', head: true })
