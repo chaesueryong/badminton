@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from '@/lib/supabase/server';
-import { supabaseAdmin } from "@/lib/supabase";
 
 // POST /api/meetings/:id/join - 모임 참가
 export async function POST(

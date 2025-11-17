@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { createClient } from './supabase/client'
 
 export interface Notification {
   id: string
@@ -19,6 +19,7 @@ export async function createNotification(
   message: string,
   link?: string
 ) {
+  const supabase = createClient()
   const { data, error } = await supabase
     .from('notifications')
     .insert({
@@ -51,6 +52,7 @@ export async function createNotification(
 
 // 알림 목록 가져오기
 export async function getNotifications(userId: string, limit = 20) {
+  const supabase = createClient()
   const { data, error } = await supabase
     .from('notifications')
     .select('*')
@@ -68,6 +70,7 @@ export async function getNotifications(userId: string, limit = 20) {
 
 // 읽지 않은 알림 수
 export async function getUnreadNotificationCount(userId: string) {
+  const supabase = createClient()
   const { count, error } = await supabase
     .from('notifications')
     .select('*', { count: 'exact', head: true })
@@ -84,6 +87,7 @@ export async function getUnreadNotificationCount(userId: string) {
 
 // 알림 읽음 처리
 export async function markNotificationAsRead(notificationId: string) {
+  const supabase = createClient()
   const { error } = await ((supabase
     .from('notifications') as any)
     .update({ read: true })
@@ -99,6 +103,7 @@ export async function markNotificationAsRead(notificationId: string) {
 
 // 모든 알림 읽음 처리
 export async function markAllNotificationsAsRead(userId: string) {
+  const supabase = createClient()
   const { error } = await ((supabase
     .from('notifications') as any)
     .update({ read: true })
@@ -139,6 +144,7 @@ export async function sendEmailNotification(
   html: string
 ) {
   try {
+    const supabase = createClient()
     const { data, error } = await supabase.functions.invoke('send-email', {
       body: { to, subject, html },
     })
