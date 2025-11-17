@@ -1,14 +1,12 @@
-name: Production Deploy
+name: Development Deploy
 
 on:
-  pull_request:
-    types: [closed]
-    branches: [ "main" ]
+  push:
+    branches: [ "develop" ]
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true && (github.event.pull_request.head.ref == 'develop' || startsWith(github.event.pull_request.head.ref, 'hotfix/'))
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -36,17 +34,16 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          target: production
+          target: development
           push: true
-          tags: ghcr.io/${{ steps.repo_owner.outputs.lowercase }}/badminton/badminton-prod:latest
+          tags: ghcr.io/${{ steps.repo_owner.outputs.lowercase }}/badminton/badminton-dev:latest
           build-args: |
             NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
             SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-            NEXT_PUBLIC_SITE_URL=https://badmate.club
-            SITE_URL=https://badmate.club
+            NEXT_PUBLIC_SITE_URL=https://dev.badmate.club
+            SITE_URL=https://dev.badmate.club
             NEXT_PUBLIC_PORTONE_STORE_ID=${{ secrets.NEXT_PUBLIC_PORTONE_STORE_ID }}
-            PORTONE_API_KEY=${{ secrets.PORTONE_API_KEY }}
             PORTONE_API_SECRET=${{ secrets.PORTONE_API_SECRET }}
             NEXT_PUBLIC_PORTONE_CHANNEL_KEY_GENERAL=${{ secrets.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_GENERAL }}
             NEXT_PUBLIC_PORTONE_CHANNEL_KEY_SUBSCRIPTION=${{ secrets.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_SUBSCRIPTION }}
@@ -54,50 +51,54 @@ jobs:
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
-    environment: production
+    environment: development
     steps:
       - name: Set lowercase repository owner
         id: repo_owner
         run: echo "lowercase=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_OUTPUT
 
-      - name: Deploy to Production
+      - name: Deploy to Development
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.LIGHTSAIL_HOST }}
           username: ec2-user
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
           script: |
-            # 기존 컨테이너 정지 및 제거 (이미지 삭제 전에 필요)
-            docker stop badminton-prod || true
-            docker rm badminton-prod || true
+            # 기존 컨테이너 정지 및 제거
+            docker stop badminton-dev || true
+            docker rm badminton-dev || true
 
             # 기존 이미지 삭제 (디스크 공간 확보)
-            docker rmi ghcr.io/${{ steps.repo_owner.outputs.lowercase }}/badminton/badminton-prod:latest || true
+            docker rmi ghcr.io/${{ steps.repo_owner.outputs.lowercase }}/badminton/badminton-dev:latest || true
 
-            # 사용하지 않는 모든 Docker 리소스 정리
+            # 사용하지 않는 Docker 리소스 정리 (개발환경은 좀 더 적극적으로)
             docker system prune -af --volumes || true
 
-            # 로그인 처리 (GitHub Container Registry)
+            # 로그인 처리
             echo "${{ secrets.GH_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             # 새 이미지 pull
-            docker pull ghcr.io/${{ steps.repo_owner.outputs.lowercase }}/badminton/badminton-prod:latest
+            docker pull ghcr.io/${{ steps.repo_owner.outputs.lowercase }}/badminton/badminton-dev:latest
 
-            # 새 컨테이너 실행
-            docker run -d --name badminton-prod \
-              -p 3030:3000 \
+            # 새 컨테이너 실행 (개발 환경은 다른 포트 사용)
+            docker run -d --name badminton-dev \
+              -p 3031:3000 \
+              -e NODE_ENV=development \
               -e NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }} \
               -e NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }} \
               -e SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }} \
-              -e NEXT_PUBLIC_SITE_URL=https://badmate.club \
-              -e SITE_URL=https://badmate.club \
+              -e NEXT_PUBLIC_SITE_URL=https://dev.badmate.club \
+              -e SITE_URL=https://dev.badmate.club \
               -e NEXT_PUBLIC_PORTONE_STORE_ID=${{ secrets.NEXT_PUBLIC_PORTONE_STORE_ID }} \
-              -e PORTONE_API_KEY=${{ secrets.PORTONE_API_KEY }} \
               -e PORTONE_API_SECRET=${{ secrets.PORTONE_API_SECRET }} \
               -e NEXT_PUBLIC_PORTONE_CHANNEL_KEY_GENERAL=${{ secrets.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_GENERAL }} \
               -e NEXT_PUBLIC_PORTONE_CHANNEL_KEY_SUBSCRIPTION=${{ secrets.NEXT_PUBLIC_PORTONE_CHANNEL_KEY_SUBSCRIPTION }} \
               --restart unless-stopped \
-              ghcr.io/${{ steps.repo_owner.outputs.lowercase }}/badminton/badminton-prod:latest
+              ghcr.io/${{ steps.repo_owner.outputs.lowercase }}/badminton/badminton-dev:latest
 
             # 컨테이너 상태 확인
-            docker ps | grep badminton-prod
+            docker ps | grep badminton-dev
+
+            # 초기 로그 출력 (디버깅용)
+            echo "=== 컨테이너 로그 ==="
+            docker logs --tail 50 badminton-dev
