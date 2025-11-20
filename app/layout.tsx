@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import SessionProvider from "@/components/SessionProvider";
 import JsonLd from "@/components/JsonLd";
 import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 export const metadata: Metadata = {
   title: {
@@ -125,14 +126,16 @@ export default function RootLayout({
         <JsonLd data={websiteSchema} />
       </head>
       <body className="antialiased flex flex-col min-h-screen">
-        <SessionProvider>
-          <Navbar />
-          <main className="flex-1 pb-16 md:pb-0">
-            {children}
-          </main>
-          <Footer />
-          <Toaster position="top-center" duration={3000} richColors closeButton />
-        </SessionProvider>
+        <AuthProvider>
+          <SessionProvider>
+            <Navbar />
+            <main className="flex-1 pb-16 md:pb-0">
+              {children}
+            </main>
+            <Footer />
+            <Toaster position="top-center" duration={3000} richColors closeButton />
+          </SessionProvider>
+        </AuthProvider>
       </body>
     </html>
   );

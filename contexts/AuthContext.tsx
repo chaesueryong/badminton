@@ -1,0 +1,177 @@
+'use client'
+
+import { createContext, useContext, useEffect, useState, useMemo } from 'react'
+import { User, Session, AuthError } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/client'
+
+interface UserProfile {
+  id: string
+  email: string
+  name?: string
+  profileImage?: string
+  referralCode?: string
+  createdAt: string
+  updatedAt: string
+}
+
+interface AuthContextType {
+  user: User | null
+  profile: UserProfile | null
+  session: Session | null
+  loading: boolean
+  signInWithGoogle: () => Promise<{ error: AuthError | null }>
+  signInWithKakao: () => Promise<{ error: AuthError | null }>
+  signOut: () => Promise<void>
+  refreshProfile: () => Promise<void>
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [session, setSession] = useState<Session | null>(null)
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
+
+  const loadUserProfile = async (userId: string, userEmail?: string, userName?: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle()
+
+      if (error) {
+        console.error('Error loading user profile:', error)
+        return
+      }
+
+      if (!data) {
+        // Profile doesn't exist, create it
+        let referralCode = ''
+        try {
+          const { data: codeResult } = await supabase.rpc('generate_referral_code')
+          if (codeResult) {
+            referralCode = codeResult
+          }
+        } catch (rpcErr) {
+          console.error('Error generating referral code:', rpcErr)
+        }
+
+        const { data: newProfile, error: insertError } = await supabase
+          .from('users')
+          .insert({
+            id: userId,
+            email: userEmail || '',
+            name: userName || '',
+            profileImage: '/default-avatar.png',
+            referralCode: referralCode,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          })
+          .select()
+          .single()
+
+        if (!insertError && newProfile) {
+          setProfile(newProfile)
+        }
+      } else {
+        setProfile(data)
+      }
+    } catch (error) {
+      console.error('Error loading user profile:', error)
+    }
+  }
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setUser(session?.user ?? null)
+      if (session?.user) {
+        loadUserProfile(session.user.id, session.user.email)
+      }
+      setLoading(false)
+    })
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+      setUser(session?.user ?? null)
+      if (session?.user) {
+        loadUserProfile(session.user.id, session.user.email)
+
+        // Check for redirect path after login
+        if (typeof window !== 'undefined') {
+          const redirectPath = sessionStorage.getItem('redirectAfterLogin')
+          if (redirectPath) {
+            sessionStorage.removeItem('redirectAfterLogin')
+            window.location.href = redirectPath
+          }
+        }
+      } else {
+        setProfile(null)
+      }
+      setLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    })
+    return { error }
+  }
+
+  const signInWithKakao = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'kakao',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    })
+    return { error }
+  }
+
+  const signOut = async () => {
+    await supabase.auth.signOut()
+    setUser(null)
+    setProfile(null)
+    setSession(null)
+  }
+
+  const refreshProfile = async () => {
+    if (user) {
+      await loadUserProfile(user.id, user.email)
+    }
+  }
+
+  const value: AuthContextType = useMemo(() => ({
+    user,
+    profile,
+    session,
+    loading,
+    signInWithGoogle,
+    signInWithKakao,
+    signOut,
+    refreshProfile,
+  }), [user, profile, session, loading])
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
+}
