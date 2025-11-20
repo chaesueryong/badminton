@@ -1,9 +1,15 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server'
 
+// Prevent static generation for OAuth callback
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: Request) {
+  const requestUrl = new URL(request.url)
+  const origin = requestUrl.origin
+
   try {
-    const { searchParams, origin } = new URL(request.url)
+    const searchParams = requestUrl.searchParams
     const code = searchParams.get('code')
     const next = searchParams.get('next') ?? '/'
     const error = searchParams.get('error')
@@ -79,7 +85,10 @@ export async function GET(request: Request) {
 
   } catch (error) {
     console.error('Callback route error:', error)
-    // Fallback redirect on any error
-    return NextResponse.redirect('/login?error=callback-error')
+    // Fallback redirect on any error - must use absolute URL
+    const fallbackUrl = process.env.NEXT_PUBLIC_SITE_URL
+      ? `${process.env.NEXT_PUBLIC_SITE_URL}/login?error=callback-error`
+      : `${origin || 'https://badmate.club'}/login?error=callback-error`
+    return NextResponse.redirect(fallbackUrl)
   }
 }
