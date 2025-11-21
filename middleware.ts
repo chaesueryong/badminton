@@ -36,7 +36,41 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // No need to redirect in middleware, just refresh the session if it exists
+  // Check if user is logged in and needs onboarding
+  if (user) {
+    const pathname = request.nextUrl.pathname
+
+    // Allow these paths always
+    const allowedPaths = [
+      '/onboarding',
+      '/auth/callback',
+      '/api',
+      '/login',
+      '/_next',
+      '/favicon.ico'
+    ]
+
+    // Check if current path is allowed
+    const isAllowedPath = allowedPaths.some(path => pathname.startsWith(path))
+
+    if (!isAllowedPath) {
+      // Check if user has completed profile
+      const { data: profile } = await supabase
+        .from('users')
+        .select('nickname, name')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      // If no profile or no nickname/name, redirect to onboarding
+      if (!profile || (!profile.nickname && !profile.name)) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/onboarding'
+        url.searchParams.set('from', pathname)
+        return NextResponse.redirect(url)
+      }
+    }
+  }
+
   return supabaseResponse
 }
 
