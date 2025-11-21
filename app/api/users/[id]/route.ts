@@ -23,6 +23,11 @@ export async function GET(
         "totalGames",
         wins,
         points,
+        feathers,
+        is_premium,
+        premium_until,
+        is_vip,
+        vip_until,
         gender,
         "preferredStyle",
         experience,
@@ -31,7 +36,7 @@ export async function GET(
         "createdAt"
       `)
       .eq('id', params.id)
-      .single();
+      .maybeSingle();
 
     if (error || !user) {
       return NextResponse.json(
