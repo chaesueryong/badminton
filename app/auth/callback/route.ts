@@ -10,8 +10,6 @@ export async function GET(request: Request) {
     const supabase = await createClient()
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      // Check if this is a new user
-      const isNewUser = data?.user && data.user.created_at === data.user.last_sign_in_at
 
       // Get the redirect URL
       const forwardedHost = request.headers.get('x-forwarded-host')
@@ -33,18 +31,17 @@ export async function GET(request: Request) {
         baseUrl = origin
       }
 
-      // If new user, check if they have a profile
-      if (isNewUser) {
-        const { data: profile } = await supabase
-          .from('users')
-          .select('name')
-          .eq('id', data.user.id)
-          .single()
+      // Check if user has a profile
+      const { data: profile } = await supabase
+        .from('users')
+        .select('name, nickname')
+        .eq('id', data.user.id)
+        .maybeSingle()
 
-        // If no profile or no name, redirect to onboarding
-        if (!profile || !profile.name) {
-          return NextResponse.redirect(`${baseUrl}/onboarding?first_login=true`)
-        }
+      // If no profile or no name/nickname, redirect to onboarding
+      if (!profile || (!profile.name && !profile.nickname)) {
+        console.log('No profile or missing name/nickname, redirecting to onboarding')
+        return NextResponse.redirect(`${baseUrl}/onboarding?first_login=true`)
       }
 
       return NextResponse.redirect(`${baseUrl}${next}`)
