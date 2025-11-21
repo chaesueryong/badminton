@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
           amount: REFERRAL_REWARD_POINTS,
           transactionType: 'EARN',
           reason: '친구 초대 보상',
-          relatedId: user.id,
+          relatedId: user?.id || '',
           relatedType: 'REFERRAL',
           createdAt: new Date().toISOString(),
         });
