@@ -26,7 +26,7 @@ export function usePremium() {
         .from("users")
         .select("is_premium, premium_until")
         .eq("id", session.user.id)
-        .single();
+        .maybeSingle();
 
       // Check if user is Premium and Premium is not expired
       const isPremiumActive = (userData as any)?.is_premium && (userData as any)?.premium_until && new Date((userData as any).premium_until) > new Date();

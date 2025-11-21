@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
       .from("users")
       .select("is_premium, premium_until")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
 
     // Check if user is Premium and Premium is not expired
     const isPremium = userData?.is_premium && userData?.premium_until && new Date(userData.premium_until) > new Date();
