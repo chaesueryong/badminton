@@ -128,7 +128,7 @@ export default function ProfilePage() {
         .from('users')
         .select('*')
         .eq('id', profileId)
-        .single();
+        .maybeSingle();
 
       if (profileData) {
         console.log("Profile data loaded:", profileData);

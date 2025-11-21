@@ -36,7 +36,7 @@ export default function VerificationPage() {
         .from('users')
         .select('is_verified, verified_name, birth_date, phone')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
 
       if ((userData as any)?.is_verified) {
         setIsVerified(true);
