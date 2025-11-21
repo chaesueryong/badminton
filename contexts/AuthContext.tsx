@@ -9,7 +9,6 @@ interface UserProfile {
   email: string
   name?: string
   profileImage?: string
-  referralCode?: string
   createdAt: string
   updatedAt: string
 }
@@ -49,15 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!data) {
         // Profile doesn't exist, create it
-        let referralCode = ''
-        try {
-          const { data: codeResult } = await supabase.rpc('generate_referral_code')
-          if (codeResult) {
-            referralCode = codeResult
-          }
-        } catch (rpcErr) {
-          console.error('Error generating referral code:', rpcErr)
-        }
+        console.log('Creating new user profile for:', userId, userEmail, userName)
 
         const { data: newProfile, error: insertError } = await supabase
           .from('users')
@@ -66,14 +57,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             email: userEmail || '',
             name: userName || '',
             profileImage: '/default-avatar.png',
-            referralCode: referralCode,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           })
           .select()
           .single()
 
-        if (!insertError && newProfile) {
+        if (insertError) {
+          console.error('Error creating user profile:', insertError)
+        } else if (newProfile) {
+          console.log('Successfully created user profile:', newProfile)
           setProfile(newProfile)
         }
       } else {
@@ -90,7 +83,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
-        loadUserProfile(session.user.id, session.user.email)
+        const userName = session.user.user_metadata?.full_name || session.user.user_metadata?.name || ''
+        loadUserProfile(session.user.id, session.user.email, userName)
       }
       setLoading(false)
     })
@@ -102,7 +96,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
-        loadUserProfile(session.user.id, session.user.email)
+        const userName = session.user.user_metadata?.full_name || session.user.user_metadata?.name || ''
+        loadUserProfile(session.user.id, session.user.email, userName)
 
         // Check for redirect path after login
         if (typeof window !== 'undefined') {

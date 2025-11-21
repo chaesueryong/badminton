@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { nickname, phone, level, region, gender, preferredStyle, experience, birthdate, referralCode } = body;
+    const { nickname, phone, level, region, gender, preferredStyle, experience, birthdate } = body;
 
     if (!nickname || !level || !gender || !preferredStyle || experience === undefined || !birthdate) {
       return NextResponse.json(
@@ -38,31 +38,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 초대 코드 검증 (입력된 경우에만)
+    // 초대 코드 기능 비활성화 (referralCode 컬럼이 없음)
     let referrerId = null;
-    if (referralCode && referralCode.trim()) {
-      const { data: referrer } = await supabase
-        .from('users')
-        .select('id, nickname, referralCode')
-        .eq('referralCode', referralCode.trim().toUpperCase())
-        .maybeSingle();
-
-      if (!referrer) {
-        return NextResponse.json(
-          { error: "유효하지 않은 초대 코드입니다" },
-          { status: 400 }
-        );
-      }
-
-      if (referrer.id === user.id) {
-        return NextResponse.json(
-          { error: "자신의 초대 코드는 사용할 수 없습니다" },
-          { status: 400 }
-        );
-      }
-
-      referrerId = referrer.id;
-    }
 
     // 사용자 정보 확인
     const { data: existingUser } = await supabase
@@ -76,10 +53,6 @@ export async function POST(request: NextRequest) {
     if (!existingUser) {
       // 사용자가 없으면 생성
       const now = new Date().toISOString();
-
-      // 고유한 추천 코드 생성
-      const { data: codeResult } = await supabase.rpc('generate_referral_code');
-      const newReferralCode = codeResult || '';
 
       const { data: newUser, error: insertError } = await supabase
         .from('users')
@@ -96,8 +69,6 @@ export async function POST(request: NextRequest) {
           experience,
           birthdate,
           profileImage: '/default-avatar.png',  // 소셜 이미지 사용 안함, 기본 아이콘
-          referralCode: newReferralCode,
-          referredBy: referrerId,
           createdAt: now,
           updatedAt: now,
         })
@@ -123,16 +94,7 @@ export async function POST(request: NextRequest) {
         birthdate,
       };
 
-      // 초대 코드가 아직 없으면 생성
-      if (!existingUser.referralCode) {
-        const { data: codeResult } = await supabase.rpc('generate_referral_code');
-        updateData.referralCode = codeResult || '';
-      }
-
-      // 추천인이 있고 아직 설정되지 않은 경우에만 추가
-      if (referrerId && !existingUser.referredBy) {
-        updateData.referredBy = referrerId;
-      }
+      // 초대 코드 기능 비활성화
 
       const { data: updatedUser, error: updateError } = await supabase
         .from('users')
@@ -148,8 +110,8 @@ export async function POST(request: NextRequest) {
       result = updatedUser;
     }
 
-    // 추천인에게 포인트 지급 (신규 가입 시에만) - from config
-    if (referrerId && !existingUser?.referredBy) {
+    // 추천 기능 비활성화 - referralCode 컬럼 없음
+    if (false) {
       const REFERRAL_REWARD_POINTS = GameSettings.referral.signup;
 
       // 추천인의 현재 포인트 가져오기
