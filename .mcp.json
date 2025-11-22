@@ -8,7 +8,7 @@
       ],
       "env": {}
     },
-    "supabase-broomi": {
+    "supabase-badmate": {
       "command": "npx",
       "args": [
         "-y",
