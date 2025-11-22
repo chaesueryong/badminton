@@ -57,6 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             email: userEmail || '',
             name: userName || '',
             profileImage: '/default-avatar.png',
+            onboarding_completed: false,  // 온보딩 미완료 상태로 생성
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           })

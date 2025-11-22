@@ -296,9 +296,11 @@ export default function MatchingPage() {
                 onChange={(e) => setFilters({ ...filters, preferredStyle: e.target.value })}
               >
                 <option value="">전체</option>
-                <option value="MENS_DOUBLES">남복</option>
-                <option value="MIXED_DOUBLES">혼복</option>
-                <option value="WOMENS_DOUBLES">여복</option>
+                <option value="MENS_SINGLES">남자 단식</option>
+                <option value="WOMENS_SINGLES">여자 단식</option>
+                <option value="MENS_DOUBLES">남복 (남자 복식)</option>
+                <option value="WOMENS_DOUBLES">여복 (여자 복식)</option>
+                <option value="MIXED_DOUBLES">혼복 (혼합 복식)</option>
               </select>
             </div>
 

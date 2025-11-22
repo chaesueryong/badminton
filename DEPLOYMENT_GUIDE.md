@@ -86,6 +86,41 @@ TOSS_SECRET_KEY=your-toss-secret-key
 
 ## 3. Supabase 설정
 
+### ⚠️ 중요: Onboarding 완료 컬럼 마이그레이션
+
+**배포 전 반드시 실행해야 할 SQL:**
+
+1. **Supabase Dashboard SQL Editor에서 실행:**
+   ```sql
+   -- Add onboarding_completed column to users table
+   ALTER TABLE users
+   ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT FALSE;
+
+   -- Update existing users who have nickname to have completed onboarding
+   UPDATE users
+   SET onboarding_completed = TRUE
+   WHERE nickname IS NOT NULL AND nickname != '';
+
+   -- Add comment for documentation
+   COMMENT ON COLUMN users.onboarding_completed IS 'Indicates whether the user has completed the onboarding process';
+   ```
+
+2. **마이그레이션 확인:**
+   ```sql
+   -- Check if column exists
+   SELECT column_name, data_type, column_default
+   FROM information_schema.columns
+   WHERE table_name = 'users'
+   AND column_name = 'onboarding_completed';
+
+   -- Check onboarding status
+   SELECT
+     COUNT(*) as total_users,
+     COUNT(CASE WHEN onboarding_completed = TRUE THEN 1 END) as completed,
+     COUNT(CASE WHEN onboarding_completed = FALSE THEN 1 END) as not_completed
+   FROM users;
+   ```
+
 ### ✅ OAuth 리다이렉트 URL 설정
 
 1. **Supabase Dashboard 접속**
@@ -114,6 +149,8 @@ TOSS_SECRET_KEY=your-toss-secret-key
    - [ ] Supabase에 REST API Key, Client Secret 입력
 
 ### 📝 체크리스트
+- [ ] **onboarding_completed 컬럼 마이그레이션 실행**
+- [ ] **마이그레이션 확인 쿼리 실행**
 - [ ] Site URL 설정
 - [ ] Redirect URLs 추가
 - [ ] Google OAuth 설정
