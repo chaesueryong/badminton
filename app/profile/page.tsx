@@ -942,9 +942,11 @@ function ProfilePageContent() {
                   >
                     <option value="">선택하세요</option>
                     <option value="ALL">전체</option>
+                    <option value="MENS_SINGLES">남자 단식</option>
+                    <option value="WOMENS_SINGLES">여자 단식</option>
                     <option value="MENS_DOUBLES">남복 (남자 복식)</option>
-                    <option value="MIXED_DOUBLES">혼복 (혼합 복식)</option>
                     <option value="WOMENS_DOUBLES">여복 (여자 복식)</option>
+                    <option value="MIXED_DOUBLES">혼복 (혼합 복식)</option>
                   </select>
                 </div>
                 <div>
@@ -1004,9 +1006,11 @@ function ProfilePageContent() {
                   <p className="text-sm text-gray-600 mb-1">선호 스타일</p>
                   <p className="text-gray-900">
                     {profile.preferredStyle === "ALL" ? "전체" :
+                     profile.preferredStyle === "MENS_SINGLES" ? "남자 단식" :
+                     profile.preferredStyle === "WOMENS_SINGLES" ? "여자 단식" :
                      profile.preferredStyle === "MENS_DOUBLES" ? "남복 (남자 복식)" :
-                     profile.preferredStyle === "MIXED_DOUBLES" ? "혼복 (혼합 복식)" :
-                     profile.preferredStyle === "WOMENS_DOUBLES" ? "여복 (여자 복식)" : "-"}
+                     profile.preferredStyle === "WOMENS_DOUBLES" ? "여복 (여자 복식)" :
+                     profile.preferredStyle === "MIXED_DOUBLES" ? "혼복 (혼합 복식)" : "-"}
                   </p>
                 </div>
                 <div>

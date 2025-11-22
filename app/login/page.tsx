@@ -75,15 +75,13 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      <div className="flex-1 flex flex-col justify-between p-6 max-w-md mx-auto w-full">
-        {/* Header */}
-        <div className="flex-1 flex flex-col items-center justify-center pt-10">
-          <div className="text-6xl mb-6">🏸</div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-3">배드민턴 커뮤니티</h1>
-          <p className="text-base md:text-lg text-gray-600 text-center">
-            함께 운동하고 즐기는 배드민턴 플레이어들의 공간
-          </p>
+    <div className="min-h-screen bg-white flex items-center justify-center px-4 py-8 sm:p-0">
+      <div className="w-full max-w-md">
+        {/* 간결한 헤더 - 모바일에서 더 컴팩트 */}
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="text-4xl sm:text-5xl mb-2 sm:mb-3">🏸</div>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">배드민턴 커뮤니티</h1>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">함께 즐기는 배드민턴</p>
         </div>
 
         {error && (
@@ -101,12 +99,12 @@ function LoginContent() {
         )}
 
         {/* Buttons */}
-        <div className="space-y-3 mb-8">
+        <div className="space-y-3">
           {/* Google Login */}
           <button
             onClick={handleGoogleLogin}
             disabled={loading}
-            className="w-full bg-white border-2 border-gray-300 text-gray-900 font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-3 hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="w-full bg-white border-2 border-gray-300 text-gray-900 font-semibold py-3.5 px-5 rounded-xl flex items-center justify-center gap-3 hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
             <svg className="w-6 h-6" viewBox="0 0 24 24">
               <path
@@ -133,7 +131,7 @@ function LoginContent() {
           <button
             onClick={handleKakaoLogin}
             disabled={loading}
-            className="w-full bg-[#FEE500] text-black font-semibold py-4 px-6 rounded-xl flex items-center justify-center gap-3 hover:bg-[#FDD835] transition-colors disabled:opacity-50"
+            className="w-full bg-[#FEE500] text-black font-semibold py-3.5 px-5 rounded-xl flex items-center justify-center gap-3 hover:bg-[#FDD835] transition-colors disabled:opacity-50"
           >
             <svg
               className="w-6 h-6"
@@ -147,8 +145,8 @@ function LoginContent() {
         </div>
 
         {/* Footer */}
-        <div className="text-center mb-4">
-          <p className="text-sm text-gray-600 leading-relaxed">
+        <div className="text-center mt-6">
+          <p className="text-xs text-gray-500 leading-relaxed">
             시작하기 버튼을 누르면{' '}
             <Link href="/terms" className="text-blue-600 underline cursor-pointer hover:text-blue-700">
               이용약관
@@ -157,8 +155,7 @@ function LoginContent() {
             <Link href="/privacy" className="text-blue-600 underline cursor-pointer hover:text-blue-700">
               개인정보 처리방침
             </Link>
-            에<br />
-            동의하는 것으로 간주합니다
+            에 동의하는 것으로 간주합니다
           </p>
         </div>
       </div>

@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
           experience,
           birthdate,
           profileImage: '/default-avatar.png',  // 소셜 이미지 사용 안함, 기본 아이콘
+          onboarding_completed: true,  // 온보딩 완료 표시
           createdAt: now,
           updatedAt: now,
         })
@@ -92,6 +93,7 @@ export async function POST(request: NextRequest) {
         preferredStyle,
         experience,
         birthdate,
+        onboarding_completed: true,  // 온보딩 완료 표시
       };
 
       // 초대 코드 기능 비활성화

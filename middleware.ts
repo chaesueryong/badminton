@@ -54,15 +54,15 @@ export async function middleware(request: NextRequest) {
     const isAllowedPath = allowedPaths.some(path => pathname.startsWith(path))
 
     if (!isAllowedPath) {
-      // Check if user has completed profile
+      // Check if user has completed onboarding
       const { data: profile } = await supabase
         .from('users')
-        .select('nickname, name')
+        .select('onboarding_completed')
         .eq('id', user.id)
         .maybeSingle()
 
-      // If no profile or no nickname/name, redirect to onboarding
-      if (!profile || (!profile.nickname && !profile.name)) {
+      // If no profile or onboarding not completed, redirect to onboarding
+      if (!profile || !profile.onboarding_completed) {
         const url = request.nextUrl.clone()
         url.pathname = '/onboarding'
         url.searchParams.set('from', pathname)
